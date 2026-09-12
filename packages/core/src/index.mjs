@@ -194,27 +194,35 @@ async function objectsOfType(client, account, type) {
 export async function readVaultGraph(client, vaultId) {
   const at = rippleNow()
   const vault = await readVault(client, vaultId)
-  const brokers = await objectsOfType(client, vault.Account, 'loan_broker')
-  const assetsTotal = vault.AssetsTotal ?? '0'
-
-  const enriched = []
-  for (const b of brokers) {
-    const loans = await objectsOfType(client, b.Account, 'loan')
-    enriched.push({
-      ...b,
-      metrics: brokerMetrics(b),
-      loans: loans.map(l => ({
-        ...l,
-        metrics: loanMetrics(l, { at, brokerOwner: b.Owner, vaultAssetsTotal: assetsTotal }),
-      })),
-    })
+  const rawBrokers = await objectsOfType(client, vault.Account, 'loan_broker')
+  const withLoans = []
+  for (const b of rawBrokers) {
+    withLoans.push({ ...b, loans: await objectsOfType(client, b.Account, 'loan') })
   }
+  return buildVaultGraph({ vaultId, vault, brokers: withLoans, at })
+}
+
+/**
+ * Toutes les dérivations d'un graphe, sans réseau. Séparée de `readVaultGraph`
+ * pour que les tests recalculent depuis les objets ledger bruts d'un snapshot au
+ * lieu de faire confiance à des `metrics` figées, qui dérivent silencieusement
+ * dès qu'une formule change.
+ */
+export function buildVaultGraph({ vaultId, vault, brokers = [], at = rippleNow() }) {
+  const assetsTotal = vault.AssetsTotal ?? '0'
+  const enriched = brokers.map(b => ({
+    ...b,
+    metrics: brokerMetrics(b),
+    loans: (b.loans ?? []).map(l => ({
+      ...l,
+      metrics: loanMetrics(l, { at, brokerOwner: b.Owner, vaultAssetsTotal: assetsTotal }),
+    })),
+  }))
 
   // Résumé au niveau vault — ce que l'analyste lit d'abord, tout mâché.
-  const vm = vaultMetrics(vault)
   const allLoans = enriched.flatMap(b => b.loans)
   const summary = {
-    ...vm,
+    ...vaultMetrics(vault),
     ...phaseInfo(vault, at),
     brokerCount: enriched.length,
     loanCount: allLoans.length,
@@ -228,9 +236,9 @@ export async function readVaultGraph(client, vaultId) {
   }
 
   return {
-    vaultId, at: String(at),
+    vaultId: vaultId ?? vault.index, at: String(at),
     vault, brokers: enriched, shares: vault.shares,
-    phase: phaseOf(vault),   // conservé pour compat
+    phase: phaseOf(vault, at),   // conservé pour compat
     metrics: summary,
   }
 }

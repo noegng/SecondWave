@@ -19,8 +19,39 @@ const LOAN_OVERPAYMENT = 0x00040000
 const COVER_DENOM = 100000n
 
 const S = v => (v == null ? null : String(v))
-const big = v => { try { return BigInt(v ?? 0) } catch { return 0n } }
-/** Ratio num/den arrondi à 6 décimales, ou null si den = 0. */
+
+// Un montant XRP est un entier de drops, mais un montant IOU est un décimal à
+// 15 chiffres significatifs ("40.0001522071003"). BigInt() lève sur ces
+// derniers : on travaille donc en virgule fixe à 1e-15 pour tout le module.
+// Sans ça un vault IOU de 200 000 USD se lit comme vide, et un broker à
+// DebtTotal décimal passe pour sans dette (donc cover 100 % retirable).
+const AMOUNT_DEC = 15
+const AMOUNT_UNIT = 10n ** BigInt(AMOUNT_DEC)
+const AMOUNT_RE = /^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/
+
+/** Montant ledger (entier, décimal ou notation scientifique) → BigInt en 1e-15. */
+const amt = v => {
+  if (v == null) return 0n
+  const m = AMOUNT_RE.exec(String(v).trim())
+  if (!m) return 0n
+  const [, sign, int = '', frac = '', exp] = m
+  if (!int && !frac) return 0n
+  const shift = BigInt(AMOUNT_DEC) - BigInt(frac.length) + BigInt(exp ?? 0)
+  let x = BigInt(int + frac)
+  x = shift >= 0n ? x * 10n ** shift : x / 10n ** -shift
+  return sign === '-' ? -x : x
+}
+
+/** BigInt en 1e-15 → string décimale compacte, sans zéros de queue. */
+const fmt = x => {
+  if (x == null) return null
+  const neg = x < 0n
+  const a = neg ? -x : x
+  const frac = (a % AMOUNT_UNIT).toString().padStart(AMOUNT_DEC, '0').replace(/0+$/, '')
+  return `${neg ? '-' : ''}${a / AMOUNT_UNIT}${frac ? `.${frac}` : ''}`
+}
+
+/** Ratio num/den arrondi à 6 décimales, ou null si den = 0. Les échelles se compensent. */
 const ratio = (num, den) => (den === 0n ? null : Number((num * 1_000_000n) / den) / 1e6)
 
 // ─────────────────────────────────────────────────────────────
@@ -46,16 +77,23 @@ export function phaseInfo(vault, at = analyticsNow()) {
 // Vault
 // ─────────────────────────────────────────────────────────────
 export function vaultMetrics(vault) {
-  const total = big(vault.AssetsTotal), avail = big(vault.AssetsAvailable), loss = big(vault.LossUnrealized)
-  const shares = big(vault.shares?.OutstandingAmount)
+  const total = amt(vault.AssetsTotal), avail = amt(vault.AssetsAvailable), loss = amt(vault.LossUnrealized)
+  const shares = amt(vault.shares?.OutstandingAmount)
   const lent = total > avail ? total - avail : 0n
   const prudent = total > loss ? total - loss : 0n
-  const navScaled = shares === 0n ? 0n : (total * 1_000_000n) / shares
-  const navPrudScaled = shares === 0n ? 0n : (prudent * 1_000_000n) / shares
+  // Un dépôt de 1 unité d'actif émet 10^Scale parts (Scale absent ⇒ 0, cas XRP).
+  // Sans ce facteur la NAV n'est pas comparable d'un vault à l'autre : un vault
+  // IOU Scale 6 au pair sortirait à 1 là où un vault XRP au pair sort à 1e6.
+  const scale = Number(vault.Scale ?? 0)
+  const parity = 10n ** BigInt(scale)
+  const nav = a => (shares === 0n ? 0n : (a * parity * 1_000_000n) / shares)
+  const navScaled = nav(total)
+  const navPrudScaled = nav(prudent)
   return {
-    assetsTotal: S(total), assetsAvailable: S(avail), assetsLent: S(lent),
-    lossUnrealized: S(loss), outstandingShares: S(shares),
-    // nav = valeur d'une part. …Scaled = ×1e6 (drops-par-part), …PerShare = décimal lisible.
+    assetsTotal: fmt(total), assetsAvailable: fmt(avail), assetsLent: fmt(lent),
+    lossUnrealized: fmt(loss), outstandingShares: fmt(shares), scale,
+    // nav = valeur d'une part rapportée au pair. …Scaled = ×1e6 (1e6 = pair),
+    // …PerShare = décimal lisible (1 = pair, 0.87 = 13 % sous le pair).
     navScaled: S(navScaled), navPerShare: Number(navScaled) / 1e6,
     navPrudentScaled: S(navPrudScaled), navPrudentPerShare: Number(navPrudScaled) / 1e6,
     utilisation: ratio(lent, total),   // part des actifs effectivement prêtée
@@ -67,8 +105,8 @@ export function vaultMetrics(vault) {
 // Broker
 // ─────────────────────────────────────────────────────────────
 export function brokerMetrics(broker) {
-  const cover = big(broker.CoverAvailable), debt = big(broker.DebtTotal)
-  const dmaxRaw = big(broker.DebtMaximum)
+  const cover = amt(broker.CoverAvailable), debt = amt(broker.DebtTotal)
+  const dmaxRaw = amt(broker.DebtMaximum)
   const dmax = broker.DebtMaximum != null && dmaxRaw > 0n ? dmaxRaw : null   // absent/0 = illimité
   const min = Number(broker.CoverRateMinimum ?? 0), liq = Number(broker.CoverRateLiquidation ?? 0)
   const required = (debt * BigInt(min)) / COVER_DENOM
@@ -77,12 +115,12 @@ export function brokerMetrics(broker) {
   const withdrawable = debt === 0n ? cover : (cover > required ? cover - required : 0n)
   return {
     owner: broker.Owner ?? null,
-    coverAvailable: S(cover), debtTotal: S(debt), debtMaximum: dmax == null ? null : S(dmax),
+    coverAvailable: fmt(cover), debtTotal: fmt(debt), debtMaximum: dmax == null ? null : fmt(dmax),
     coverRateMinimum: min, coverRateLiquidation: liq,
     coverRateMinimumPct: min / 1000, coverRateLiquidationPct: liq / 1000,   // 1/100000 → %
     noCover: min === 0 && liq === 0,                    // 🔴 signal rouge : aucun first-loss capital
-    coverRequired: S(required),
-    coverWithdrawable: S(withdrawable),
+    coverRequired: fmt(required),
+    coverWithdrawable: fmt(withdrawable),
     coverWithdrawableIsEstimate: debt !== 0n,
     debtRatio: dmax == null ? null : ratio(debt, dmax),
     coverFractionOfDebt: debt === 0n ? null : ratio(cover, debt),
@@ -99,7 +137,7 @@ export function loanMetrics(loan, { at = analyticsNow(), brokerOwner = null, vau
   const isOverpay = Boolean(flags & LOAN_OVERPAYMENT)
   const tvo = loan.TotalValueOutstanding
   const settled = tvo == null && !isDefault      // objet Loan soldé, en attente de LoanDelete [F-80]
-  const principal = big(loan.PrincipalOutstanding)
+  const principal = amt(loan.PrincipalOutstanding)
   const due = loan.NextPaymentDueDate != null ? Number(loan.NextPaymentDueDate) : null
   const grace = Number(loan.GracePeriod ?? 0)
 
@@ -118,7 +156,7 @@ export function loanMetrics(loan, { at = analyticsNow(), brokerOwner = null, vau
   return {
     borrower: loan.Borrower ?? null,
     selfLoan: brokerOwner != null && loan.Borrower === brokerOwner,   // 🔴 auto-prêt
-    principalOutstanding: S(principal),
+    principalOutstanding: fmt(principal),
     totalValueOutstanding: tvo != null ? S(tvo) : null,
     nextPaymentDueDate: due != null ? S(due) : null,
     gracePeriod: S(grace),
@@ -126,7 +164,7 @@ export function loanMetrics(loan, { at = analyticsNow(), brokerOwner = null, vau
     secondsLate: S(secondsLate),
     status, defaillable,
     impaired: isImpaired, defaulted: isDefault, overpayment: isOverpay,
-    weight: vaultAssetsTotal != null ? ratio(principal, big(vaultAssetsTotal)) : null,
+    weight: vaultAssetsTotal != null ? ratio(principal, amt(vaultAssetsTotal)) : null,
   }
 }
 
@@ -135,9 +173,9 @@ export function loanMetrics(loan, { at = analyticsNow(), brokerOwner = null, vau
 // ─────────────────────────────────────────────────────────────
 /** Herfindahl-Hirschman (0..10000). > 2500 = marché concentré ; 10000 = monopole. */
 export function concentrationHHI(holders, total) {
-  const t = big(total)
+  const t = amt(total)
   if (t === 0n) return 0
   let sumsq = 0n
-  for (const h of holders) { const s = big(h.shares); sumsq += s * s }
+  for (const h of holders) { const s = amt(h.shares); sumsq += s * s }
   return Number((sumsq * 10000n) / (t * t))
 }

@@ -1,5 +1,5 @@
 {
-  "note": "Cas attendus par vault du monde généré. Cible de l'analyste et test de non-régression. Les 'redFlags' NE doivent PAS disparaître ; le verdict est indicatif.",
+  "note": "Cas attendus par vault du monde généré. Cible de l'analyste et test de non-régression. Les listes sont EXHAUSTIVES : ni un signal en moins, ni un signal en trop. Les metrics sont recalculées depuis les objets ledger bruts du snapshot, pas relues.",
   "vaults": {
     "sain": {
       "verdict": "prudence",
@@ -9,7 +9,7 @@
     "predateur": {
       "verdict": "à fuir",
       "redFlags": ["no-cover", "self-loan", "undeclared-default"],
-      "alerts": ["concentration"]
+      "alerts": []
     },
     "deprecie": {
       "verdict": "risqué",
@@ -25,7 +25,7 @@
       "verdict": "prudence",
       "redFlags": [],
       "alerts": ["non-transferable"],
-      "fairPrice": null
+      "fairPricePerShare": null
     },
     "redemption": {
       "verdict": "sain",
@@ -35,8 +35,8 @@
     "solde": {
       "verdict": "sain",
       "redFlags": [],
-      "alerts": ["withdrawable-cover"],
-      "note": "prêt soldé et supprimé (LoanDelete) ; DebtTotal=0 ⇒ cover 100% retirable"
+      "alerts": ["withdrawable-cover", "concentration"],
+      "note": "prêt soldé et supprimé (LoanDelete) ; DebtTotal=0 ⇒ cover 100% retirable ; détenteur unique"
     }
   }
 }

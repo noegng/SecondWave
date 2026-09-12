@@ -63,7 +63,7 @@ Ci-dessous, la forme des données **telles que core les livre** (dans
   "metrics": {                                   // ⭐ LE niveau vault, tout mâché
     "assetsTotal": "50000000", "assetsAvailable": "28000000", "assetsLent": "22000000",
     "lossUnrealized": "0", "outstandingShares": "50000000",
-    "navScaled": "1000000", "navPerShare": 1,           // valeur d'une part (×1e6 / décimal)
+    "navScaled": "1000000", "navPerShare": 1,           // NAV/part au pair (×1e6 / décimal)
     "navPrudentScaled": "1000000", "navPrudentPerShare": 1,   // (assets − pertes) / parts
     "utilisation": 0.44, "lossRatio": 0,               // 0..1
     "phase": "Investment", "next": "Redemption",
@@ -137,9 +137,18 @@ curable ; au-delà de la grâce c'est `défaillable`.)
 | **clawback armé** | `metrics.isIou` && `meta.clawbackArmed` (dans `snapshot.vaults[clé].meta`) | `iou` | l'émetteur de l'actif peut saisir la position d'un déposant [I-102] |
 | **rejeu divergent** | `holders.reconciles === false` | (aucun en conditions saines) | lecture incomplète : ne pas noter à l'aveugle |
 
-`nav` et `fairPrice` : `nav = graph.metrics.navScaled` (ou `navPrudentScaled` pour
-être prudent). `fairPrice` d'une offre ≈ `navPrudentScaled × order.shares / 1e6`,
-décoté par le risque (ton score). Une part non transférable ⇒ `fairPrice = null`.
+`nav` et les prix : `nav = graph.metrics.navScaled`, **×1e6 avec 1e6 = pair**. Le
+facteur est `10^Scale` et non 1e6 en dur, sinon un vault IOU `Scale 6` au pair
+sort à 1 là où un vault XRP au pair sort à 1e6 — les deux NAV ne seraient pas
+comparables.
+
+`analyse()` renvoie deux prix, pour ne pas changer d'unité selon les arguments :
+
+- `fairPricePerShare` — prix par part, même échelle que `nav` (×1e6). Toujours
+  présent, `null` si les parts ne sont pas transférables.
+- `fairPrice` — **total** pour `order.shares`, décoté par le score. `null` si
+  aucun `order` n'est fourni : un appelant qui compare au prix demandé d'une
+  offre doit passer `order`, sinon il comparerait un prix par part à un total.
 
 ---
 

@@ -66,8 +66,16 @@ export function lookupVaultMeta(vaultId) {
   return indexByVaultId().get(String(vaultId).toUpperCase()) ?? null
 }
 
+/** Spread sans les clés à `undefined`, qui écraseraient le catalogue. */
+const defini = (o) => Object.fromEntries(Object.entries(o ?? {}).filter(([, v]) => v !== undefined))
+
 export function resolveMeta(graph, meta) {
   const vaultId = graph?.vaultId ?? graph?.vault?.index ?? meta?.vaultId
   const fromCatalog = lookupVaultMeta(vaultId)
-  return { ...fromCatalog, ...meta, vaultId: vaultId ?? meta?.vaultId ?? fromCatalog?.vaultId }
+  return {
+    ours: false,          // hors catalogue = inconnu, pas « à nous »
+    ...fromCatalog,
+    ...defini(meta),
+    vaultId: vaultId ?? meta?.vaultId ?? fromCatalog?.vaultId,
+  }
 }

@@ -12,8 +12,21 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { buildVaultGraph } from '@secondwave/core'
 import { analyse } from './analyse.mjs'
 import { fetchVaultLive, isVaultId, scanPublicVaults, withClient } from './live.mjs'
+
+/**
+ * Les `metrics` du snapshot datent de la capture : on les recalcule depuis les
+ * objets ledger bruts, sinon un changement de formule dans core ne se verrait
+ * jamais hors ligne.
+ */
+const graphDuSnapshot = (row) => buildVaultGraph({
+  vaultId: row.graph.vaultId,
+  vault: row.graph.vault,
+  brokers: row.graph.brokers,
+  at: Number(row.graph.at),
+})
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
 const COULEUR = { sain: '🟢', prudence: '🟡', risqué: '🟠', 'à fuir': '🔴' }
@@ -38,8 +51,9 @@ function parseArgs(argv) {
     else if (a.startsWith('--vault=')) out.vaultId = a.slice('--vault='.length)
     else rest.push(a)
   }
+  // 'all' est déjà consommé au-dessus, rest ne contient que clés et vault_id.
   if (rest[0] && isVaultId(rest[0])) out.vaultId = rest[0]
-  else if (rest[0] && rest[0] !== 'all') out.key = rest[0]
+  else if (rest[0]) out.key = rest[0]
   return out
 }
 
@@ -82,7 +96,8 @@ function printFacts({ key, label, source, graph, holders, meta }) {
 function printNote(note) {
   console.log(`\nNOTE ANALYSTE :`)
   console.log(`  ${COULEUR[note.verdict] ?? '·'} ${note.verdict} (${note.score}/100)`
-    + `  NAV ${note.nav}  fairPrice ${note.fairPrice ?? 'null'}`)
+    + `  NAV ${(Number(note.nav) / 1e6).toFixed(4)}/part (pair 1.0000)`
+    + `  prix juste ${note.fairPricePerShare == null ? 'n/a' : `${(note.fairPricePerShare / 1e6).toFixed(4)}/part`}`)
   if (!note.signaux.length) console.log('  aucun signal')
   for (const s of note.signaux) console.log(`  ${PUCE[s.niveau] ?? '·'} ${s.titre} — ${s.detail}`)
   for (const sc of note.brokerNotes ?? []) {
@@ -254,7 +269,7 @@ if (args.scan) {
       key,
       label: row.meta.label,
       source: `snapshot figé à Ripple-time ${snapshot.capturedAtRipple}`,
-      graph: row.graph,
+      graph: graphDuSnapshot(row),
       holders: row.holders,
       meta: row.meta,
     })

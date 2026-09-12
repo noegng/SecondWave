@@ -22,6 +22,12 @@ import { analyse } from '@secondwave/analyst'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
 const XRP = d => (Number(d) / 1e6).toFixed(2)
+/** Un montant IOU est déjà dans son unité : le diviser par 1e6 afficherait 0.00. */
+const montant = (graph, raw) => graph.metrics.isIou
+  ? `${Number(raw)} ${graph.vault.Asset.currency}`
+  : `${XRP(raw)} XRP`
+/** nav est ×1e6 avec 1e6 = pair, pas des drops. */
+const parPart = nav => (Number(nav) / 1e6).toFixed(4)
 
 if (!existsSync(join(ROOT, 'world.json')))
   fatal('world.json absent — lance d\'abord `npm run world`.')
@@ -70,10 +76,10 @@ try {
 } finally { await c.disconnect() }
 
 // ─────────────────────────────────────────────────────────────
-async function noteDe(v) {
+async function noteDe(v, order) {
   const graph = await readVaultGraph(c, v.vaultId)
   const holders = await holderMap(c, graph.vault)
-  return { graph, holders, note: analyse({ graph, holders }) }
+  return { graph, holders, note: analyse({ graph, holders, order }) }
 }
 
 async function cmdVaults() {
@@ -82,9 +88,9 @@ async function cmdVaults() {
     console.log(`\n${COULEUR[note.verdict]}  ${v.key}  —  ${note.verdict} (${note.score}/100)`)
     console.log(`    ${v.label}`)
     console.log(`    ${v.vaultId}`)
-    console.log(`    phase ${graph.phase} · actifs ${XRP(graph.vault.AssetsTotal)} XRP`
-      + ` · disponibles ${XRP(graph.vault.AssetsAvailable)} XRP`
-      + ` · NAV ${XRP(note.nav)} XRP/part`)
+    console.log(`    phase ${graph.phase} · actifs ${montant(graph, graph.vault.AssetsTotal)}`
+      + ` · disponibles ${montant(graph, graph.vault.AssetsAvailable)}`
+      + ` · NAV ${parPart(note.nav)}/part (pair 1.0000)`)
     console.log(`    ${holders.count} détenteurs · concentration ${(holders.concentration * 100).toFixed(0)}%`
       + ` · ${graph.brokers.length} broker(s) · ${graph.brokers.reduce((s, b) => s + b.loans.length, 0)} prêt(s)`)
     for (const s of note.signaux) console.log(`    ${PUCE[s.niveau]} ${s.titre} — ${s.detail}`)
@@ -133,9 +139,12 @@ async function cmdBuy(orderId, acheteur) {
     ?? fatal('seed du vendeur absente de state.json')
 
   console.log(`\n─── ANALYSE ───`)
-  const { note } = await noteDe(v)
+  // L'ordre est indispensable : sans lui `fairPrice` est null et on comparerait
+  // un prix par part au prix total demandé.
+  const { note } = await noteDe(v, { shares: o.shares })
   console.log(`  ${COULEUR[note.verdict]} ${v.key} : ${note.verdict} (${note.score}/100)`)
-  console.log(`  prix demandé ${XRP(o.price)} XRP · prix « juste » selon l'analyste ${XRP(note.fairPrice ?? 0)} XRP`)
+  console.log(`  ${o.shares} parts · prix demandé ${XRP(o.price)} XRP`
+    + ` · prix « juste » selon l'analyste ${note.fairPrice == null ? 'n/a (parts non transférables)' : `${XRP(note.fairPrice)} XRP`}`)
   for (const s of note.signaux) console.log(`  ${PUCE[s.niveau]} ${s.titre} — ${s.detail}`)
 
   console.log(`\n─── RÈGLEMENT ───`)
@@ -177,7 +186,7 @@ async function cmdDemo() {
   await cmdVaults()
 
   // Deux offres au même prix sur deux vaults opposés : c'est le moment du pitch.
-  const sain = vaultOf('sain'), risque = vaultOf('sans-garantie')
+  const sain = vaultOf('sain'), risque = vaultOf('predateur')
   const partsSain = BigInt(sain.holders[0].shares) / 2n
   const partsRisque = BigInt(risque.holders[0].shares) / 2n
   book.post({ vaultId: sain.vaultId, seller: sain.holders[0].account, shares: partsSain, price: String(partsSain * 90n / 100n) })

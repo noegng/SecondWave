@@ -74,7 +74,9 @@ npm run cli
 | Historique (Loan disparaît au `LoanDelete`) | après le dump : timeline via `account_tx` |
 | Fiche DevX jury (first-loss ≠ CoverAvailable) | **fait** — [FEEDBACK_XLS65_XLS66.md](./FEEDBACK_XLS65_XLS66.md) |
 
-Point d'entrée : `analyzeOffer(adaptCase(rawLedgerJson))`.
+Deux points d'entrée : `analyse({ graph, holders, order, meta })` sur un graphe
+`core.readVaultGraph` (c'est celui que le CLI et le runner utilisent), et
+`analyzeOffer(adaptCase(rawLedgerJson))` sur du JSON ledger brut.
 
 ## Réseau
 
