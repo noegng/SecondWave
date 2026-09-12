@@ -1,0 +1,506 @@
+{
+  "name": "x",
+  "secs": 445,
+  "rows": [
+    {
+      "id": "X0",
+      "title": "VaultCreate",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/E49EE39B78F283A31341B10B44BA514C6ECA394298F7811E549422134F8E2EB2"
+    },
+    {
+      "id": "X0.dep",
+      "title": "XD dépose 40 XRP",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/4628D77C1EF02AB315015F378BD8809BD05639DEB9FCC984103446FF52DAEEEB"
+    },
+    {
+      "id": "X0.bk",
+      "title": "broker 10000/50000 fee 1000",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/ADEA6C52D67F451B5B9328AE779AB0D97C583BAEE86ABDC0CBA41AC030F57FD8"
+    },
+    {
+      "id": "X0.cover",
+      "title": "CoverDeposit 5 XRP",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/E8056285A8A281B088037F5FBBA24C71A7ED2BFC47338C1067302C74BFA88637"
+    },
+    {
+      "id": "X1.coverMin",
+      "title": "LoanBrokerSet update coverMin",
+      "sent": "{\"CoverRateMinimum\":20000}",
+      "code": "LoanBrokerSet: CoverRateMinimum and CoverRateLiquidation must both be zero or both be non-zero",
+      "message": "LoanBrokerSet: CoverRateMinimum and CoverRateLiquidation must both be zero or both be non-zero",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "X1.coverLiq",
+      "title": "LoanBrokerSet update coverLiq",
+      "sent": "{\"CoverRateLiquidation\":60000}",
+      "code": "LoanBrokerSet: CoverRateMinimum and CoverRateLiquidation must both be zero or both be non-zero",
+      "message": "LoanBrokerSet: CoverRateMinimum and CoverRateLiquidation must both be zero or both be non-zero",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "X1.debtMax",
+      "title": "LoanBrokerSet update debtMax",
+      "sent": "{\"DebtMaximum\":\"50000000\"}",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/2C6971CF317FA72738BC76D6B6B38CF66648D74C08449F24DCA72179D8E72169"
+    },
+    {
+      "id": "X1.fee",
+      "title": "LoanBrokerSet update fee",
+      "sent": "{\"ManagementFeeRate\":500}",
+      "code": "Transaction failed, temINVALID: The transaction is ill-formed.",
+      "message": "Transaction failed, temINVALID: The transaction is ill-formed.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "X1.data",
+      "title": "LoanBrokerSet update data",
+      "sent": "{\"Data\":\"6D616A\"}",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/E39BD6AD0EBE6D8FB9BE3836EB9A5FA9BCF54C8159A1360A3274D96869A3E382"
+    },
+    {
+      "id": "X1",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "broker après updates: min=10000 liq=50000 debtMax=50000000 fee=1000 Data=6D616A",
+      "url": ""
+    },
+    {
+      "id": "X6.gap179",
+      "title": "gap 179s (serveur)",
+      "sent": "",
+      "code": "temMALFORMED",
+      "message": "",
+      "verdict": "",
+      "note": "Malformed transaction.",
+      "url": ""
+    },
+    {
+      "id": "X6.gap31y",
+      "title": "gap 31 ans (serveur)",
+      "sent": "",
+      "code": "temMALFORMED",
+      "message": "",
+      "verdict": "",
+      "note": "Malformed transaction.",
+      "url": ""
+    },
+    {
+      "id": "X6.nodates",
+      "title": "VaultKind 1 sans dates (serveur)",
+      "sent": "",
+      "code": "temMALFORMED",
+      "message": "",
+      "verdict": "",
+      "note": "Malformed transaction.",
+      "url": ""
+    },
+    {
+      "id": "X6.kind2",
+      "title": "VaultKind 2 (serveur)",
+      "sent": "",
+      "code": "temMALFORMED",
+      "message": "",
+      "verdict": "",
+      "note": "Malformed transaction.",
+      "url": ""
+    },
+    {
+      "id": "X6.kind0",
+      "title": "VaultKind 0 explicite + dates (serveur)",
+      "sent": "",
+      "code": "temMALFORMED",
+      "message": "",
+      "verdict": "",
+      "note": "Malformed transaction.",
+      "url": ""
+    },
+    {
+      "id": "X6.scaleXRP",
+      "title": "Scale 6 sur XRP (serveur)",
+      "sent": "",
+      "code": "temMALFORMED",
+      "message": "",
+      "verdict": "",
+      "note": "Malformed transaction.",
+      "url": ""
+    },
+    {
+      "id": "X6.domNoFlag",
+      "title": "DomainID sans tfVaultPrivate (serveur)",
+      "sent": "",
+      "code": "temMALFORMED",
+      "message": "",
+      "verdict": "",
+      "note": "Malformed transaction.",
+      "url": ""
+    },
+    {
+      "id": "X6.oneRate",
+      "title": "CoverRateMinimum seul non nul (serveur)",
+      "sent": "",
+      "code": "temINVALID → jamais validé",
+      "message": "",
+      "verdict": "",
+      "note": "The transaction is ill-formed.",
+      "url": ""
+    },
+    {
+      "id": "X6.fee20k",
+      "title": "ManagementFeeRate 20000 (serveur)",
+      "sent": "",
+      "code": "temINVALID → jamais validé",
+      "message": "",
+      "verdict": "",
+      "note": "The transaction is ill-formed.",
+      "url": ""
+    },
+    {
+      "id": "X3.loan",
+      "title": "LoanSet 10 XRP interval 150 total 2 (service 0.01, late 0.05)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/AF201D6E8D93942760F500D4AC40AD1933FA16FE15479D992BF091C88BF39FCF"
+    },
+    {
+      "id": "X3",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan: PeriodicPayment=5000017.836765632213 Next=842530012 (dans 150s) TVO=10000036 MgmtFeeOut=undefined",
+      "url": ""
+    },
+    {
+      "id": "X3.early",
+      "title": "LoanPay 5010018 drops AVANT l'échéance (échéance+service)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/AD26577DD19E9AAAEDB8D2A7675F210616A373E71E4CF07867A3B38ED5955AA7"
+    },
+    {
+      "id": "X3.flux",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "delta XB=-5010019 pseudoVault=5000018 pseudoBroker=0 XO=10000 | AssetsTotal=40000024 AssetsAvailable=35000018",
+      "url": ""
+    },
+    {
+      "id": "X3.flux",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan après: {\"Borrower\":\"rUjMT2567SzPizU8D9ipwd6sr61nWUxj4G\",\"Flags\":0,\"GracePeriod\":60,\"InterestRate\":50000,\"LatePaymentFee\":\"50000\",\"LedgerEntryType\":\"Loan\",\"LoanBrokerID\":\"A709C7949E50641791B918FE3A641074AD7EB8789BB9FD0F2388525CA8D9B2F3\",\"LoanBrokerNode\":\"0\",\"LoanSequence\":1,\"LoanServiceFee\":\"10000\",\"NextPaymentDueDate\":842530162,\"OwnerNode\":\"0\",\"PaymentInterval\":150,\"PaymentRemaining\":1,\"PeriodicPayment\":\"5000017.836765632213\",\"PreviousPaymentDueDate\":842530012,\"PreviousTxnID\":\"AD26577DD19E9AAAEDB8D2A7675F210616A373E71E4CF07867A3B38ED5955AA7\",\"PreviousTxnLgrSeq\":5252183,\"PrincipalOutstanding\":\"5000006\",\"StartDate\":842529862,\"TotalValueOutstanding\":\"5000018\",\"index\":\"F035AAFBDFB6678A0B196E554B8BF0B1F1C7F7B1CE48D359FE37241836B189BB\"}",
+      "url": ""
+    },
+    {
+      "id": "X4.loan",
+      "title": "LoanSet 5 XRP avec Flags=tfLoanOverpayment",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "Flags objet=262144",
+      "url": "https://devnet.xrpl.org/transactions/DE1531CADFD63C2952714BA9DFDF3EC201F0AEACE504158CD4A25A0638617184"
+    },
+    {
+      "id": "X4.over",
+      "title": "LoanPay 3 XRP flag tfLoanOverpayment (avant échéance)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/958022BDEE129266E859046832F340959DA93028B2B106325EED44B8BD6C1BC6"
+    },
+    {
+      "id": "X4",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan après overpay: {\"Borrower\":\"rUjMT2567SzPizU8D9ipwd6sr61nWUxj4G\",\"Flags\":262144,\"GracePeriod\":60,\"InterestRate\":50000,\"LedgerEntryType\":\"Loan\",\"LoanBrokerID\":\"A709C7949E50641791B918FE3A641074AD7EB8789BB9FD0F2388525CA8D9B2F3\",\"LoanBrokerNode\":\"0\",\"LoanSequence\":2,\"NextPaymentDueDate\":842530281,\"OwnerNode\":\"0\",\"PaymentInterval\":200,\"PaymentRemaining\":1,\"PeriodicPayment\":\"2000022.305727050358\",\"PreviousPaymentDueDate\":842530081,\"PreviousTxnID\":\"958022BDEE129266E859046832F340959DA93028B2B106325EED44B8BD6C1BC6\",\"PreviousTxnLgrSeq\":5252187,\"PrincipalOutstanding\":\"2000016\",\"StartDate\":842529881,\"TotalValueOutstanding\":\"2000023\",\"index\":\"4B21400F1969D618AEBDFE22BE2BB8EDF134D7407DDF8868A2555AF43BAD5203\"}",
+      "url": ""
+    },
+    {
+      "id": "X4.full",
+      "title": "LoanPay TVO complet (2000023) flag tfLoanFullPayment",
+      "sent": "",
+      "code": "tecKILLED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/E957E2A7DBD6EA7CA771E5D046CC11EED78F79AA9A7D96C5C6959A068B09F08F"
+    },
+    {
+      "id": "X4.obj",
+      "title": "objet après full payment",
+      "sent": "",
+      "code": "TOUJOURS LÀ TVO=2000023 Flags=262144",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "X2.m70",
+      "title": "fin à red−70s",
+      "sent": "interval=450",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/70E90F4CCEF5276EE2B79B9C6004B2653E2AA0E839420F67769938A143DF5C9C"
+    },
+    {
+      "id": "X2.m85",
+      "title": "fin à red−85s",
+      "sent": "interval=425",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/F4A92F2889E358EDCF1FAB607B054BCEB184DBD8E9ED2CC642444C74F89DD265"
+    },
+    {
+      "id": "X2.m90",
+      "title": "fin à red−90s",
+      "sent": "interval=413",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/3FF10F5566F8B6C51A9CBEEBBBB3918388FC018F281B6E6989BAF3CBFBCD0CC1"
+    },
+    {
+      "id": "X2.m95",
+      "title": "fin à red−95s",
+      "sent": "interval=401",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/59DB2C338C3CF05B8CF58B5B93ECC7B46D28D1841FB0A58BFB245C2883243F4E"
+    },
+    {
+      "id": "X2.m105",
+      "title": "fin à red−105s",
+      "sent": "interval=384",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/ECD9EF02708887B9831E3EA5BADAFBD8A242D9E7C4193EFF044B22803987C7B7"
+    },
+    {
+      "id": "X2.m119",
+      "title": "fin à red−119s",
+      "sent": "interval=363",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/BABDE44C3BC6008B9EE80A266A73DFBA7F331801EE01AB62AA18A2D8BF39B96F"
+    },
+    {
+      "id": "X7",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "debt=9500022 cover=5000000 minRate=10000 → plancher supposé (1/1e5) = 950002",
+      "url": ""
+    },
+    {
+      "id": "X7.toFloor",
+      "title": "CoverWithdraw 4049998 (laisse pile le plancher)",
+      "sent": "",
+      "code": "tecINSUFFICIENT_FUNDS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/A65F12C633C276A910FEF5A799F48361E1AB51675985D518456B44916ADF0B97"
+    },
+    {
+      "id": "X7.one",
+      "title": "CoverWithdraw 1 drop de plus",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/6F29D8E569CED739E32327729F5F8607372495AA49DDF8505260B563395FEAB1"
+    },
+    {
+      "id": "X7",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "CoverAvailable final=4999999 (plancher supposé 950002)",
+      "url": ""
+    },
+    {
+      "id": "X5.sl",
+      "title": "SignerListSet 2-of-2 sur XO",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/0D4F709B535E7843BF89BB1027FFE289ACD40BD6BC7ABCBF09A5104D353BFADF"
+    },
+    {
+      "id": "X5.cpm",
+      "title": "LoanSet multisig CPM\\0 (tri binaire)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "The transaction was applied. Only final in a validated ledger.",
+      "url": ""
+    },
+    {
+      "id": "X3.lateNoFlag",
+      "title": "LoanPay APRÈS échéance SANS flag",
+      "sent": "",
+      "code": "tecEXPIRED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/57623D7FE4B884C3674E44448993998D94E2F3A30CF7CEC4249E8AC72A765BD2"
+    },
+    {
+      "id": "X3.lateFlag",
+      "title": "LoanPay APRÈS échéance AVEC tfLoanLatePayment",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/CC875E06C91F72DACEF06435ECD2BA0FC82588EA1DAA46B0AEE013F81B27E1E1"
+    },
+    {
+      "id": "X3.late",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "delta XB=-5060019 pseudoVault=5000018 pseudoBroker=0 XO=60000 (late fee 0.05 XRP → qui ?)",
+      "url": ""
+    },
+    {
+      "id": "X3.late",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan après retard payé: {\"Borrower\":\"rUjMT2567SzPizU8D9ipwd6sr61nWUxj4G\",\"Flags\":0,\"GracePeriod\":60,\"InterestRate\":50000,\"LatePaymentFee\":\"50000\",\"LedgerEntryType\":\"Loan\",\"LoanBrokerID\":\"A709C7949E50641791B918FE3A641074AD7EB8789BB9FD0F2388525CA8D9B2F3\",\"LoanBrokerNode\":\"0\",\"LoanSequence\":1,\"LoanServiceFee\":\"10000\",\"OwnerNode\":\"0\",\"PaymentInterval\":150,\"PeriodicPayment\":\"5000017.836765632213\",\"PreviousPaymentDueDate\":842530162,\"PreviousTxnID\":\"CC875E06C91F72DACEF06435ECD2BA0FC82588EA1DAA46B0AEE013F81B27E1E1\",\"PreviousTxnLgrSeq\":5252271,\"StartDate\":842529862,\"index\":\"F035AAFBDFB6678A0B196E554B8BF0B1F1C7F7B1CE48D359FE37241836B189BB\"}",
+      "url": ""
+    },
+    {
+      "id": "X8",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "L4: Principal=5000000 Next=842528352 (retard 1831s) Flags=0",
+      "url": ""
+    },
+    {
+      "id": "X8.cure",
+      "title": "LoanPay tardif AVEC flag sur prêt abandonné (Redemption)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/37AC3706931E6AC4C8E810C3F24350373B10A9EB68FA186242159E10A572DCFA"
+    },
+    {
+      "id": "X8.impair",
+      "title": "tfLoanImpair en Redemption",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/E991907D9CD1B8A177FD7342AB1DC6FF66EBBC657DD4445873AF47FF486EC52D"
+    },
+    {
+      "id": "X8.default",
+      "title": "tfLoanDefault en Redemption (cover 0, D déjà sorti à 82%)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/235D31E0F3761C88B2CE77563254D003D30F0E0DD3183385C80DEF3713A08CBD"
+    },
+    {
+      "id": "X8",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault G1: AssetsTotal 9000024→6500018 AssetsAvailable 2500018→2500018 parts=9000000",
+      "url": ""
+    }
+  ]
+}

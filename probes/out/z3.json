@@ -1,0 +1,96 @@
+{
+  "name": "z3",
+  "secs": 305,
+  "rows": [
+    {
+      "id": "Z3.loan",
+      "title": "LoanSet 6 XRP interval 60 total 2 grace 60",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/266C13FD59D7B72B735705F40A3CF75EF7948BD7BF3907B46960D5A68890699A"
+    },
+    {
+      "id": "Z3",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "créé: Next=842537411 (now=842537345, due dans 66s) Periodic=3000004.280822110996",
+      "url": ""
+    },
+    {
+      "id": "Z3",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "pay à now=842537407 (due-4s wall)",
+      "url": ""
+    },
+    {
+      "id": "Z3.pay",
+      "title": "LoanPay 4 XRP (généreux) à wall≈due+2",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/FB81006ABF5EE3278F630B0CBF89529433A9046D93EBE11CF97A626D2C7FE136"
+    },
+    {
+      "id": "Z3.meta",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "rBVWPZrD: 3000005 | rfRw2t9e: -3000006 | Loan(ModifiedNode): {\"Borrower\":\"rfRw2t9e848Ea5j6YuCgvht3zM199HpfH\",\"Flags\":0,\"GracePeriod\":60,\"InterestRate\":50000,\"LoanBrokerID\":\"77593B17D33C67D4E41E929E174D191826F8C26755B5A315C62CE2E648D582AD\",\"LoanBrokerNode\":\"0\",\"LoanSequence\":1,\"NextPaymentDueDate\":842537471,\"OwnerNode\":\"0\",\"PaymentInterval\":60,\"PaymentRemaining\":1,\"PeriodicPayment\":\"3000004.280822110996\",\"PreviousPaymentDueDate\":842537411,\"PrincipalOutstanding\":\"3000002\",\"StartDate\":842537351,\"TotalValueOutstanding\":\"3000004\"}",
+      "url": ""
+    },
+    {
+      "id": "Z3",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan APRÈS pay (JSON complet): {\"Borrower\":\"rfRw2t9e848Ea5j6YuCgvht3zM199HpfH\",\"Flags\":0,\"GracePeriod\":60,\"InterestRate\":50000,\"LedgerEntryType\":\"Loan\",\"LoanBrokerID\":\"77593B17D33C67D4E41E929E174D191826F8C26755B5A315C62CE2E648D582AD\",\"LoanBrokerNode\":\"0\",\"LoanSequence\":1,\"NextPaymentDueDate\":842537471,\"OwnerNode\":\"0\",\"PaymentInterval\":60,\"PaymentRemaining\":1,\"PeriodicPayment\":\"3000004.280822110996\",\"PreviousPaymentDueDate\":842537411,\"PreviousTxnID\":\"FB81006ABF5EE3278F630B0CBF89529433A9046D93EBE11CF97A626D2C7FE136\",\"PreviousTxnLgrSeq\":5254382,\"PrincipalOutstanding\":\"3000002\",\"StartDate\":842537351,\"TotalValueOutstanding\":\"3000004\",\"index\":\"8CB649BC68DA2C4C000705A682FEDDDBED514F01803E9F841C2337209C6A54F4\"}",
+      "url": ""
+    },
+    {
+      "id": "Z3.impair",
+      "title": "tfLoanImpair",
+      "sent": "now=842537551",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/648BD02E43B944B382C88A1D28E40D778DDE6A140BECA5F93A97EEDA45B88B5B"
+    },
+    {
+      "id": "Z3.default",
+      "title": "tfLoanDefault",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/A48A532083F87575854646243000C8E20B5DC3896090DCE39FE5F767B35A6B8B"
+    },
+    {
+      "id": "Z3",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan final: {\"Borrower\":\"rfRw2t9e848Ea5j6YuCgvht3zM199HpfH\",\"Flags\":196608,\"GracePeriod\":60,\"InterestRate\":50000,\"LedgerEntryType\":\"Loan\",\"LoanBrokerID\":\"77593B17D33C67D4E41E929E174D191826F8C26755B5A315C62CE2E648D582AD\",\"LoanBrokerNode\":\"0\",\"LoanSequence\":1,\"OwnerNode\":\"0\",\"PaymentInterval\":60,\"PeriodicPayment\":\"3000004.280822110996\",\"PreviousPaymentDueDate\":842537411,\"PreviousTxnID\":\"A48A532083F87575854646243000C8E20B5DC3896090DCE39FE5F767B35A6B8B\",\"PreviousTxnLgrSeq\":5254427,\"StartDate\":842537351,\"index\":\"8CB649BC68DA2C4C000705A682FEDDDBED514F01803E9F841C2337209C6A54F4\"}",
+      "url": ""
+    }
+  ]
+}

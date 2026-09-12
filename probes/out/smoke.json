@@ -1,0 +1,46 @@
+{
+  "name": "smoke",
+  "secs": 22,
+  "rows": [
+    {
+      "id": "S1",
+      "title": "VaultCreate open-ended (smoke)",
+      "sent": "VaultCreate XRP",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/8C62B0D0557E2360161ACA70CA47A2EA81955B990425EEE37F3C056F2AC6D755"
+    },
+    {
+      "id": "S1",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vaultId=9AE176E6512FBE85669E55334B69513432A2BFD661B4893CFD8D6892E29FA52D mptId=00000001C2E6037657A2F04357DBB92B6A08D675703FA6A2 LEVersion=1 VaultKind=(absent)",
+      "url": ""
+    },
+    {
+      "id": "S2",
+      "title": "longlived dépose 10 XRP",
+      "sent": "VaultDeposit 10 XRP",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/645A0EF32B90D56D9BFEE1AB1491C35ED7C1AE39ED0C3F54C7A88A8F0204C6BD"
+    },
+    {
+      "id": "S3",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "ledger courant=5251550, AccountDelete possible vers ledger 5251804",
+      "url": ""
+    }
+  ]
+}

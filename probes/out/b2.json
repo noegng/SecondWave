@@ -1,0 +1,136 @@
+{
+  "name": "b2",
+  "secs": 420,
+  "rows": [
+    {
+      "id": "B2.0",
+      "title": "VaultCreate",
+      "sent": "sub=842529712 red=842529952",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/25E48E97DB20EBFBFCC1706A6A76E253B1DAFC43E26BE0E8718EA4C8C15B88C4"
+    },
+    {
+      "id": "B2.0",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "5 déposants provisionnés en Subscription",
+      "url": ""
+    },
+    {
+      "id": "22.dep.-2",
+      "title": "22.dep à t-2s",
+      "sent": "soumis à -1s, prelim tesSUCCESS",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "ledger 5252140 close_time=842529712 (close−frontière=0s)",
+      "url": ""
+    },
+    {
+      "id": "22.dep.-1",
+      "title": "22.dep à t-1s",
+      "sent": "soumis à -1s, prelim tesSUCCESS",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "ledger 5252140 close_time=842529712 (close−frontière=0s)",
+      "url": ""
+    },
+    {
+      "id": "22.dep.0",
+      "title": "22.dep à t+0s",
+      "sent": "soumis à 1s, prelim tesSUCCESS",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "ledger 5252141 close_time=842529720 (close−frontière=8s)",
+      "url": ""
+    },
+    {
+      "id": "22.dep.1",
+      "title": "22.dep à t+1s",
+      "sent": "soumis à 1s, prelim tesSUCCESS",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "ledger 5252141 close_time=842529720 (close−frontière=8s)",
+      "url": ""
+    },
+    {
+      "id": "22.dep.2",
+      "title": "22.dep à t+2s",
+      "sent": "soumis à 2s, prelim tesSUCCESS",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "ledger 5252141 close_time=842529720 (close−frontière=8s)",
+      "url": ""
+    },
+    {
+      "id": "23.wd.-2",
+      "title": "23.wd à t-2s",
+      "sent": "soumis à -2s, prelim tecTOO_SOON",
+      "code": "tecTOO_SOON",
+      "message": "",
+      "verdict": "",
+      "note": "ledger 5252207 close_time=842529951 (close−frontière=-1s)",
+      "url": ""
+    },
+    {
+      "id": "23.wd.-1",
+      "title": "23.wd à t-1s",
+      "sent": "soumis à 0s, prelim tecTOO_SOON",
+      "code": "tecTOO_SOON",
+      "message": "",
+      "verdict": "",
+      "note": "ledger 5252208 close_time=842529960 (close−frontière=8s)",
+      "url": ""
+    },
+    {
+      "id": "23.wd.0",
+      "title": "23.wd à t+0s",
+      "sent": "soumis à 0s, prelim tecTOO_SOON",
+      "code": "tecTOO_SOON",
+      "message": "",
+      "verdict": "",
+      "note": "ledger 5252208 close_time=842529960 (close−frontière=8s)",
+      "url": ""
+    },
+    {
+      "id": "23.wd.1",
+      "title": "23.wd à t+1s",
+      "sent": "soumis à 3s, prelim tecTOO_SOON",
+      "code": "tecTOO_SOON",
+      "message": "",
+      "verdict": "",
+      "note": "ledger 5252208 close_time=842529960 (close−frontière=8s)",
+      "url": ""
+    },
+    {
+      "id": "23.wd.2",
+      "title": "23.wd à t+2s",
+      "sent": "soumis à 3s, prelim tecTOO_SOON",
+      "code": "tecTOO_SOON",
+      "message": "",
+      "verdict": "",
+      "note": "ledger 5252208 close_time=842529960 (close−frontière=8s)",
+      "url": ""
+    },
+    {
+      "id": "B2",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "dernier ledger: 5252210 close_time=842529962 close_time_resolution=10 | rippleNow=842529967",
+      "url": ""
+    }
+  ]
+}

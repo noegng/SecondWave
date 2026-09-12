@@ -55,24 +55,35 @@ const wait = v.subscriptionDate - rippleNow() + 10
 if (wait > 0) { console.log(`  ${wait}s…`); await sleep(wait * 1000) }
 
 console.log('\n━━━ 3. LoanSet (fix CPT via core.counterpartySign) ━━━')
+// ⚠️ `principal` est en DROPS (comme partout dans @secondwave/vault). Écrire
+// `principal: 6` = un prêt de 6 drops — c'est ce bug qui a produit les deux runs
+// « anormaux » de l'annexe Z (LoanPay 4 XRP ≥ TVO 6 drops ⇒ prêt soldé d'un coup).
 const loan = await createLoan(c, borrower, owner, b.brokerId, {
-  principal: 6, paymentInterval: 60, paymentTotal: 2, gracePeriod: 60, interestRate: 50000,
+  principal: XRP(6), paymentInterval: 60, paymentTotal: 2, gracePeriod: 60, interestRate: 50000,
   redemptionDate: v.redemptionDate,
 })
 check('LoanSet co-signé accepté', loan.ok, loan.result)
 if (!loan.loanId) { console.log(`\n❌ pas de prêt (${loan.result} ${loan.message ?? ''}) — arrêt.`); await c.disconnect(); process.exit(1) }
 
-console.log('\n━━━ 4. LoanPay (1re échéance) ━━━')
-await sleep(62000)
-const pay = await payLoan(c, borrower, loan.loanId, XRP(4))
-check('LoanPay', pay.ok, pay.result)
+console.log('\n━━━ 4. LoanPay (1re échéance, payée EN AVANCE dans la période) ━━━')
+// ⚠️ Déterminisme : on paie le périodique EXACT, tôt dans la période — jamais au
+// bord de l'échéance. La fenêtre se ferme À la due date en TEMPS LEDGER (retard
+// 5-12s sur l'horloge murale [B2/X2]) : payer « vers » la due est une loterie.
+// (Deux runs au bord ont produit un état de prêt anormal — voir RESULTATS annexe Z.)
+const lNow = (await readVaultGraph(c, v.vaultId)).brokers[0].loans[0]
+const duePay = Math.ceil(Number(lNow.PeriodicPayment))
+const pay = await payLoan(c, borrower, loan.loanId, String(duePay))
+check('LoanPay (périodique exact, en avance)', pay.ok, `${pay.result} (${duePay} drops)`)
 
 console.log('\n━━━ 5. Impairment puis défaut ━━━')
 const g1 = await readVaultGraph(c, v.vaultId)
 const l = g1.brokers[0].loans[0]
-const target = Number(l.NextPaymentDueDate) + Number(l.GracePeriod) + 8
+// ⚠️ marge 20s, pas 8 : le check du protocole se fait en TEMPS LEDGER (close time
+// parente, résolution 10s) qui traîne de 5 à 12s sur l'horloge murale [B2/X2].
+const target = Number(l.NextPaymentDueDate) + Number(l.GracePeriod) + 20
 let d = target - rippleNow()
-if (d > 0) { console.log(`  attente ${d}s (échéance + grâce)…`); await sleep(d * 1000) }
+if (d > 0) { console.log(`  attente ${d}s (échéance + grâce + marge ledger)…`); await sleep(d * 1000) }
+console.log(`  loan avant impair : Next=${l.NextPaymentDueDate} Grace=${l.GracePeriod} PayRemaining=${l.PaymentRemaining} Flags=${l.Flags} (now=${rippleNow()})`)
 const imp = await impair(c, owner, loan.loanId)
 check('tfLoanImpair accepté', imp.ok, imp.result)
 const g2 = await readVaultGraph(c, v.vaultId)

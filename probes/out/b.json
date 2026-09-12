@@ -1,0 +1,486 @@
+{
+  "name": "b",
+  "secs": 699,
+  "rows": [
+    {
+      "id": "B0",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "sub=842527993 red=842528413 (subscription 200s, investment 420s)",
+      "url": ""
+    },
+    {
+      "id": "B0",
+      "title": "VaultCreate V1 closed-ended",
+      "sent": "VaultCreate VaultKind:1",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/A8EA3CAF37146761E67D105F95491E27205C8B9BAB061F0E805EAF01DFC5F583"
+    },
+    {
+      "id": "B0",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vaults vides pour VaultDelete: 66E186E1 6FFF733C 90DA738A",
+      "url": ""
+    },
+    {
+      "id": "21.dep.Subscription",
+      "title": "VaultDeposit en Subscription",
+      "sent": "VaultDeposit 10 XRP par D",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/EAA79681D1E670FA1ECED62CA7573E1D88D5DB9FE6B982333A89607E089DE8F3"
+    },
+    {
+      "id": "21.wd.Subscription",
+      "title": "VaultWithdraw en Subscription",
+      "sent": "VaultWithdraw 1e6 parts par D",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/DA01B4ECA0E0D3CA9A2DBB0281D6AA5FE27AE55E41CFD9FAFC44C965C606672B"
+    },
+    {
+      "id": "21.set.Subscription",
+      "title": "VaultSet (Data) en Subscription",
+      "sent": "VaultSet Data",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/EB23E36FA834D2043353D8F84C4602DAFCB89E9F28309E4F999C34C0DCB28EF9"
+    },
+    {
+      "id": "21.del.Subscription",
+      "title": "VaultDelete (vault vide) en Subscription",
+      "sent": "VaultDelete vault vide",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/8580E72385373943DFAECE38D804F397AA245D6AB703A9D59246BA967653C58B"
+    },
+    {
+      "id": "21.bset.Subscription",
+      "title": "LoanBrokerSet en Subscription",
+      "sent": "LoanBrokerSet rates 0/0",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/B58E7AE6877001AB773515C463173FDB1BC833D802C8D81A05DAA7E7872F27A6"
+    },
+    {
+      "id": "21.lset.Subscription",
+      "title": "LoanSet en Subscription",
+      "sent": "LoanSet 3 XRP interval 60 total 2",
+      "code": "temINVALID",
+      "message": "The transaction is ill-formed.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "21.lpay.Subscription",
+      "title": "LoanPay en Subscription",
+      "sent": "LoanPay",
+      "code": "n/a",
+      "message": "",
+      "verdict": "structurel",
+      "note": "aucun prêt ne peut exister dans cette phase",
+      "url": ""
+    },
+    {
+      "id": "26.S+.Subscription",
+      "title": "VaultSet repousser SubscriptionDate en Subscription",
+      "sent": "VaultSet SubscriptionDate=842528293",
+      "code": "invalidTransaction",
+      "message": "Field 'SubscriptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "26.S-.Subscription",
+      "title": "VaultSet avancer SubscriptionDate en Subscription",
+      "sent": "VaultSet SubscriptionDate=842527933",
+      "code": "invalidTransaction",
+      "message": "Field 'SubscriptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "26.R+.Subscription",
+      "title": "VaultSet repousser RedemptionDate (enfermement !) en Subscription",
+      "sent": "VaultSet RedemptionDate=842529013",
+      "code": "invalidTransaction",
+      "message": "Field 'RedemptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "26.R-.Subscription",
+      "title": "VaultSet avancer RedemptionDate en Subscription",
+      "sent": "VaultSet RedemptionDate=842528353",
+      "code": "invalidTransaction",
+      "message": "Field 'RedemptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "25.create",
+      "title": "VaultCreate open-ended",
+      "sent": "sans VaultKind",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/1EEAB4662A8A8C1A997FBD2F7CA8FBAB506C652C2B1ECD395C0D87216D8B2F3D"
+    },
+    {
+      "id": "25.dep",
+      "title": "deposit open-ended",
+      "sent": "VaultDeposit 5 XRP",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/582CC4D9EFD521E4BEEFA3EF216517D9039726D7CCAAEA163DE6D04C840EAC61"
+    },
+    {
+      "id": "25.wd",
+      "title": "withdraw open-ended",
+      "sent": "VaultWithdraw 1e6 parts",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/5034AA41522D788C694D2F624D6F0FFB6B366DC5A84FEA2220D22852EAC74982"
+    },
+    {
+      "id": "25.set",
+      "title": "VaultSet open-ended",
+      "sent": "VaultSet Data",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/642F4D170D91DDD8B9B0016C4DDB4EAEF713CE612581F022B5CB24DE6D03C7DC"
+    },
+    {
+      "id": "25.bset",
+      "title": "LoanBrokerSet open-ended (attendu tecNO_PERMISSION)",
+      "sent": "LoanBrokerSet",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/E5532C1835C219BD313A10C8DB7073579DAE415D4A5C027261D4BCC5DE5D5AAB"
+    },
+    {
+      "id": "25.dates",
+      "title": "VaultSet dates sur open-ended",
+      "sent": "VaultSet SubscriptionDate",
+      "code": "invalidTransaction",
+      "message": "Field 'SubscriptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "21.dep.Investment",
+      "title": "VaultDeposit en Investment",
+      "sent": "VaultDeposit 10 XRP par D",
+      "code": "tecEXPIRED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/2CBB150EA5406ACFBA5340D2C50FC563EBF3E2D6B175F7ACDA06EFCECDB1C957"
+    },
+    {
+      "id": "21.wd.Investment",
+      "title": "VaultWithdraw en Investment",
+      "sent": "VaultWithdraw 1e6 parts par D",
+      "code": "tecTOO_SOON",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/4B4C76ED9571725FDE9E3BEB64C226102825D523E6E27B7A74381359587CADEA"
+    },
+    {
+      "id": "21.set.Investment",
+      "title": "VaultSet (Data) en Investment",
+      "sent": "VaultSet Data",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/1FB2AA9F3AE013FCFB38F94DC90DA8D6F9D841251F04B661F160292330E8FB41"
+    },
+    {
+      "id": "21.del.Investment",
+      "title": "VaultDelete (vault vide) en Investment",
+      "sent": "VaultDelete vault vide",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/693DBA66B9DBB75E121F6B33D58DE89D32AF2CEAC97661216AE476EBDA6CAB3F"
+    },
+    {
+      "id": "21.bset.Investment",
+      "title": "LoanBrokerSet en Investment",
+      "sent": "LoanBrokerSet rates 0/0",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/A8715B69A613A2CD9395F94C96CCE7F25131F6DB9DDA575996A72E2517372EA6"
+    },
+    {
+      "id": "21.lset.Investment",
+      "title": "LoanSet en Investment",
+      "sent": "LoanSet 3 XRP interval 60 total 2",
+      "code": "temINVALID",
+      "message": "The transaction is ill-formed.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "21.lpay.Investment",
+      "title": "LoanPay en Investment",
+      "sent": "LoanPay",
+      "code": "n/a",
+      "message": "",
+      "verdict": "structurel",
+      "note": "aucun prêt ne peut exister dans cette phase",
+      "url": ""
+    },
+    {
+      "id": "26.S+.Investment",
+      "title": "VaultSet repousser SubscriptionDate en Investment",
+      "sent": "VaultSet SubscriptionDate=842528293",
+      "code": "invalidTransaction",
+      "message": "Field 'SubscriptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "26.S-.Investment",
+      "title": "VaultSet avancer SubscriptionDate en Investment",
+      "sent": "VaultSet SubscriptionDate=842527933",
+      "code": "invalidTransaction",
+      "message": "Field 'SubscriptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "26.R+.Investment",
+      "title": "VaultSet repousser RedemptionDate (enfermement !) en Investment",
+      "sent": "VaultSet RedemptionDate=842529013",
+      "code": "invalidTransaction",
+      "message": "Field 'RedemptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "26.R-.Investment",
+      "title": "VaultSet avancer RedemptionDate en Investment",
+      "sent": "VaultSet RedemptionDate=842528353",
+      "code": "invalidTransaction",
+      "message": "Field 'RedemptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "21.dep.Redemption",
+      "title": "VaultDeposit en Redemption",
+      "sent": "VaultDeposit 10 XRP par D",
+      "code": "tecEXPIRED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/5A0BB1746DEB72E54A883A9FD876E22C8232A064D177542A52600EDEA5528E3A"
+    },
+    {
+      "id": "21.wd.Redemption",
+      "title": "VaultWithdraw en Redemption",
+      "sent": "VaultWithdraw 1e6 parts par D",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/1790FA14E66AAEA67370BA8E8BF1B1C273FB2418EF23B82E3010B0BDE9678FCC"
+    },
+    {
+      "id": "21.set.Redemption",
+      "title": "VaultSet (Data) en Redemption",
+      "sent": "VaultSet Data",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/9527E2DF0DEFDE3980EDB030EA19E7805373C3B5F98DECF9DCF60ADBC26403A1"
+    },
+    {
+      "id": "21.del.Redemption",
+      "title": "VaultDelete (vault vide) en Redemption",
+      "sent": "VaultDelete vault vide",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/2032FF097C9D457AAB80B8950E983FFE1A3BD299826D3B543E420B1943C63B4B"
+    },
+    {
+      "id": "21.bset.Redemption",
+      "title": "LoanBrokerSet en Redemption",
+      "sent": "LoanBrokerSet rates 0/0",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/1B6FB98EB7AA4A5082B8B134F35248DA05F4C2F4AC5F4337246A57F3F0BA4642"
+    },
+    {
+      "id": "21.lset.Redemption",
+      "title": "LoanSet en Redemption",
+      "sent": "LoanSet 3 XRP interval 60 total 2",
+      "code": "temINVALID",
+      "message": "The transaction is ill-formed.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "21.lpay.Redemption",
+      "title": "LoanPay en Redemption",
+      "sent": "LoanPay",
+      "code": "n/a",
+      "message": "",
+      "verdict": "structurel",
+      "note": "aucun prêt ne peut exister dans cette phase",
+      "url": ""
+    },
+    {
+      "id": "26.S+.Redemption",
+      "title": "VaultSet repousser SubscriptionDate en Redemption",
+      "sent": "VaultSet SubscriptionDate=842528293",
+      "code": "invalidTransaction",
+      "message": "Field 'SubscriptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "26.S-.Redemption",
+      "title": "VaultSet avancer SubscriptionDate en Redemption",
+      "sent": "VaultSet SubscriptionDate=842527933",
+      "code": "invalidTransaction",
+      "message": "Field 'SubscriptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "26.R+.Redemption",
+      "title": "VaultSet repousser RedemptionDate (enfermement !) en Redemption",
+      "sent": "VaultSet RedemptionDate=842529013",
+      "code": "invalidTransaction",
+      "message": "Field 'RedemptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "26.R-.Redemption",
+      "title": "VaultSet avancer RedemptionDate en Redemption",
+      "sent": "VaultSet RedemptionDate=842528353",
+      "code": "invalidTransaction",
+      "message": "Field 'RedemptionDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "27.shares",
+      "title": "VaultDelete avec parts en circulation + broker",
+      "sent": "VaultDelete V1",
+      "code": "tecHAS_OBLIGATIONS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/CD6DFC677FCA49E7214AB49518768B048A2A467AEA211CC063FD344663482E88"
+    },
+    {
+      "id": "27",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "D détient 8000000 parts ; vault AssetsTotal=8000000 AssetsAvailable=8000000",
+      "url": ""
+    },
+    {
+      "id": "27.exit",
+      "title": "D retire TOUTES ses parts en Redemption (prêt en cours ?)",
+      "sent": "VaultWithdraw 8000000",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/292AE25B6466B7331F5CD744B935D20355AE2761D5B9F598F8BAC3F6561FD79D"
+    },
+    {
+      "id": "27.broker",
+      "title": "VaultDelete sans parts mais avec broker",
+      "sent": "VaultDelete V1",
+      "code": "tecHAS_OBLIGATIONS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/466A939681F56930D8B2A3DD7D53C76EC14D9D3C6A1EED3F779F8BB42D22CCD1"
+    },
+    {
+      "id": "27.bdel",
+      "title": "LoanBrokerDelete (prêt en cours ?)",
+      "sent": "LoanBrokerDelete",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/C77219D90255160F50F3E6612683534766F2FFC0CC2C5B67A8A485CFF4407307"
+    },
+    {
+      "id": "27.clean",
+      "title": "VaultDelete après suppression du broker",
+      "sent": "VaultDelete V1",
+      "code": "tecHAS_OBLIGATIONS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/ED2CD3FA5FFE706DDDB2E39DF7B7A5165E2B707BBCAD136B4EA5F7348B9A460E"
+    }
+  ]
+}

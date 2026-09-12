@@ -1,0 +1,496 @@
+{
+  "name": "a",
+  "secs": 482,
+  "rows": [
+    {
+      "id": "1",
+      "title": "open-ended (VaultKind absent)",
+      "sent": "VaultCreate minimal",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "LEVersion=1 VaultKind=(absent) champs=Account,Asset,Flags,LEVersion,LedgerEntryType,Owner,OwnerNode,PreviousTxnID,PreviousTxnLgrSeq,Sequence,ShareMPTID,WithdrawalPolicy,index,shares",
+      "url": "https://devnet.xrpl.org/transactions/78E26F99DCEB35A9CCE3A1A8A784A29396AEF0737FA1287005FDA2A2143CC05D"
+    },
+    {
+      "id": "15",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "Fee autofill=200000 drops | delta solde=-200000 drops | OwnerCount 0→3",
+      "url": ""
+    },
+    {
+      "id": "2",
+      "title": "VaultKind:1 SANS SubscriptionDate",
+      "sent": "",
+      "code": "VaultCreate: A close-ended vault requires both SubscriptionDate and RedemptionDate",
+      "message": "VaultCreate: A close-ended vault requires both SubscriptionDate and RedemptionDate",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "3",
+      "title": "VaultKind:1 SANS RedemptionDate",
+      "sent": "",
+      "code": "VaultCreate: A close-ended vault requires both SubscriptionDate and RedemptionDate",
+      "message": "VaultCreate: A close-ended vault requires both SubscriptionDate and RedemptionDate",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "4",
+      "title": "SubscriptionDate dans le passé",
+      "sent": "sub=now-600 red=now+300",
+      "code": "tecEXPIRED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/A8D3BC2860322F8DC97A2D97E2E7FAFAD14CA8B28963F942D9BFF7ACE54D89DF"
+    },
+    {
+      "id": "4b",
+      "title": "les DEUX dates dans le passé",
+      "sent": "sub=now-900 red=now-300",
+      "code": "tecEXPIRED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/BED1C412C5F715C595FEFD97D285201E2BE035745FBD229C4E368B8E07F66965"
+    },
+    {
+      "id": "5",
+      "title": "RedemptionDate < SubscriptionDate",
+      "sent": "",
+      "code": "VaultCreate: RedemptionDate - SubscriptionDate must be within [180, 946708560) seconds",
+      "message": "VaultCreate: RedemptionDate - SubscriptionDate must be within [180, 946708560) seconds",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "6.g60",
+      "title": "écart sub/red = 60s",
+      "sent": "",
+      "code": "VaultCreate: RedemptionDate - SubscriptionDate must be within [180, 946708560) seconds",
+      "message": "VaultCreate: RedemptionDate - SubscriptionDate must be within [180, 946708560) seconds",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "6.g120",
+      "title": "écart sub/red = 120s",
+      "sent": "",
+      "code": "VaultCreate: RedemptionDate - SubscriptionDate must be within [180, 946708560) seconds",
+      "message": "VaultCreate: RedemptionDate - SubscriptionDate must be within [180, 946708560) seconds",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "6.g179",
+      "title": "écart sub/red = 179s",
+      "sent": "",
+      "code": "VaultCreate: RedemptionDate - SubscriptionDate must be within [180, 946708560) seconds",
+      "message": "VaultCreate: RedemptionDate - SubscriptionDate must be within [180, 946708560) seconds",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "6.g180",
+      "title": "écart sub/red = 180s",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/215D6236C94F912F49CF55A22FEA6829DD8CE783456A0636DE551E70E16A1105"
+    },
+    {
+      "id": "6.g181",
+      "title": "écart sub/red = 181s",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/78E98C3AD5D09EDB19AA73A0AE7B679554F31346321E6F9E75C31B8D876B2CC7"
+    },
+    {
+      "id": "6.g300",
+      "title": "écart sub/red = 300s",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/22B6AA975271CF59098B57430BA9998D7E449427E3EF6526AA9890DF1DE4669E"
+    },
+    {
+      "id": "7.10ans",
+      "title": "écart sub/red = 10 ans",
+      "sent": "gap=315360000s",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/683566029B9310B013C0CED10BB8E80A5A7F6233A7FBBB0A1ABF2961EE621A01"
+    },
+    {
+      "id": "7.29ans",
+      "title": "écart sub/red = 29 ans",
+      "sent": "gap=914544000s",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/A0BA3444B1EDAD39DE0EEEA416A136E0985F071A1FCE9C605CAAA1CBA69185A6"
+    },
+    {
+      "id": "7.30ans",
+      "title": "écart sub/red = 30 ans",
+      "sent": "gap=946080000s",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/B25D17285F3C9EFA6DAA4704C66CCCDB0C3F93F1E3AE6AD94DDA0FB618629D34"
+    },
+    {
+      "id": "7.31ans",
+      "title": "écart sub/red = 31 ans",
+      "sent": "gap=977616000s",
+      "code": "VaultCreate: RedemptionDate - SubscriptionDate must be within [180, 946708560) seconds",
+      "message": "VaultCreate: RedemptionDate - SubscriptionDate must be within [180, 946708560) seconds",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "8",
+      "title": "Scale:6 sur actif XRP",
+      "sent": "",
+      "code": "VaultCreate: Scale parameter must not be provided for XRP or MPT assets",
+      "message": "VaultCreate: Scale parameter must not be provided for XRP or MPT assets",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "prep.dr",
+      "title": "AccountSet DefaultRipple sur B",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/1D036A0525B688AC7BF46B7CE131E210322A765D6D2D69CA5172A8DF5F067819"
+    },
+    {
+      "id": "prep.mpt",
+      "title": "MPTokenIssuanceCreate par B",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "mpt_issuance_id=005022ECAF392ED5611CF9B50214A49D2E95AFDB37836A88",
+      "url": "https://devnet.xrpl.org/transactions/63805452477274053097964B2B443A8A907E3BC4133C5C3EF444EB139A38F296"
+    },
+    {
+      "id": "9.ctrl",
+      "title": "vault sur MPT SANS Scale (contrôle)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/0E23B04485F6A008D06D71666ACDDB05C777B2A64EC188EF593C46DE30013880"
+    },
+    {
+      "id": "9",
+      "title": "Scale:2 sur actif MPT",
+      "sent": "",
+      "code": "VaultCreate: Scale parameter must not be provided for XRP or MPT assets",
+      "message": "VaultCreate: Scale parameter must not be provided for XRP or MPT assets",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "10.s0",
+      "title": "Scale:0 sur IOU USD.B",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/6C5B7A4CE37136E09931D27A58B186410DC0F71B0DD39FCB89B82701B2046F99"
+    },
+    {
+      "id": "10.s6",
+      "title": "Scale:6 sur IOU USD.B",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/E999C6A7E4CF95EB6B4FCF1F85A4BC5FC34FC8839AC80EC5490BCF38EAAF2973"
+    },
+    {
+      "id": "10.s15",
+      "title": "Scale:15 sur IOU USD.B",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/A2445FA8574D958718E51310A180EBC473EBD170D24C741AD8B40EC3FCA8960F"
+    },
+    {
+      "id": "10.s18",
+      "title": "Scale:18 sur IOU USD.B",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/3CBE2956DB0C89321C8417DE5A137751A6424D0E55DB8E8FE47CC58EECC91427"
+    },
+    {
+      "id": "10.s19",
+      "title": "Scale:19 sur IOU USD.B",
+      "sent": "",
+      "code": "VaultCreate: Scale must be a number between 0 and 18 inclusive for IOU assets",
+      "message": "VaultCreate: Scale must be a number between 0 and 18 inclusive for IOU assets",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "10.s255",
+      "title": "Scale:255 sur IOU USD.B",
+      "sent": "",
+      "code": "VaultCreate: Scale must be a number between 0 and 18 inclusive for IOU assets",
+      "message": "VaultCreate: Scale must be a number between 0 and 18 inclusive for IOU assets",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "12.p1",
+      "title": "WithdrawalPolicy: 1",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/816EC95FD6A973793570742016BED3F332BFB2D318983EA4BD25C0EA782224F1"
+    },
+    {
+      "id": "12.p2",
+      "title": "WithdrawalPolicy: 2",
+      "sent": "",
+      "code": "Transaction failed, temMALFORMED: Malformed transaction.",
+      "message": "Transaction failed, temMALFORMED: Malformed transaction.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "12.p0",
+      "title": "WithdrawalPolicy: 0",
+      "sent": "",
+      "code": "Transaction failed, temMALFORMED: Malformed transaction.",
+      "message": "Transaction failed, temMALFORMED: Malformed transaction.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "12.p99",
+      "title": "WithdrawalPolicy: 99",
+      "sent": "",
+      "code": "Transaction failed, temMALFORMED: Malformed transaction.",
+      "message": "Transaction failed, temMALFORMED: Malformed transaction.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "13.0",
+      "title": "Data vide",
+      "sent": "",
+      "code": "VaultCreate: Data must be a hex string with an even number of characters",
+      "message": "VaultCreate: Data must be a hex string with an even number of characters",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "13.1",
+      "title": "Data 1 octet",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/FB49D10943A9C434E3F23942CB0169635194619626738FB56D799392C8131285"
+    },
+    {
+      "id": "13.256",
+      "title": "Data 256 octets",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/2FC184631731C9C0EA63D94817E5DC5AEA9271E417CD1C363DC584742FFB92D7"
+    },
+    {
+      "id": "13.257",
+      "title": "Data 257 octets",
+      "sent": "",
+      "code": "VaultCreate: Data exceeds 256 bytes (actual: 257)",
+      "message": "VaultCreate: Data exceeds 256 bytes (actual: 257)",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "14",
+      "title": "MPTokenMetadata fourni",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "sur l'issuance: RECOPIÉ",
+      "url": "https://devnet.xrpl.org/transactions/6AC4EE6C5DCA1E5DF3F3ABBC2892A89DAFF38A93D7740170B49AF7868B8F3760"
+    },
+    {
+      "id": "11.create",
+      "title": "AssetsMaximum = 10 XRP",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/7DAADD6230A615C724932A0C9C434B676781A1D85A31124A8E27D45FDA5D4167"
+    },
+    {
+      "id": "11.exact",
+      "title": "dépôt de PILE 10 XRP",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/822D0125099075336BBFBFE5A09D7CDCE9F8B84CB294D89B9A1ABEECB60AB713"
+    },
+    {
+      "id": "11.over",
+      "title": "dépôt de 1 drop de plus",
+      "sent": "",
+      "code": "tecLIMIT_EXCEEDED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/98DCC6C46D44DF54E5147ABEB3207802D492062FB5BF957B59B019A149563F96"
+    },
+    {
+      "id": "16",
+      "title": "tfVaultPrivate SANS DomainID",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "shares.Flags=60",
+      "url": "https://devnet.xrpl.org/transactions/E76E3AC764B993A8A63DE13AC71AD9CA180C910E464DAC7E6CDF57387B0C7AEA"
+    },
+    {
+      "id": "16.dep",
+      "title": "dépôt par un tiers (S) dans un privé sans domaine",
+      "sent": "",
+      "code": "tecNO_AUTH",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/CB575E89D4E261E2435E5AE672B81DF6A57C8002B3C20AA432461EC82929D46D"
+    },
+    {
+      "id": "16.own",
+      "title": "dépôt par le PROPRIÉTAIRE dans son privé sans domaine",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/127B78E327E1D9EC07A99E4C378F03086CBC4C0B438FE9AB8532D5AA752CE951"
+    },
+    {
+      "id": "17.dom",
+      "title": "PermissionedDomainSet (décor)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/15106684E88ABC16D6D2EE04EB0143905D74D0BBA711988DE5ACBD8EB942C7D7"
+    },
+    {
+      "id": "17",
+      "title": "DomainID SANS tfVaultPrivate",
+      "sent": "",
+      "code": "VaultCreate: Cannot set DomainID unless tfVaultPrivate flag is set.",
+      "message": "VaultCreate: Cannot set DomainID unless tfVaultPrivate flag is set.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "18",
+      "title": "tfVaultPrivate + DomainID inexistant",
+      "sent": "",
+      "code": "tecOBJECT_NOT_FOUND",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/8718AD15D2AD3BDF9A9310CEC5FED7E20321A43F3E85CDC12ECDAE1E042D8EDB"
+    },
+    {
+      "id": "19",
+      "title": "tfVaultShareNonTransferable",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "shares.Flags=0",
+      "url": "https://devnet.xrpl.org/transactions/453F5EBF236B36B3DEC2E649EF97E779C2F87FBDC0A5696ABFEAF534E7233252"
+    },
+    {
+      "id": "20",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "S avant: Balance=89999998 OwnerCount=1",
+      "url": ""
+    },
+    {
+      "id": "20",
+      "title": "empilement : 40 vaults créés avant refus",
+      "sent": "VaultCreate en boucle",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "après: Balance=81999998 OwnerCount=121",
+      "url": ""
+    }
+  ]
+}

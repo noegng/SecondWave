@@ -1,0 +1,406 @@
+{
+  "name": "f3",
+  "secs": 350,
+  "rows": [
+    {
+      "id": "74",
+      "title": "LoanSet avec StartDate",
+      "sent": "StartDate=now+60",
+      "code": "invalidTransaction",
+      "message": "Field 'StartDate' found in disallowed location.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "70.zero",
+      "title": "PaymentTotal: 0",
+      "sent": "",
+      "code": "temINVALID",
+      "message": "The transaction is ill-formed.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "71.g59",
+      "title": "GracePeriod 59 (borne basse)",
+      "sent": "",
+      "code": "temINVALID",
+      "message": "The transaction is ill-formed.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "71.g>i",
+      "title": "GracePeriod 301 > interval 300",
+      "sent": "",
+      "code": "temINVALID",
+      "message": "The transaction is ill-formed.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "72.rmax",
+      "title": "InterestRate 4294967295",
+      "sent": "",
+      "code": "temINVALID",
+      "message": "The transaction is ill-formed.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "63.fix",
+      "title": "co-signature via counterpartySign (CPT\\0) — pendant Investment",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/A8A1EC0892A5C1863833EE8317A231EED4E1CCE725664F464AFD68445AB3D559"
+    },
+    {
+      "id": "67",
+      "title": "PrincipalRequested 100 XRP > AssetsAvailable",
+      "sent": "",
+      "code": "tecINSUFFICIENT_FUNDS",
+      "message": "Not enough funds available to complete requested transaction.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "68",
+      "title": "PrincipalRequested 6 XRP > DebtMaximum 5 XRP",
+      "sent": "",
+      "code": "tecLIMIT_EXCEEDED",
+      "message": "Limit exceeded.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "75",
+      "title": "LoanSet avec Data=\"coucou\"",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "Data sur l'objet Loan: (ABSENT de l'objet)",
+      "url": "https://devnet.xrpl.org/transactions/1634B565376D44084DC29F94ABF8DD3C435055F1759EE5D5536D85380D830D41"
+    },
+    {
+      "id": "69.m0",
+      "title": "fin à red−0s",
+      "sent": "interval=607",
+      "code": "tecNO_PERMISSION",
+      "message": "No permission to perform requested operation.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "69.m30",
+      "title": "fin à red−30s",
+      "sent": "interval=576",
+      "code": "tecNO_PERMISSION",
+      "message": "No permission to perform requested operation.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "69.m59",
+      "title": "fin à red−59s",
+      "sent": "interval=546",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/4855FF614B84099D512200A2D8ABD072DA9B728F12C5F61B57D9DE93E3D99683"
+    },
+    {
+      "id": "69.m60",
+      "title": "fin à red−60s",
+      "sent": "interval=538",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/3C1553D95775F08CDAD2E953C27A7902A446A15233E7AA2B7946D7766E7011F2"
+    },
+    {
+      "id": "69.m61",
+      "title": "fin à red−61s",
+      "sent": "interval=530",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/5CE4CA4F940BE023A448204FA49848C74C41832FA9DFABCD76E1CA454484AA5D"
+    },
+    {
+      "id": "69.m120",
+      "title": "fin à red−120s",
+      "sent": "interval=464",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/AAB683A4C3CD7AC67F830D94BE0188493197783A021D213591E4CF47C5D976F6"
+    },
+    {
+      "id": "69.grace",
+      "title": "fin à red−90s, GracePeriod=120",
+      "sent": "interval=487",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/721976EF4F349212DDA6FCFC071972731EA4029D72835E7A237453EE596DB399"
+    },
+    {
+      "id": "70.max",
+      "title": "PaymentTotal 4294967295 (interval 60)",
+      "sent": "",
+      "code": "tecKILLED",
+      "message": "No funds transferred and no offer created.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "72.r0",
+      "title": "InterestRate 0 (contrôle)",
+      "sent": "{\"i\":300,\"n\":1,\"r\":0}",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "Principal=1000000 TVO=1000000 intérêt=0",
+      "url": "https://devnet.xrpl.org/transactions/B17E5C4D6206821FF8E5BBDDBEE9B71B91B2F16706A900E4480624AF0CBA475A"
+    },
+    {
+      "id": "72.rA",
+      "title": "rate 100000, interval 200s",
+      "sent": "{\"i\":200,\"n\":1,\"r\":100000}",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "Principal=10000000 TVO=10000064 intérêt=64",
+      "url": "https://devnet.xrpl.org/transactions/C1961AD79705314F4791E1254C98B880251356FFB09B9DFFAE2219725FDF1648"
+    },
+    {
+      "id": "72.rB",
+      "title": "rate 100000, interval 400s",
+      "sent": "{\"i\":400,\"n\":1,\"r\":100000}",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "Principal=10000000 TVO=10000127 intérêt=127",
+      "url": "https://devnet.xrpl.org/transactions/2A9053490A337DB114696B680D8388B3AAECD5276F4AF6DA48828807A11595FD"
+    },
+    {
+      "id": "76",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "avant LoanSet: BW=125999970 O=74599992 pseudoVault=24000000 pseudoBroker=5000000 | AssetsTotal=50000000 AssetsAvailable=24000000 Cover=5000000",
+      "url": ""
+    },
+    {
+      "id": "76",
+      "title": "LoanSet 10 XRP + frais (origination 0.1, service 0.01, late 0.05)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/08E5D15BFE89AB7ACD52C6719546D650F68946C569AD683C6D0779CEE5D28316"
+    },
+    {
+      "id": "76",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "delta: BW=9899998 O=100000 pseudoVault=-10000000 pseudoBroker=0",
+      "url": ""
+    },
+    {
+      "id": "76",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal 50000000→50000000 AssetsAvailable 24000000→14000000 | Cover 5000000→5000000 DebtTotal=35000000",
+      "url": ""
+    },
+    {
+      "id": "76",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan LF: {\"Borrower\":\"rp7yw8ckNgqJGpMCMepE2Tyx4DZSn6Us6W\",\"Flags\":0,\"GracePeriod\":60,\"InterestRate\":50000,\"LatePaymentFee\":\"50000\",\"LedgerEntryType\":\"Loan\",\"LoanBrokerID\":\"05C34302F9C276AF6268DB73E941BEDAC869AEEBC90898DC69BB36DF55702369\",\"LoanBrokerNode\":\"0\",\"LoanOriginationFee\":\"100000\",\"LoanSequence\":7,\"LoanServiceFee\":\"10000\",\"ManagementFeeOutstanding\":\"2\",\"NextPaymentDueDate\":842528982,\"OwnerNode\":\"0\",\"PaymentInterval\":90,\"PaymentRemaining\":2,\"PeriodicPayment\":\"5000010.70205804189\",\"PreviousTxnID\":\"08E5D15BFE89AB7ACD52C6719546D650F68946C569AD683C6D0779CEE5D28316\",\"PreviousTxnLgrSeq\":5251908,\"PrincipalOutstanding\":\"10000000\",\"StartDate\":842528892,\"TotalValueOutstanding\":\"10000022\",\"index\":\"4E856ABB9DF6CECCC799035EEC471DA067AD64EF366D82CD0988F4ABCCA16792\"}",
+      "url": ""
+    },
+    {
+      "id": "79",
+      "title": "LoanPay intégral anticipé (TVO=10000064, tfLoanFullPayment)",
+      "sent": "",
+      "code": "tecKILLED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/68114F6CE9E1D3C2F20A20EFC2C5B50C3C4B2625E562AB02EF972A4FB9F63270"
+    },
+    {
+      "id": "80",
+      "title": "objet Loan après remboursement intégral",
+      "sent": "ledger_entry",
+      "code": "TOUJOURS LÀ (Flags=0 TVO=10000064 PayRemaining=1)",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "80.del",
+      "title": "LoanDelete sur prêt soldé",
+      "sent": "",
+      "code": "tecHAS_OBLIGATIONS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/3BC66D76C42DD11A63B61CEC1FA08766E93B4AAEB6550CD4B6B6E019A55CC61B"
+    },
+    {
+      "id": "64.sl",
+      "title": "SignerListSet 2-of-2 sur O",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/A667E952C7A6B199C55757A2ED2DD16A88C08E978E24850E0B7C9553D2DDBFD5"
+    },
+    {
+      "id": "64.cpm",
+      "title": "LoanSet co-signé multisig (CPM\\0, s1+s2)",
+      "sent": "",
+      "code": "invalidTransaction",
+      "message": "fails local checks: Counterparty: Unsorted Signers array.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "64.sdk",
+      "title": "LoanSet multisig via helper SDK",
+      "sent": "",
+      "code": "invalidTransaction",
+      "message": "fails local checks: Counterparty: Invalid signature on account rshWYPLfQMSTCU7Frmf25u5Nsep3aGv9WK.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "77",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan LF à l'échéance: {\"Borrower\":\"rp7yw8ckNgqJGpMCMepE2Tyx4DZSn6Us6W\",\"Flags\":0,\"GracePeriod\":60,\"InterestRate\":50000,\"LatePaymentFee\":\"50000\",\"LedgerEntryType\":\"Loan\",\"LoanBrokerID\":\"05C34302F9C276AF6268DB73E941BEDAC869AEEBC90898DC69BB36DF55702369\",\"LoanBrokerNode\":\"0\",\"LoanOriginationFee\":\"100000\",\"LoanSequence\":7,\"LoanServiceFee\":\"10000\",\"ManagementFeeOutstanding\":\"2\",\"NextPaymentDueDate\":842528982,\"OwnerNode\":\"0\",\"PaymentInterval\":90,\"PaymentRemaining\":2,\"PeriodicPayment\":\"5000010.70205804189\",\"PreviousTxnID\":\"08E5D15BFE89AB7ACD52C6719546D650F68946C569AD683C6D0779CEE5D28316\",\"PreviousTxnLgrSeq\":5251908,\"PrincipalOutstanding\":\"10000000\",\"StartDate\":842528892,\"TotalValueOutstanding\":\"10000022\",\"index\":\"4E856ABB9DF6CECCC799035EEC471DA067AD64EF366D82CD0988F4ABCCA16792\"}",
+      "url": ""
+    },
+    {
+      "id": "77.under",
+      "title": "LoanPay sous-paiement 0.5 XRP",
+      "sent": "",
+      "code": "tecEXPIRED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/2C67ADA75C3C00A6AFE7A7A6894270CEFB0828EAE034F82834147B9289D9031F"
+    },
+    {
+      "id": "78",
+      "title": "LoanPay par un TIERS (X)",
+      "sent": "Amount 6 XRP",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/886798BD1CF4792DCFCAD379D3894A2B69E3143C787FBB670AE051B476924AD4"
+    },
+    {
+      "id": "77.pay",
+      "title": "LoanPay 6 XRP (1re échéance)",
+      "sent": "",
+      "code": "tecEXPIRED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/C8F7437A3FB2B19323E2F83E284EDDDE789677AAF0C325C8EA2F2890CD7E5135"
+    },
+    {
+      "id": "73",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "LoanPay: delta BW=-1 pseudoVault=0 pseudoBroker=0 O=0 | AssetsTotal=50000000 AssetsAvailable=14000000",
+      "url": ""
+    },
+    {
+      "id": "77",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan après paiement: {\"Borrower\":\"rp7yw8ckNgqJGpMCMepE2Tyx4DZSn6Us6W\",\"Flags\":0,\"GracePeriod\":60,\"InterestRate\":50000,\"LatePaymentFee\":\"50000\",\"LedgerEntryType\":\"Loan\",\"LoanBrokerID\":\"05C34302F9C276AF6268DB73E941BEDAC869AEEBC90898DC69BB36DF55702369\",\"LoanBrokerNode\":\"0\",\"LoanOriginationFee\":\"100000\",\"LoanSequence\":7,\"LoanServiceFee\":\"10000\",\"ManagementFeeOutstanding\":\"2\",\"NextPaymentDueDate\":842528982,\"OwnerNode\":\"0\",\"PaymentInterval\":90,\"PaymentRemaining\":2,\"PeriodicPayment\":\"5000010.70205804189\",\"PreviousTxnID\":\"08E5D15BFE89AB7ACD52C6719546D650F68946C569AD683C6D0779CEE5D28316\",\"PreviousTxnLgrSeq\":5251908,\"PrincipalOutstanding\":\"10000000\",\"StartDate\":842528892,\"TotalValueOutstanding\":\"10000022\",\"index\":\"4E856ABB9DF6CECCC799035EEC471DA067AD64EF366D82CD0988F4ABCCA16792\"}",
+      "url": ""
+    },
+    {
+      "id": "77.over",
+      "title": "LoanPay 20 XRP avec tfLoanOverpayment",
+      "sent": "",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/96932A433037A4737FD1112BD6A97D55D163CF9E8D77ED9FD8370D3A02D7CD7D"
+    },
+    {
+      "id": "77",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan après sur-paiement: {\"Borrower\":\"rp7yw8ckNgqJGpMCMepE2Tyx4DZSn6Us6W\",\"Flags\":0,\"GracePeriod\":60,\"InterestRate\":50000,\"LatePaymentFee\":\"50000\",\"LedgerEntryType\":\"Loan\",\"LoanBrokerID\":\"05C34302F9C276AF6268DB73E941BEDAC869AEEBC90898DC69BB36DF55702369\",\"LoanBrokerNode\":\"0\",\"LoanOriginationFee\":\"100000\",\"LoanSequence\":7,\"LoanServiceFee\":\"10000\",\"ManagementFeeOutstanding\":\"2\",\"NextPaymentDueDate\":842528982,\"OwnerNode\":\"0\",\"PaymentInterval\":90,\"PaymentRemaining\":2,\"PeriodicPayment\":\"5000010.70205804189\",\"PreviousTxnID\":\"08E5D15BFE89AB7ACD52C6719546D650F68946C569AD683C6D0779CEE5D28316\",\"PreviousTxnLgrSeq\":5251908,\"PrincipalOutstanding\":\"10000000\",\"StartDate\":842528892,\"TotalValueOutstanding\":\"10000022\",\"index\":\"4E856ABB9DF6CECCC799035EEC471DA067AD64EF366D82CD0988F4ABCCA16792\"}",
+      "url": ""
+    },
+    {
+      "id": "B21.lset.R",
+      "title": "LoanSet VALIDE en Redemption (vault run 1)",
+      "sent": "",
+      "code": "tecEXPIRED",
+      "message": "Expiration time is passed.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    }
+  ]
+}

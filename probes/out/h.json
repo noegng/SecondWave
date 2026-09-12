@@ -1,0 +1,226 @@
+{
+  "name": "h",
+  "secs": 18,
+  "rows": [
+    {
+      "id": "92.vault_info",
+      "title": "commande vault_info",
+      "sent": "{\"command\":\"vault_info\",\"vault_id\":\"963C99096D020AC451737900491B0BF260552DE9C26EA02D0337A8",
+      "code": "OK",
+      "message": "",
+      "verdict": "",
+      "note": "ledger_current_index,validated,vault",
+      "url": ""
+    },
+    {
+      "id": "92.loan_info",
+      "title": "commande loan_info (loan_info)",
+      "sent": "{\"command\":\"loan_info\",\"loan_id\":\"88C2DDF42AAA73FB308A403F077632B2EF29D7A8FECCA6516363EE99",
+      "code": "unknownCmd",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "92.loan_broker_info",
+      "title": "commande loan_broker_info (loan_broker_info)",
+      "sent": "{\"command\":\"loan_broker_info\",\"loan_broker_id\":\"F1851655D3C04E6F463460247EFAFC1F0B87C04719",
+      "code": "unknownCmd",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "92.mpt_holders",
+      "title": "commande mpt_holders (mpt_holders)",
+      "sent": "{\"command\":\"mpt_holders\",\"mpt_issuance_id\":\"00000001A06DBCEFA5036E1F388F68266D881BEEAFA2AB",
+      "code": "unknownCmd",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "92.le.vault",
+      "title": "commande ledger_entry (le.vault)",
+      "sent": "{\"command\":\"ledger_entry\",\"vault\":\"963C99096D020AC451737900491B0BF260552DE9C26EA02D0337A88",
+      "code": "OK",
+      "message": "",
+      "verdict": "",
+      "note": "index,ledger_hash,ledger_index,node,validated",
+      "url": ""
+    },
+    {
+      "id": "92.le.vault2",
+      "title": "commande ledger_entry (le.vault2)",
+      "sent": "{\"command\":\"ledger_entry\",\"index\":\"963C99096D020AC451737900491B0BF260552DE9C26EA02D0337A88",
+      "code": "OK",
+      "message": "",
+      "verdict": "",
+      "note": "index,ledger_hash,ledger_index,node,validated",
+      "url": ""
+    },
+    {
+      "id": "92.le.loan",
+      "title": "commande ledger_entry (le.loan)",
+      "sent": "{\"command\":\"ledger_entry\",\"index\":\"88C2DDF42AAA73FB308A403F077632B2EF29D7A8FECCA6516363EE9",
+      "code": "OK",
+      "message": "",
+      "verdict": "",
+      "note": "index,ledger_hash,ledger_index,node,validated",
+      "url": ""
+    },
+    {
+      "id": "92.le.loan_t",
+      "title": "commande ledger_entry (le.loan_t)",
+      "sent": "{\"command\":\"ledger_entry\",\"loan\":\"88C2DDF42AAA73FB308A403F077632B2EF29D7A8FECCA6516363EE99",
+      "code": "OK",
+      "message": "",
+      "verdict": "",
+      "note": "index,ledger_hash,ledger_index,node,validated",
+      "url": ""
+    },
+    {
+      "id": "92.le.broker_t",
+      "title": "commande ledger_entry (le.broker_t)",
+      "sent": "{\"command\":\"ledger_entry\",\"loan_broker\":\"F1851655D3C04E6F463460247EFAFC1F0B87C047193CB0CEF",
+      "code": "OK",
+      "message": "",
+      "verdict": "",
+      "note": "index,ledger_hash,ledger_index,node,validated",
+      "url": ""
+    },
+    {
+      "id": "92.le.mptI",
+      "title": "commande ledger_entry (le.mptI)",
+      "sent": "{\"command\":\"ledger_entry\",\"mpt_issuance\":\"00000001A06DBCEFA5036E1F388F68266D881BEEAFA2ABF1",
+      "code": "OK",
+      "message": "",
+      "verdict": "",
+      "note": "index,ledger_hash,ledger_index,node,validated",
+      "url": ""
+    },
+    {
+      "id": "93",
+      "title": "vault_info vs ledger_entry brut",
+      "sent": "",
+      "code": "vault_info en plus: [shares] · brut en plus: []",
+      "message": "",
+      "verdict": "",
+      "note": "vault_info: Account,Asset,AssetsAvailable,AssetsTotal,Flags,LEVersion,LedgerEntryType,Owner,OwnerNode,PreviousTxnID,PreviousTxnLgrSeq,RedemptionDate,Sequence,ShareMPTID,SubscriptionDate,VaultKind,WithdrawalPolicy,index,shares",
+      "url": ""
+    },
+    {
+      "id": "94",
+      "title": "account_objects du pseudo-compte vault",
+      "sent": "",
+      "code": "{\"LoanBroker\":3,\"MPTokenIssuance\":1}",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "94",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "pseudo-compte: Balance=12600000 Flags=26214400 RegularKey=(aucune) OwnerCount=1",
+      "url": ""
+    },
+    {
+      "id": "95",
+      "title": "account_tx du pseudo-compte (types vus)",
+      "sent": "",
+      "code": "{\"LoanManage\":7,\"LoanSet\":3,\"LoanBrokerSet\":3,\"VaultDeposit\":1,\"VaultCreate\":1}",
+      "message": "",
+      "verdict": "",
+      "note": "LoanManage et LoanSet visibles = défauts et prêts journalisés",
+      "url": ""
+    },
+    {
+      "id": "97.vc",
+      "title": "simulate VaultCreate",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "applied=false",
+      "url": ""
+    },
+    {
+      "id": "97.dep",
+      "title": "simulate VaultDeposit",
+      "sent": "",
+      "code": "tecEXPIRED",
+      "message": "",
+      "verdict": "",
+      "note": "applied=false",
+      "url": ""
+    },
+    {
+      "id": "97.lm",
+      "title": "simulate LoanManage",
+      "sent": "",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "applied=false",
+      "url": ""
+    },
+    {
+      "id": "97.lpay",
+      "title": "simulate LoanPay",
+      "sent": "",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "applied=false",
+      "url": ""
+    },
+    {
+      "id": "97.lset",
+      "title": "simulate LoanSet",
+      "sent": "",
+      "code": "temBAD_SIGNER",
+      "message": "",
+      "verdict": "",
+      "note": "applied=false",
+      "url": ""
+    },
+    {
+      "id": "96",
+      "title": "subscribe sur le pseudo-compte",
+      "sent": "dépôt émis pendant l'abonnement",
+      "code": "AUCUN événement reçu",
+      "message": "",
+      "verdict": "surprenant",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "98",
+      "title": "diff server_definitions vs codec local",
+      "sent": "",
+      "code": "champs serveur absents du codec: 0 · champs codec absents du serveur: 4 · tx types serveur en plus: 0",
+      "message": "",
+      "verdict": "attendu",
+      "note": "serveur only: [] · codec only: [IssuerKeyEpoch,AuditorKeyEpoch,IssuerKeyMirrorEpoch,AuditorKeyMirrorEpoch] · ttServeur: []",
+      "url": ""
+    },
+    {
+      "id": "99",
+      "title": "reconstruction complète: 6 appels RPC",
+      "sent": "3 brokers, 3 prêts, 1 pages account_tx",
+      "code": "6 appels",
+      "message": "",
+      "verdict": "",
+      "note": "formule: 2 + nb_brokers + pages_account_tx — aucun appel direct par prêt possible",
+      "url": ""
+    }
+  ]
+}

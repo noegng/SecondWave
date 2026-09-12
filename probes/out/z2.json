@@ -1,0 +1,86 @@
+{
+  "name": "z2",
+  "secs": 243,
+  "rows": [
+    {
+      "id": "Z2",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "décor identique à l'intégration (broker 10000/50000, cover 5)",
+      "url": ""
+    },
+    {
+      "id": "Z2.loan",
+      "title": "LoanSet 6 XRP interval 60 total 2",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/D51FCA00B2105749B22D2E71F65D006FFC42F7E30ABAC0C58877C76694A8079B"
+    },
+    {
+      "id": "Z2",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan: Periodic=3000004.280822110996 Next=842537090 (due dans 68s) TVO=6000009",
+      "url": ""
+    },
+    {
+      "id": "Z2.pay",
+      "title": "LoanPay 4 XRP à due+2s wall (généreux, sans flag)",
+      "sent": "",
+      "code": "tecEXPIRED",
+      "message": "",
+      "verdict": "",
+      "note": "réellement débité: 1 drops (dont fee tx)",
+      "url": "https://devnet.xrpl.org/transactions/5F1953C9069FB74BFC6736FE56C14E4B2C32BC3F413D246FF4250B246044ADDA"
+    },
+    {
+      "id": "Z2",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan après: Next=842537090 PayRemaining=2 TVO=6000009 Flags=0",
+      "url": ""
+    },
+    {
+      "id": "Z2",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=40000000 AssetsAvailable=34000000",
+      "url": ""
+    },
+    {
+      "id": "Z2.impair",
+      "title": "tfLoanImpair",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/CA1B3CF5200BF98F7993AE617D183AE47C5D6794D7B0CD3BFEDE7D25DEEBA960"
+    },
+    {
+      "id": "Z2.default",
+      "title": "tfLoanDefault",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/8F2A4ABEC7ACC844EF7CFCEB9096EF5B5248A22DB7107B9CCBC2A6744403D45C"
+    }
+  ]
+}
