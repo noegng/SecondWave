@@ -70,6 +70,7 @@ npm run cli
 | Brancher un dump `world.json` d'Hugo | **prochaine** dès que `fixtures/` écrit un fichier |
 | Lecteurs live Devnet | **Hugo / `core`** — on ne les réécrit pas |
 | Historique (Loan disparaît au `LoanDelete`) | après le dump : timeline via `account_tx` |
+| Fiche DevX jury (first-loss ≠ CoverAvailable) | **fait** — [FEEDBACK_XLS65_XLS66.md](./FEEDBACK_XLS65_XLS66.md) |
 
 Point d'entrée : `analyzeOffer(adaptCase(rawLedgerJson))`.
 
