@@ -11,6 +11,7 @@
   },
   "scripts": {
     "world": "node fixtures/generate.mjs",
+    "invite": "node fixtures/invite.mjs",
     "cli": "node apps/cli/src/index.mjs",
     "analyse": "node packages/analyst/src/run.mjs",
     "analyse:live": "node packages/analyst/src/run.mjs live",

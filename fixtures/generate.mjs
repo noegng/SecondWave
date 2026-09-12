@@ -27,7 +27,7 @@ import {
   connect, fundAccount, readVaultGraph, holderMap, submit, sleep, rippleNow, txUrl,
 } from '@secondwave/core'
 import {
-  issueCredential, createDomain, createVault, deposit, createBroker,
+  issueCredential, createCredential, createDomain, createVault, deposit, createBroker,
   coverDeposit, createLoan, payLoan, impair, unimpair, deleteLoan,
 } from '@secondwave/vault'
 
@@ -39,7 +39,19 @@ const jsonBig = (o) => JSON.stringify(o, (_, v) => (typeof v === 'bigint' ? v.to
 const LSF_ALLOW_CLAWBACK = 0x80000000
 
 /** Fenêtres par défaut, compressées à l'échelle d'un hackathon. */
-const SUBSCRIPTION_IN = 130
+const ADDR_RE = /^r[1-9A-HJ-NP-Za-km-z]{24,34}$/
+function parseInvite() {
+  const argv = process.argv.slice(2)
+  const i = argv.indexOf('--invite')
+  if (i >= 0) return argv[i + 1] ?? null
+  return argv.find((a) => ADDR_RE.test(a)) ?? process.env.INVITE ?? null
+}
+const INVITE = parseInvite()
+if (INVITE && !ADDR_RE.test(INVITE)) {
+  throw new Error(`adresse invite invalide : ${INVITE}`)
+}
+
+const SUBSCRIPTION_IN = INVITE ? 480 : 130
 const INVESTMENT_FOR = 900
 
 // ─────────────────────────────────────────────────────────────
@@ -192,6 +204,26 @@ await Promise.all(mondes.flatMap(m =>
 const refus = await deposit(c, nonMembre, mondes[0].vaultId, XRP(10))
 log(`   dépôts posés · non-membre → ${refus.result} ${refus.result === 'tecNO_AUTH' ? '✓ gate actif' : '⚠️ inattendu'}\n`)
 
+// 5b. Wallet externe : on émet le KYC, lui l'accepte dans l'extension, puis dépose.
+if (INVITE) {
+  log(`5b. Invitation ${INVITE}…`)
+  try {
+    await c.request({ command: 'account_info', account: INVITE, ledger_index: 'validated' })
+  } catch {
+    throw new Error(`${INVITE} n'existe pas encore sur le Devnet — faucet d'abord : https://faucet.devnet.rippletest.net/accounts`)
+  }
+  const cred = await createCredential(c, { issuer, subject: INVITE })
+  if (!cred.ok) throw new Error(`CredentialCreate: ${cred.result} ${cred.message ?? ''}`)
+  const sain = mondes.find(m => m.profil.key === 'sain')
+  const reste = Math.max(0, (sain?.subscriptionDate ?? 0) - rippleNow())
+  log(`   credential KYC émis par ${issuer.classicAddress}  ${cred.ok ? '✓' : cred.result}`)
+  log(`   1. dans l'extension (Devnet) : accepte le credential KYC de ${issuer.classicAddress}`)
+  log(`   2. dépose du XRP dans le vault sain :`)
+  log(`      ${sain.vaultId}`)
+  log(`      https://devnet.xrpl.org/vaults/${sain.vaultId}`)
+  log(`   il te reste ~${reste}s avant la clôture de Subscription.\n`)
+}
+
 // 6. Brokers + first-loss capital.
 log('6. Brokers et first-loss capital…')
 await Promise.all(mondes.map(async m => {
@@ -294,6 +326,7 @@ const world = {
   issuer: issuer.classicAddress,
   domainId: dom.domainId,
   nonMember: nonMembre.classicAddress,
+  guest: INVITE ?? null,
   vaults: [],
 }
 const snapshot = {
