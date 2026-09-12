@@ -1,0 +1,27 @@
+# dépendances
+node_modules/
+.pnp.*
+
+# secrets & état local — ⚠️ les scripts génèrent des wallets avec seeds en clair
+.env
+.env.*
+state*.json
+*.seed
+*.key
+
+# outil XRPL DevEx (chacun l'installe localement, voir README)
+# les skills sont des symlinks vers xrpl-devex-hook/ -> inutilisables chez l'autre
+xrpl-devex-hook/
+.xrpl-devex/
+.claude/settings.local.json
+.claude/skills/
+.codex/skills/
+.cursor/skills/
+.grok/skills/
+
+# build & divers
+dist/
+build/
+coverage/
+*.log
+.DS_Store

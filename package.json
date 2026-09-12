@@ -1,0 +1,11 @@
+{
+  "name": "secondwave",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*", "apps/*"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "world": "node fixtures/generate.mjs",
+    "cli": "node apps/cli/src/index.mjs"
+  }
+}
