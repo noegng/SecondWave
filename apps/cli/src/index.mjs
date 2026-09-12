@@ -15,10 +15,10 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { connect, Wallet, readVaultGraph, holderMap, shareBalance, txUrl } from '@secondwave/core'
+import { connect, Wallet, readVaultGraph, holderMap, shareBalance, rippleNow, txUrl } from '@secondwave/core'
 import { SettlementEngine } from '@secondwave/settlement'
 import { OrderBook, priceHistory } from '@secondwave/orderbook'
-import { analyse } from '@secondwave/analyst'
+import { scoreBroker, classifyDiscount, navPerShare } from '@secondwave/analyst'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
 const XRP = d => (Number(d) / 1e6).toFixed(2)
@@ -51,8 +51,11 @@ const book = new OrderBook(join(ROOT, 'orderbook.json'))
 const c = await connect(world.network)
 const engine = new SettlementEngine(c)
 
-const COULEUR = { sain: '🟢', prudence: '🟡', risqué: '🟠', 'à fuir': '🔴' }
-const PUCE = { info: '·', alerte: '⚠️ ', rouge: '🔴' }
+/** Notation → pastille. Au-dessous de BBB, on n'achète pas sans lire les raisons. */
+const COULEUR = r => (['AAA', 'AA', 'A'].includes(r) ? '🟢'
+                    : ['BBB', 'BB'].includes(r) ? '🟡'
+                    : ['B', 'CCC'].includes(r) ? '🟠' : r === '—' ? '⚪' : '🔴')
+const PASTILLE = { liquidity: '🟢 décote de liquidité', distress: '🔴 décote de DÉTRESSE', fair: '⚪ prix ≈ NAV' }
 
 const [cmd, ...args] = process.argv.slice(2)
 try {
@@ -70,24 +73,89 @@ try {
 } finally { await c.disconnect() }
 
 // ─────────────────────────────────────────────────────────────
-async function noteDe(v) {
+// La couture core → analyste.
+//
+// core.readVaultGraph rend l'objet ledger brut + un bloc `.metrics` ; l'analyste
+// de Noé consomme un modèle normalisé en camelCase. Cette fonction est la même
+// que `toAnalystInput` dans packages/analyst/src/run.mjs — à fusionner dans core
+// quand les deux moitiés se stabiliseront.
+function toAnalystInput(graph) {
+  const vm = graph.metrics
+  const vault = {
+    vaultId: graph.vaultId,
+    assetsTotal: vm.assetsTotal,
+    assetsAvailable: vm.assetsAvailable,
+    lossUnrealized: vm.lossUnrealized,
+    sharesOutstanding: vm.outstandingShares,
+    vaultKind: Number(graph.vault.VaultKind ?? 0),
+    subscriptionDate: Number(graph.vault.SubscriptionDate ?? 0),
+    redemptionDate: Number(graph.vault.RedemptionDate ?? 0),
+  }
+  const brokers = graph.brokers.map(b => ({
+    broker: {
+      loanBrokerId: b.index,
+      vaultId: graph.vaultId,
+      debtTotal: b.metrics.debtTotal,
+      coverAvailable: b.metrics.coverAvailable,
+      coverRateMinimum: b.metrics.coverRateMinimum,
+      coverRateLiquidation: b.metrics.coverRateLiquidation,
+      managementFeeRate: Number(b.ManagementFeeRate ?? 0),
+      didVerified: true,
+    },
+    loans: b.loans.map(l => ({
+      loanId: l.index,
+      principalOutstanding: l.metrics.principalOutstanding,
+      totalValueOutstanding: l.metrics.totalValueOutstanding ?? '0',
+      managementFeeOutstanding: l.ManagementFeeOutstanding ?? '0',
+      nextPaymentDueDate: Number(l.NextPaymentDueDate ?? 0),
+      gracePeriod: Number(l.GracePeriod ?? 0),
+      flags: Number(l.Flags ?? 0),
+    })),
+  }))
+  return { vault, brokers }
+}
+
+const PIRE = ['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC', 'CC', 'C', 'D']
+
+/**
+ * La note d'un vault. Un vault peut porter plusieurs brokers : on retient
+ * le PIRE — un déposant est exposé à tous, pas au meilleur.
+ * `discount` est la décote de l'offre examinée (0 = on note le vault seul).
+ */
+async function noteDe(v, discount = 0) {
   const graph = await readVaultGraph(c, v.vaultId)
   const holders = await holderMap(c, graph.vault)
-  return { graph, holders, note: analyse({ graph, holders }) }
+  const { vault, brokers } = toAnalystInput(graph)
+  const now = rippleNow()
+
+  const notes = brokers.map(({ broker, loans }) => ({
+    score: scoreBroker({ broker, vault, loans, nowRipple: now }),
+    classification: classifyDiscount({ vault, broker, loans, offer: { discount }, nowRipple: now }),
+  }))
+  notes.sort((a, b) => PIRE.indexOf(b.score.rating) - PIRE.indexOf(a.score.rating))
+
+  const pire = notes[0]
+  const note = pire
+    ? { ...pire.score, ...pire.classification, nav: navPerShare(vault), brokers: notes.length }
+    : { rating: '—', riskScore: null, kind: 'fair', reasons: [],
+        headline: 'aucun broker — le capital dort', nav: navPerShare(vault), brokers: 0 }
+  return { graph, holders, note }
 }
 
 async function cmdVaults() {
   for (const v of world.vaults) {
     const { graph, holders, note } = await noteDe(v)
-    console.log(`\n${COULEUR[note.verdict]}  ${v.key}  —  ${note.verdict} (${note.score}/100)`)
+    console.log(`\n${COULEUR(note.rating)}  ${v.key}  —  ${note.rating}`
+      + (note.riskScore != null ? ` (${note.riskScore}/100)` : ''))
     console.log(`    ${v.label}`)
     console.log(`    ${v.vaultId}`)
     console.log(`    phase ${graph.phase} · actifs ${XRP(graph.vault.AssetsTotal)} XRP`
       + ` · disponibles ${XRP(graph.vault.AssetsAvailable)} XRP`
-      + ` · NAV ${XRP(note.nav)} XRP/part`)
+      + ` · NAV ${note.nav.toFixed(4)} drop/part`)
     console.log(`    ${holders.count} détenteurs · concentration ${(holders.concentration * 100).toFixed(0)}%`
       + ` · ${graph.brokers.length} broker(s) · ${graph.brokers.reduce((s, b) => s + b.loans.length, 0)} prêt(s)`)
-    for (const s of note.signaux) console.log(`    ${PUCE[s.niveau]} ${s.titre} — ${s.detail}`)
+    if (note.reasons.length) for (const r of note.reasons) console.log(`    🔴 ${r}`)
+    else console.log(`    ${note.brokers ? 'aucun signal de risque' : note.headline}`)
   }
   console.log()
 }
@@ -102,13 +170,17 @@ async function cmdBook(acheteur) {
   const notes = new Map()
   for (const o of offres) {
     const v = world.vaults.find(x => x.vaultId === o.vaultId)
-    if (!notes.has(o.vaultId)) notes.set(o.vaultId, (await noteDe(v)).note)
-    const n = notes.get(o.vaultId)
+    if (!v) continue
+    // La décote de CETTE offre décide si l'analyste parle de liquidité ou de détresse.
+    const brut = notes.get(o.vaultId) ?? (notes.set(o.vaultId, await noteDe(v)), notes.get(o.vaultId))
+    const nav = brut.note.nav
+    const decote = nav > 0 ? Math.max(0, 1 - o.pricePerShare / nav) : 0
+    const n = (await noteDe(v, decote)).note
     console.log(`  ${o.id}  ${v.key.padEnd(14)} ${o.shares} parts pour ${XRP(o.price)} XRP`
-      + `   ${COULEUR[n.verdict]} ${n.verdict} ${n.score}/100`)
+      + `  —  décote ${(decote * 100).toFixed(1)} %   ${COULEUR(n.rating)} ${n.rating}`)
     console.log(`       ${o.eligible ? '✅' : '⛔'} ${o.reason}`)
-    for (const s of n.signaux.filter(x => x.niveau === 'rouge'))
-      console.log(`       🔴 ${s.titre}`)
+    console.log(`       ${PASTILLE[n.kind]}`)
+    for (const r of n.reasons) console.log(`       🔴 ${r}`)
   }
   console.log()
 }
@@ -133,10 +205,16 @@ async function cmdBuy(orderId, acheteur) {
     ?? fatal('seed du vendeur absente de state.json')
 
   console.log(`\n─── ANALYSE ───`)
-  const { note } = await noteDe(v)
-  console.log(`  ${COULEUR[note.verdict]} ${v.key} : ${note.verdict} (${note.score}/100)`)
-  console.log(`  prix demandé ${XRP(o.price)} XRP · prix « juste » selon l'analyste ${XRP(note.fairPrice ?? 0)} XRP`)
-  for (const s of note.signaux) console.log(`  ${PUCE[s.niveau]} ${s.titre} — ${s.detail}`)
+  const brut = await noteDe(v)
+  const nav = brut.note.nav
+  const pps = Number(o.price) / Number(o.shares)
+  const decote = nav > 0 ? Math.max(0, 1 - pps / nav) : 0
+  const { note } = await noteDe(v, decote)
+  console.log(`  ${COULEUR(note.rating)} ${v.key} : ${note.rating}`
+    + (note.riskScore != null ? ` (${note.riskScore}/100)` : ''))
+  console.log(`  NAV ${nav.toFixed(4)} drop/part · payé ${pps.toFixed(4)} · décote ${(decote * 100).toFixed(1)} %`)
+  console.log(`  ${PASTILLE[note.kind]} — ${note.headline}`)
+  for (const r of note.reasons) console.log(`  🔴 ${r}`)
 
   console.log(`\n─── RÈGLEMENT ───`)
   const r = await engine.executeSwap({
@@ -182,6 +260,6 @@ async function cmdDemo() {
   const partsRisque = BigInt(risque.holders[0].shares) / 2n
   book.post({ vaultId: sain.vaultId, seller: sain.holders[0].account, shares: partsSain, price: String(partsSain * 90n / 100n) })
   book.post({ vaultId: risque.vaultId, seller: risque.holders[0].account, shares: partsRisque, price: String(partsRisque * 90n / 100n) })
-  console.log('Deux offres au même prix par part. L\'analyste les sépare :\n')
+  console.log('Deux offres à la MÊME décote. L\'analyste sépare la liquidité de la détresse :\n')
   await cmdBook('sain.d1')
 }
