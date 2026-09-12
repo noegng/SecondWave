@@ -10,6 +10,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "web": "node apps/web/server.mjs",
     "world": "node fixtures/generate.mjs",
     "invite": "node fixtures/invite.mjs",
     "cli": "node apps/cli/src/index.mjs",
