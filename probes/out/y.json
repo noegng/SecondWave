@@ -1,0 +1,76 @@
+{
+  "name": "y",
+  "secs": 24,
+  "rows": [
+    {
+      "id": "Y1",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "broker: debt=5000016 cover=4999999 min=10000 liq=50000",
+      "url": ""
+    },
+    {
+      "id": "Y1.a",
+      "title": "retirer jusqu'à laisser floorLiq+1 (2500009)",
+      "sent": "retrait 2499990",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/AB4CDEF890F2E33B9B4B23E75A035BBFC18F3498F84B4C3D3216068A6B115BFB"
+    },
+    {
+      "id": "Y1.b",
+      "title": "retirer 1 drop de plus (laisserait pile 2500008)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/4AAD170816E752866680FEB27F4552EA66A22E16A8EA5B147A11D8E6026E450C"
+    },
+    {
+      "id": "Y1.c",
+      "title": "encore 1 drop (passerait SOUS floorLiq)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/7FAEC7BAA1E927E99BDC9A864DF5540F5BCE9843CD3437B4A6A87B85B7528357"
+    },
+    {
+      "id": "Y1",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "cover: 4999999 → 2500009 → 2500008 → 2500007 | floorLiq=2500008 floorMin=500001",
+      "url": ""
+    },
+    {
+      "id": "Y2",
+      "title": "LoanBrokerSet update CoverRateMinimum+Liquidation ensemble",
+      "sent": "20000/60000",
+      "code": "Transaction failed, temINVALID: The transaction is ill-formed.",
+      "message": "Transaction failed, temINVALID: The transaction is ill-formed.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "Y2",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "objet après tentative: min=10000 liq=50000",
+      "url": ""
+    }
+  ]
+}

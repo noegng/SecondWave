@@ -293,6 +293,26 @@ export function deleteLoan(client, borrower, loanId) {
   }, borrower)
 }
 
+/**
+ * Remboursement anticipé intégral — mesuré en Z4 (annexe Z de RESULTATS) :
+ *   · sans flag : `Amount ≥ TotalValueOutstanding` solde le prêt, débit = TVO exact ;
+ *   · avec `tfLoanFullPayment` : solde en ne débitant QUE le principal (intérêt couru remis).
+ * ⚠️ En DERNIÈRE période (`PaymentRemaining = 1`) le solde anticipé sort en
+ *    `tecKILLED` — il ne reste alors qu'à payer l'échéance normalement.
+ */
+export async function settleLoan(client, borrower, loanId, { waiveInterest = false } = {}) {
+  const r = await client.request({ command: 'ledger_entry', index: loanId, ledger_index: 'validated' })
+  const tvo = r.result.node?.TotalValueOutstanding
+  if (tvo == null) return { ok: true, result: 'déjà soldé', alreadySettled: true }
+  return submit(client, {
+    TransactionType: 'LoanPay',
+    Account: borrower.classicAddress,
+    LoanID: loanId,
+    Amount: String(tvo),
+    ...(waiveInterest ? { Flags: 0x00020000 /* tfLoanFullPayment */ } : {}),
+  }, borrower)
+}
+
 /** `tfLoanImpair` constate une perte latente · `tfLoanDefault` ponctionne le cover. */
 export function manageLoan(client, brokerOwner, loanId, flag) {
   return submit(client, {

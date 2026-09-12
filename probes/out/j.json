@@ -1,0 +1,216 @@
+{
+  "name": "j",
+  "secs": 193,
+  "rows": [
+    {
+      "id": "J0",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault smoke: pseudo=rJmXdqRovfSQhgifAkgTACUihdSdz7XDdm AssetsTotal=12000000",
+      "url": ""
+    },
+    {
+      "id": "108",
+      "title": "Payment 1 XRP → pseudo-compte du vault",
+      "sent": "",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/D912250ED11DB5C5B79D904A5FCAD2BFFF8133662755E920F423AC9B49748D7B"
+    },
+    {
+      "id": "113.escrow",
+      "title": "EscrowCreate → pseudo",
+      "sent": "",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/AC595BEFD3FC8456CD2A6DAF325BFBF18943C0F6CB76778A195BB6C31067DECC"
+    },
+    {
+      "id": "113.check",
+      "title": "CheckCreate → pseudo",
+      "sent": "",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/FA718AEF9A17D03EE672BC943E8D1258AF244BAEB162657E2D10D94764F9FE0E"
+    },
+    {
+      "id": "113.paychan",
+      "title": "PaymentChannelCreate → pseudo",
+      "sent": "",
+      "code": "tecNO_PERMISSION",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/3097E1E1C07B2F59938D7112FA69209EB3DB1796B799BE4D6F9FD1A284C69A66"
+    },
+    {
+      "id": "107.under",
+      "title": "VaultSet AssetsMaximum=5 XRP < AssetsTotal=10 XRP",
+      "sent": "",
+      "code": "tecLIMIT_EXCEEDED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/AFEC5ED27DFCDC4C3E0612CF79690D1920FE57340144AF93BF6C3FA9B3FE76EE"
+    },
+    {
+      "id": "107.exact",
+      "title": "VaultSet AssetsMaximum=AssetsTotal exactement",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/1CE777C4FEB3387F42946744F5C6929DD5A7FF2167B7C6424A049E4C94608A7B"
+    },
+    {
+      "id": "107.zero",
+      "title": "VaultSet AssetsMaximum=0 (retour à illimité)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/06023357C586AA914A36E105C13B44BA2FFAA655D738DD9415DA37C7E36D6188"
+    },
+    {
+      "id": "109",
+      "title": "Batch [VaultDeposit + Payment] tfAllOrNothing",
+      "sent": "prelim temINVALID_INNER_BATCH Malformed: Invalid inner batch transaction.",
+      "code": "jamais validé",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "J.V",
+      "title": "VaultCreate (J1)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/4F58F10FFBCE6E9F7F00325F15F6742BBD48B3269A92BB94DA4E5EB7AD80AC4E"
+    },
+    {
+      "id": "114",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "VaultCreate: OwnerCount J1 0→3 | Balance delta=-200000 drops",
+      "url": ""
+    },
+    {
+      "id": "114",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "pseudo-compte vault: Balance=0 OwnerCount=1 Flags=26214400",
+      "url": ""
+    },
+    {
+      "id": "110.dep",
+      "title": "le propriétaire dépose 20 XRP (Subscription)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/14BC3C5C3A27C31157D7EA108B27807CAFF3464D49C0B7CA00081D1703C64CB2"
+    },
+    {
+      "id": "J.B",
+      "title": "LoanBrokerSet (J1 = owner ET broker)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/057EB6B8461082325EBDF4727D7EE9DD420CEF5F6E74C22DD74898F42F0FF1F3"
+    },
+    {
+      "id": "114",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "LoanBrokerSet: OwnerCount J1 →5 | pseudo-broker: {\"Balance\":\"0\",\"OwnerCount\":0}",
+      "url": ""
+    },
+    {
+      "id": "110.wd",
+      "title": "le propriétaire retire en Investment (privilège ?)",
+      "sent": "",
+      "code": "tecTOO_SOON",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/F9B17C97CF14E77362D87E39914F272F4CE7E931F4404B51D9DA8AA1AF618CD5"
+    },
+    {
+      "id": "111",
+      "title": "LoanSet où emprunteur = broker owner = counterparty (self-loan)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/22795CAB09DC35625646F30CF9A5F277513B722CA2C6D16864563E46A04ABE66"
+    },
+    {
+      "id": "114",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "après LoanSet self: OwnerCount J1=6 | Balance=84799991",
+      "url": ""
+    },
+    {
+      "id": "112",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "ledger courant 5252169, seuil AccountDelete ≈ 5251804",
+      "url": ""
+    },
+    {
+      "id": "112",
+      "title": "AccountDelete de longlived (détient 10e6 parts du vault smoke)",
+      "sent": "",
+      "code": "Account rD17ZwHDNjuzCEBd7zqPk3ttFK3EXm3aip cannot be deleted; there are Escrows, PayChannels, RippleStates, Checks, or Sponsorships associated with the account.",
+      "message": "Account rD17ZwHDNjuzCEBd7zqPk3ttFK3EXm3aip cannot be deleted; there are Escrows, PayChannels, RippleStates, Checks, or Sponsorships associated with the account.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "112.retry",
+      "title": "AccountDelete après retrait des parts + fermeture du MPToken",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/9E5E2E50E401F2DE588B386DCEF35F8F776FCB4D1CEA2FA1989418192CD99A17"
+    }
+  ]
+}

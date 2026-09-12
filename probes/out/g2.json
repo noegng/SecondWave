@@ -1,0 +1,536 @@
+{
+  "name": "g2",
+  "secs": 366,
+  "rows": [
+    {
+      "id": "G0",
+      "title": "VaultCreate (v2)",
+      "sent": "investment 610s",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/258A9B7DD052F2477F82269D918C4B8CBBEF6E7EB2C700972E0EA638C5393966"
+    },
+    {
+      "id": "G0.dep",
+      "title": "D dépose 30 XRP",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/44AE9577DF9A2407419BEE2D53F6F6DDD61A0DBAED214A215F12AE5B4C2AF77D"
+    },
+    {
+      "id": "G.B1",
+      "title": "LoanBrokerSet rates 10000/50000 (en Subscription)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/6B37BD7DF1D83C5C9633F3E739373022089DAD7C4F2AB7B38A60B8DFAC35166D"
+    },
+    {
+      "id": "G.B1.cover",
+      "title": "CoverDeposit 5 XRP",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/7CB9F79454AC90428A55CC86B4AD2C76EF239C7127AB6499CD29C5C87543BDAC"
+    },
+    {
+      "id": "G.B2",
+      "title": "LoanBrokerSet rates 0/0 (en Subscription)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/9B6DC31A1BF2348D2B543670BF5165DBCDED1C80275C3AA34B6322928A77DB7B"
+    },
+    {
+      "id": "G.B3",
+      "title": "LoanBrokerSet rates 10000/50000 (en Subscription)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/7DB8E3781A15467C4767242616F3919CB1216FF379ACDE897193F6C8DB8295D8"
+    },
+    {
+      "id": "G.B3.cover",
+      "title": "CoverDeposit 1 XRP",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/E73EE580462AA7F38A1B20B693B62EA7A4AC225971A36905ADD18938160339FA"
+    },
+    {
+      "id": "G.L1",
+      "title": "LoanSet 4 XRP",
+      "sent": "interval 60 total 2 grace 60",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/F40BFF15BE8C687F6163F6175F6EA77F8253E2D8D87056C7E26B05FBFC5ECA89"
+    },
+    {
+      "id": "G.L2",
+      "title": "LoanSet 6 XRP",
+      "sent": "interval 60 total 2 grace 60",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/1295AC42B861E64E1E007844FEB92536DE897B490DDAE7199FC84233CE22F4D3"
+    },
+    {
+      "id": "G.L3",
+      "title": "LoanSet 8 XRP",
+      "sent": "interval 60 total 2 grace 60",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/F2B20DE8A5A633220B82EE4166453AA969491690E1C5646D8A8872DCE9162456"
+    },
+    {
+      "id": "G.après-prêts",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=30000000 AssetsAvailable=12000000 LossUnrealized=0 parts=30000000 NAV/part=1",
+      "url": ""
+    },
+    {
+      "id": "81",
+      "title": "tfLoanImpair avant échéance (now-due=-38s)",
+      "sent": "",
+      "code": "tecTOO_SOON",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/62C30B01C77ED7ED66A1BA3FDF9C5A90570E9E8DB8066AFD20520ADF34F525A5"
+    },
+    {
+      "id": "81",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan 88C2DDF4: PrincipalOut=4000000 TVO=4000006 Next=842528581 PayRemaining=2 Flags=0",
+      "url": ""
+    },
+    {
+      "id": "81",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=30000000 AssetsAvailable=12000000 LossUnrealized=0 parts=30000000 NAV/part=1",
+      "url": ""
+    },
+    {
+      "id": "82",
+      "title": "tfLoanImpair pendant la grâce",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/5371D3D66B1C730FD4E20E78BDC4E59DE6EC7B765663FAE6D906FEED7E79F404"
+    },
+    {
+      "id": "82.undo",
+      "title": "tfLoanUnimpair (retour arrière)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/5FD071DA879BA89ED72EF8AAE253F0E7AE01C670CBF56D79A0B7215E3E4E7E33"
+    },
+    {
+      "id": "83.avant",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=30000000 AssetsAvailable=12000000 LossUnrealized=0 parts=30000000 NAV/part=1",
+      "url": ""
+    },
+    {
+      "id": "83",
+      "title": "tfLoanImpair après échéance+grâce",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/FC94330E788CDFC31A0B3AFDE9CBEEE3F551E44A123584973CCB5DAA8C9B10B9"
+    },
+    {
+      "id": "83.après",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=30000000 AssetsAvailable=12000000 LossUnrealized=4000000 parts=30000000 NAV/part=1",
+      "url": ""
+    },
+    {
+      "id": "83",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan 88C2DDF4: PrincipalOut=4000000 TVO=4000006 Next=842528581 PayRemaining=2 Flags=131072",
+      "url": ""
+    },
+    {
+      "id": "90",
+      "title": "LoanPay 2.5 XRP sur prêt IMPAIRÉ",
+      "sent": "",
+      "code": "tecEXPIRED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/30B85E57F45E0E7FACE75633739893580DB6962F9165A80B4D60D82A1A627F4D"
+    },
+    {
+      "id": "90",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan 88C2DDF4: PrincipalOut=4000000 TVO=4000006 Next=842528581 PayRemaining=2 Flags=131072",
+      "url": ""
+    },
+    {
+      "id": "90",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=30000000 AssetsAvailable=12000000 LossUnrealized=4000000 parts=30000000 NAV/part=1",
+      "url": ""
+    },
+    {
+      "id": "84",
+      "title": "tfLoanUnimpair",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/F0D35F4AA75A5D5F6984741B6E6EB21A6F86D3F3CBC4C4F6FFF21597D5A102A9"
+    },
+    {
+      "id": "84",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=30000000 AssetsAvailable=12000000 LossUnrealized=0 parts=30000000 NAV/part=1",
+      "url": ""
+    },
+    {
+      "id": "84",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan 88C2DDF4: PrincipalOut=4000000 TVO=4000006 Next=842528581 PayRemaining=2 Flags=0",
+      "url": ""
+    },
+    {
+      "id": "86.avant",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=30000000 AssetsAvailable=12000000 LossUnrealized=0 parts=30000000 NAV/part=1",
+      "url": ""
+    },
+    {
+      "id": "86.avant",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "broker 14CF3E52: CoverAvailable=0 DebtTotal=6000000",
+      "url": ""
+    },
+    {
+      "id": "86",
+      "title": "tfLoanDefault L2 (cover = 0)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/419A1D282AC6A279415FF3A104CAAB8C127DE523DB6392E7BBE1B23ED93A2471"
+    },
+    {
+      "id": "86.après",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=24000000 AssetsAvailable=12000000 LossUnrealized=0 parts=30000000 NAV/part=0.8",
+      "url": ""
+    },
+    {
+      "id": "86.après",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "broker 14CF3E52: CoverAvailable=0 DebtTotal=0",
+      "url": ""
+    },
+    {
+      "id": "86",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan 58C62474: PrincipalOut=undefined TVO=undefined Next=undefined PayRemaining=undefined Flags=65536",
+      "url": ""
+    },
+    {
+      "id": "87.avant",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=24000000 AssetsAvailable=12000000 LossUnrealized=0 parts=30000000 NAV/part=0.8",
+      "url": ""
+    },
+    {
+      "id": "87.avant",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "broker C53F8D66: CoverAvailable=1000000 DebtTotal=8000000",
+      "url": ""
+    },
+    {
+      "id": "87",
+      "title": "tfLoanDefault L3 (perte > cover)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/53FCEA3F27DC4E6BBF3E293C21B41E0F8043D7CA452BE1D6FA0DF2FBE0537558"
+    },
+    {
+      "id": "87.après",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=16400000 AssetsAvailable=12400000 LossUnrealized=0 parts=30000000 NAV/part=0.546666",
+      "url": ""
+    },
+    {
+      "id": "87.après",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "broker C53F8D66: CoverAvailable=600000 DebtTotal=0",
+      "url": ""
+    },
+    {
+      "id": "87",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan 37E1FD95: PrincipalOut=undefined TVO=undefined Next=undefined PayRemaining=undefined Flags=65536",
+      "url": ""
+    },
+    {
+      "id": "85.avant",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=16400000 AssetsAvailable=12400000 LossUnrealized=0 parts=30000000 NAV/part=0.546666",
+      "url": ""
+    },
+    {
+      "id": "85.avant",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "broker F1851655: CoverAvailable=5000000 DebtTotal=4000000",
+      "url": ""
+    },
+    {
+      "id": "85.avant",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan 88C2DDF4: PrincipalOut=4000000 TVO=4000006 Next=842528581 PayRemaining=2 Flags=0",
+      "url": ""
+    },
+    {
+      "id": "85",
+      "title": "tfLoanDefault L1 (perte < cover)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/BF5FEC87DDEDF5CE3E857DD38591AD1AE7BC64E0F4B6138A2D5A6B8A23C14FB7"
+    },
+    {
+      "id": "85.après",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault: AssetsTotal=12600000 AssetsAvailable=12600000 LossUnrealized=0 parts=30000000 NAV/part=0.42",
+      "url": ""
+    },
+    {
+      "id": "85.après",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "broker F1851655: CoverAvailable=4800000 DebtTotal=0",
+      "url": ""
+    },
+    {
+      "id": "85.après",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan 88C2DDF4: PrincipalOut=undefined TVO=undefined Next=undefined PayRemaining=undefined Flags=65536",
+      "url": ""
+    },
+    {
+      "id": "85",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "solde O (broker owner): delta -1 drops",
+      "url": ""
+    },
+    {
+      "id": "88",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "loan 88C2DDF4: PrincipalOut=undefined TVO=undefined Next=undefined PayRemaining=undefined Flags=65536",
+      "url": ""
+    },
+    {
+      "id": "88",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "account_tx pseudo-compte vault: {\"LoanManage\":7,\"LoanSet\":3,\"LoanBrokerSet\":3,\"VaultDeposit\":1,\"VaultCreate\":1}",
+      "url": ""
+    },
+    {
+      "id": "89",
+      "title": "prêt défaillable non déclaré depuis 279s",
+      "sent": "observation L4 (run 1)",
+      "code": "Flags=0, LossUnrealized vault=0",
+      "message": "",
+      "verdict": "rien ne force le broker",
+      "note": "PrincipalOut=5000000 Next=842528352",
+      "url": ""
+    },
+    {
+      "id": "91",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault origine: AssetsTotal=50000000 AssetsAvailable=41000000 | D détient 50000000 parts",
+      "url": ""
+    },
+    {
+      "id": "91.full",
+      "title": "retrait TOTAL en Redemption, prêt L4 vivant (5 XRP dehors)",
+      "sent": "VaultWithdraw 50000000 parts",
+      "code": "tecINSUFFICIENT_FUNDS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/881BB7009EC7DBDDA96A52A409775387CEB76A8AF8A7484EDC773AF08915526E"
+    },
+    {
+      "id": "91.avail",
+      "title": "retrait calé sur AssetsAvailable (41000000 drops ≈ 41000000 parts)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/3E9EBB78E1D44B138560B3C41344A97D7624ADA5744E509A4592E4D07CC70953"
+    },
+    {
+      "id": "91",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "après: AssetsTotal=9000000 AssetsAvailable=undefined parts D=9000000",
+      "url": ""
+    }
+  ]
+}

@@ -1,0 +1,296 @@
+{
+  "name": "i",
+  "secs": 358,
+  "rows": [
+    {
+      "id": "I0",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "IS émet USD (DefaultRipple + AllowTrustLineClawback), O/D/BW ont une trustline, M NON",
+      "url": ""
+    },
+    {
+      "id": "100.create",
+      "title": "VaultCreate IOU USD Scale 6 closed-ended",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/BFF12F7D5B63C16A4C0EA1F685986F90A47A38150CE6D41B21BD1AD8F3F915AA"
+    },
+    {
+      "id": "100.dep",
+      "title": "D dépose 100 USD",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/9B32B531C3EF8AD04AD701C38098C1EC3BD631A3879AECD2CB390F6C81E3E3C0"
+    },
+    {
+      "id": "101",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "parts de D pour 100 USD en Scale 6: 100000000 (attendu 100e6 si parts = USD×10^6)",
+      "url": ""
+    },
+    {
+      "id": "100.broker",
+      "title": "LoanBrokerSet sur vault IOU",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/EB289FD7519370A9B0B2BE67537D4623535D68FBFBF49372613A2BF3A186C9FC"
+    },
+    {
+      "id": "100.cover",
+      "title": "CoverDeposit 20 USD",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/7897339210B6140BF1DCDFDA85A1B3FFF635FFE566B313053D79F7BA6BF8233F"
+    },
+    {
+      "id": "102",
+      "title": "VaultClawback 30 USD par l'émetteur sur la position de D",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "surprenant",
+      "note": "AssetsTotal 100→70 | parts D 100000000→70000000 | trustline D=400",
+      "url": "https://devnet.xrpl.org/transactions/CFE2E142336590457D07681F2FEA32BB0C0360A1F16F40FBEB8B9FF69754A9BC"
+    },
+    {
+      "id": "102.over",
+      "title": "VaultClawback 500 USD (plus que la position restante)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/105582A0A93375545C12CA83D34C10DECE43E1788D0574654FB09E770FA37022"
+    },
+    {
+      "id": "102",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "parts D après clawback excessif: 0",
+      "url": ""
+    },
+    {
+      "id": "102.refill",
+      "title": "D redépose 100 USD",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/2AD4792AE8151C3D93F5EDDA33A753EA290D726E2DE220B76F747A5134510C75"
+    },
+    {
+      "id": "102.cover",
+      "title": "LoanBrokerCoverClawback 5 USD par l'émetteur",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "surprenant",
+      "note": "CoverAvailable 20→15",
+      "url": "https://devnet.xrpl.org/transactions/C13B57F674D5D99DFCACD8651E5E5B04BB49CF80CEA3CAC9D62BC7371BEF7825"
+    },
+    {
+      "id": "105",
+      "title": "LoanSet 10 USD par M (aucune trustline USD)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/8A704369224F548BE55A9F769628242D01FA5368B957E94353B3F8287375F4C1"
+    },
+    {
+      "id": "100.loan",
+      "title": "LoanSet 50 USD par BW",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "trustline BW=150",
+      "url": "https://devnet.xrpl.org/transactions/6EF3C1C16835A9FD9246452845E63AAFFCC9A0136457B8B13040A39581982330"
+    },
+    {
+      "id": "106.freeze",
+      "title": "AccountSet asfGlobalFreeze par IS",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/82EB4BC9F632BBDE70FB69589491CE318B63FB6AA240871B4B3D06F79E2C39A1"
+    },
+    {
+      "id": "106.dep",
+      "title": "dépôt IOU sous gel global (phase Investment, contrôle de code)",
+      "sent": "",
+      "code": "tecEXPIRED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/389BCC67632E9290CE867D3DE80DDEFC5464515888286B995C6712424FCB451D"
+    },
+    {
+      "id": "106.pay",
+      "title": "LoanPay 20 USD sous gel global",
+      "sent": "",
+      "code": "tecWRONG_ASSET",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/BE5E09A226A7AFCBB7818FF4ED6EE47E05061EF32D54DE6A05DDCA02FDD7994F"
+    },
+    {
+      "id": "106.wd",
+      "title": "retrait sous gel (Investment → code de phase ou de gel ?)",
+      "sent": "",
+      "code": "tecTOO_SOON",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/7831C15EDBE1C80D13FF1DD4274E154D7AB3F937C3A4A90970FC904D9B682369"
+    },
+    {
+      "id": "106.unfreeze",
+      "title": "levée du gel",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/A72D746063A1B35081C74645722491BA884A19A2BB24786DA9E6A379889BA0E6"
+    },
+    {
+      "id": "106.pay2",
+      "title": "LoanPay 20 USD après dégel (contrôle)",
+      "sent": "",
+      "code": "tecWRONG_ASSET",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/6CF2091DBA7058734294114793B1349DC074B7775FE87627B54FB143B95D685C"
+    },
+    {
+      "id": "103.issue",
+      "title": "MPTokenIssuanceCreate (M, scale 2, CanTransfer)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "id=005023E54AC3984DE1D40F71F4A0DCD41C0F672081C4B817",
+      "url": "https://devnet.xrpl.org/transactions/7EFEE7FF82DB31620039CA32DEF27F629720B2497A8D749394E26CF6FC1AD75B"
+    },
+    {
+      "id": "103",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "O approvisionné en MPT",
+      "url": ""
+    },
+    {
+      "id": "103",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "D approvisionné en MPT",
+      "url": ""
+    },
+    {
+      "id": "103.create",
+      "title": "VaultCreate sur MPT closed-ended",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/C639964B749F7D600633B36122C566EF7BF17B611A6A41AB4E73BF76245DCF4F"
+    },
+    {
+      "id": "103.dep",
+      "title": "D dépose 5000 unités MPT",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/EBF68FF79D8EC0E52500866305C81EB04105CC798576B6F85CE943C6542CE843"
+    },
+    {
+      "id": "103.broker",
+      "title": "LoanBrokerSet sur vault MPT",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/1C413E25FEDD1D6D041511112C21F2292B898010DD761D0B29DB7889B032A58C"
+    },
+    {
+      "id": "104",
+      "title": "VaultCreate dont l'actif = parts (ShareMPTID) du vault IOU",
+      "sent": "",
+      "code": "tecWRONG_ASSET",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/C1341F7200EEC45AC483DDC46FA2C9D5E6E3286E1B0582308F3466BDD91C2455"
+    },
+    {
+      "id": "103.loanNoAuth",
+      "title": "LoanSet 2000 MPT par BW (PAS de MPToken)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/445B64265278E333895DBB485A9AECA7E105ED57D1EBF7C9E83603F3A599E2DD"
+    },
+    {
+      "id": "103.loan",
+      "title": "LoanSet 2000 MPT par BW (après MPTokenAuthorize)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/9A1B78B2B5DDC32BB6872F881DF67AF0FD61CBC8EF1FE23FCDD9C0730D781C6B"
+    },
+    {
+      "id": "103.pay",
+      "title": "LoanPay 2000 MPT",
+      "sent": "",
+      "code": "tecWRONG_ASSET",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/116578F84835C5423904C4DABD1DCF5C4332DF6E2FEDC24A2CD5F76385B874FF"
+    }
+  ]
+}

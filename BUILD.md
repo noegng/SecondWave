@@ -76,4 +76,8 @@ nu. Renvoi = cas de `probes/RESULTATS.md`.
 - Aucune signature exportée de `core` n'a été retirée ni renommée ; tout est additif.
 - `settlement`, `orderbook`, `apps/cli`, `analyst` (placeholder) chargent et tournent —
   vérifié par import et par `node fixtures/test-settlement.mjs`.
-- `xrpl.js@5.2.0-beta.1` (LendingProtocolV1_1) ; le contournement `counterpartySign` (`CPT\0`) intact.
+- `xrpl.js@5.2.0-beta.1` (LendingProtocolV1_1 ; version imposée le 12/09).
+  La beta.1 corrige la co-signature `LoanSet` (`PATCH-loanset-counterparty.md`).
+  Le contournement `counterpartySign` (`CPT\0`) est **conservé** : octets
+  identiques au SDK corrigé. Revalidation : 43 tests hors ligne + cycle
+  Devnet (`fixtures/integration-beta1.log`).

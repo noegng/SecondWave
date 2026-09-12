@@ -1,0 +1,336 @@
+{
+  "name": "e",
+  "secs": 208,
+  "rows": [
+    {
+      "id": "E0",
+      "title": "VaultCreate",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/5CD9059FA75920F9A8FC61534C24826EB129D01AB3E48612275B7728BD9BBA29"
+    },
+    {
+      "id": "E0.dep",
+      "title": "D dépose 60 XRP",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/EEBA564CCBBE62A2AC6529E41BC1E76DEAEA0EF7BCBD71312577F96E3FC8B450"
+    },
+    {
+      "id": "51",
+      "title": "CoverRateMinimum 10000, CoverRateLiquidation 0",
+      "sent": "",
+      "code": "LoanBrokerSet: CoverRateMinimum and CoverRateLiquidation must both be zero or both be non-zero",
+      "message": "LoanBrokerSet: CoverRateMinimum and CoverRateLiquidation must both be zero or both be non-zero",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "52",
+      "title": "CoverRateMinimum 0, CoverRateLiquidation 50000",
+      "sent": "",
+      "code": "LoanBrokerSet: CoverRateMinimum and CoverRateLiquidation must both be zero or both be non-zero",
+      "message": "LoanBrokerSet: CoverRateMinimum and CoverRateLiquidation must both be zero or both be non-zero",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "59.max",
+      "title": "ManagementFeeRate 100000",
+      "sent": "",
+      "code": "LoanBrokerSet: ManagementFeeRate must be between 0 and 10000 inclusive",
+      "message": "LoanBrokerSet: ManagementFeeRate must be between 0 and 10000 inclusive",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "59.over",
+      "title": "ManagementFeeRate 100001",
+      "sent": "",
+      "code": "LoanBrokerSet: ManagementFeeRate must be between 0 and 10000 inclusive",
+      "message": "LoanBrokerSet: ManagementFeeRate must be between 0 and 10000 inclusive",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "E0.Ba",
+      "title": "broker B_a 10000/50000",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/90FFE06EFC94E2F2DE4E74C15F470BB47FBC5E2FD76638227C7D5A6E618F464F"
+    },
+    {
+      "id": "E0.Ba.cover",
+      "title": "CoverDeposit 2 XRP",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/715D9826D22F8A98AC7C45B294487BF4C494AD78230C366B9320B32C45E7AEC3"
+    },
+    {
+      "id": "E0.Bu",
+      "title": "broker B_u 100000/100000",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/FABD1AED376CEA921CFD30071DDE0FF4305CC0AC28BEC1BFB5123C1F5D067A58"
+    },
+    {
+      "id": "E0.Bu.cover",
+      "title": "CoverDeposit 1 XRP",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/ACB24D32AAFEF126167F9C225CDAA598D4126590C8E6EBD55319368185DBCE41"
+    },
+    {
+      "id": "E0.Bz",
+      "title": "broker B_z 0/0 (pour le partage de liquidité)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/DD2A54E181AE471A06E8BCE173637A73DBD46E826C5A5A87907AD41145B2BE92"
+    },
+    {
+      "id": "54.coverMin",
+      "title": "LoanBrokerSet update coverMin",
+      "sent": "{\"LoanBrokerID\":\"D75EDD00C9C3110EA0E87A602731071838B38FB7906C05D1EC389988EE3436B7\",\"CoverRateMinimum\":20000}",
+      "code": "LoanBrokerSet: missing field VaultID",
+      "message": "LoanBrokerSet: missing field VaultID",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "54.coverLiq",
+      "title": "LoanBrokerSet update coverLiq",
+      "sent": "{\"LoanBrokerID\":\"D75EDD00C9C3110EA0E87A602731071838B38FB7906C05D1EC389988EE3436B7\",\"CoverRateLiquidation\":60000}",
+      "code": "LoanBrokerSet: missing field VaultID",
+      "message": "LoanBrokerSet: missing field VaultID",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "54.debtMax",
+      "title": "LoanBrokerSet update debtMax",
+      "sent": "{\"LoanBrokerID\":\"D75EDD00C9C3110EA0E87A602731071838B38FB7906C05D1EC389988EE3436B7\",\"DebtMaximum\":\"50000000\"}",
+      "code": "LoanBrokerSet: missing field VaultID",
+      "message": "LoanBrokerSet: missing field VaultID",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "54.fee",
+      "title": "LoanBrokerSet update fee",
+      "sent": "{\"LoanBrokerID\":\"D75EDD00C9C3110EA0E87A602731071838B38FB7906C05D1EC389988EE3436B7\",\"ManagementFeeRate\":500}",
+      "code": "LoanBrokerSet: missing field VaultID",
+      "message": "LoanBrokerSet: missing field VaultID",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "54.data",
+      "title": "LoanBrokerSet update data",
+      "sent": "{\"LoanBrokerID\":\"D75EDD00C9C3110EA0E87A602731071838B38FB7906C05D1EC389988EE3436B7\",\"Data\":\"6D616A\"}",
+      "code": "LoanBrokerSet: missing field VaultID",
+      "message": "LoanBrokerSet: missing field VaultID",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "B21.lset.S",
+      "title": "LoanSet VALIDE en Subscription",
+      "sent": "",
+      "code": "tecTOO_SOON",
+      "message": "It is too early to attempt the requested operation. Please wait.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "55.10",
+      "title": "LoanSet 10 XRP sur B_u (passe si unité=1/1e6)",
+      "sent": "",
+      "code": "tecINSUFFICIENT_FUNDS",
+      "message": "Not enough funds available to complete requested transaction.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "55.plus",
+      "title": "LoanSet 0.1 XRP de plus sur B_u (doit buter sur le cover)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/7622B8C86BB3D1E936A530FAEDD3EC04C93096AFAE65FD1FC85FFD302B4EDBA2"
+    },
+    {
+      "id": "56",
+      "title": "CoverDeposit 20 XRP de plus sur B_a (aucune dette)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/636D226D4505EED56613FB52AAE6F2BA2BF5ECF625E66C7A635469A571461F0C"
+    },
+    {
+      "id": "60.a",
+      "title": "LoanSet 35 XRP via B_a (AssetsAvailable ~50 après 55.10)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/9C8A3441CB5B8C23D3B6BA7D88996B62F0EFD07F927DEC2772D7B6ABFF04EBE9"
+    },
+    {
+      "id": "60.b",
+      "title": "LoanSet 30 XRP via B_z (le pool est-il partagé ?)",
+      "sent": "",
+      "code": "tecINSUFFICIENT_FUNDS",
+      "message": "Not enough funds available to complete requested transaction.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "60",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "après: AssetsTotal=60000000 AssetsAvailable=24900000",
+      "url": ""
+    },
+    {
+      "id": "58",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "B_a: CoverAvailable=22000000 DebtTotal=35000000",
+      "url": ""
+    },
+    {
+      "id": "58.all",
+      "title": "CoverWithdraw TOTAL (22000000) avec dette 35000000",
+      "sent": "",
+      "code": "tecINSUFFICIENT_FUNDS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/6A531B5F1BC222904A2972F1E0DD9E11D2855341E452B55E411CE5B8A8FFF65A"
+    },
+    {
+      "id": "58.floor",
+      "title": "CoverWithdraw jusqu'au plancher supposé (21650000, reste 350000)",
+      "sent": "",
+      "code": "tecINSUFFICIENT_FUNDS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/D9387D1769BEA421BB8CF9740434D4AB52EBAE1C8A3AD54E4BD2ADCC5B02A06E"
+    },
+    {
+      "id": "58.one",
+      "title": "CoverWithdraw 1 drop de plus",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/B1D8A19C6B2AB11ED12CC8DE14F16EC8B7C96488104EEAF49E280A95ADE2E0A2"
+    },
+    {
+      "id": "58",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "après: CoverAvailable=21999999 (plancher théorique 1/1e6: 350000)",
+      "url": ""
+    },
+    {
+      "id": "57.r",
+      "title": "broker B_r 100000/100000 (course)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/97BE895148B9F833876CE5393337FCA6047D142A73EDDE0C304A40154E849D38"
+    },
+    {
+      "id": "57.race.wd",
+      "title": "CoverWithdraw 100% tiré pendant le LoanSet",
+      "sent": "prelim tesSUCCESS",
+      "code": "tesSUCCESS (ledger 5252035)",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "57.race.ls",
+      "title": "LoanSet 15 XRP concurrent",
+      "sent": "",
+      "code": "tecINSUFFICIENT_FUNDS",
+      "message": "Not enough funds available to complete requested transaction.",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "57",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "B_r après course: CoverAvailable=0 DebtTotal=0",
+      "url": ""
+    },
+    {
+      "id": "62",
+      "title": "LoanBrokerDelete sur B_a (dette 35 XRP en cours)",
+      "sent": "",
+      "code": "tecHAS_OBLIGATIONS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/7F3A29D7915DBE7989147526AABE950C2934CBFAF4D48C94A1A73DFC72819384"
+    }
+  ]
+}

@@ -129,10 +129,12 @@ export async function sequence(client, account) {
 // 🔴 LoanSet — contourne le bug de co-signature du SDK
 // ─────────────────────────────────────────────────────────────
 /**
- * `signLoanSetByCounterparty` du SDK signe avec le préfixe historique STX\0
- * alors que rippled attend CPT\0 depuis fixCleanup3_4_0 — actif sur le Devnet.
- * Les encodeurs corrects existent déjà dans ripple-binary-codec, ils ne sont
- * simplement pas appelés. Voir PATCH-loanset-counterparty.md.
+ * Historique : `signLoanSetByCounterparty` de xrpl.js ≤ 5.2.0-beta.0 signait avec
+ * le préfixe STX\0 alors que rippled attend CPT\0 depuis fixCleanup3_4_0.
+ * ✅ Corrigé dans 5.2.0-beta.1 (table SIGNING_ENCODERS par rôle) — le fix reprend
+ * exactement PATCH-loanset-counterparty.md. On GARDE ce helper : il appelle les
+ * mêmes encodeurs du codec, produit des octets identiques au SDK corrigé, et
+ * nous isole de tout futur changement du SDK pendant l'événement.
  */
 export function counterpartySign(tx, wallet, multisignAddress = null) {
   const payload = multisignAddress

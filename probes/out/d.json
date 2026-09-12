@@ -1,0 +1,286 @@
+{
+  "name": "d",
+  "secs": 229,
+  "rows": [
+    {
+      "id": "D0.alice",
+      "title": "CredentialCreate → alice",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/0AE605F26DD4EF5516E72DAA2D6E4B901C2B176B6576ED2440A43B12C9DD7A4A"
+    },
+    {
+      "id": "D0.dave",
+      "title": "CredentialCreate → dave (jamais accepté)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/34A421A28AF6AA74A487FF298F247F91E73EFF852DBD64837EA233F63DCD6D89"
+    },
+    {
+      "id": "D0.erin",
+      "title": "CredentialCreate → erin (expire dans 170s)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/98227159AEB44C9CB4F8F7F8D176317238AD192A0ECF6AB537F6C12A62EE6629"
+    },
+    {
+      "id": "D0.dom",
+      "title": "PermissionedDomainSet (KYC par I)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/7F2B84B273503A0F533CA81E4E129D30DAC801ECC353B79B015071BEC9FD3F4F"
+    },
+    {
+      "id": "48.create",
+      "title": "VaultCreate privé+domaine par O (O sans credential)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/9D24FE43F0E99EAB4D551F3F1046F53EBEA4CF065A7FB1102B4A25355C36DD39"
+    },
+    {
+      "id": "48.dep",
+      "title": "dépôt par O (propriétaire NON membre du domaine)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/1801AAD1ED20FF921DD42931B87357816FDEA88D6D529030B1895344D450A8F0"
+    },
+    {
+      "id": "43",
+      "title": "DomainID sur l'issuance des parts",
+      "sent": "vault_info.shares",
+      "code": "vault.DomainID=undefined… | shares.DomainID=8A1023C3… | shares.Flags=60",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "39",
+      "title": "dépôt par carol (aucun credential)",
+      "sent": "",
+      "code": "tecNO_AUTH",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/F2A3BC3CA208D6B0FCC7C4DE77A33B016B11126771CBA4988167F573285EFEA4"
+    },
+    {
+      "id": "40",
+      "title": "dépôt par dave (credential émis mais JAMAIS accepté)",
+      "sent": "",
+      "code": "tecNO_AUTH",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/022DCAB1431B980A198E2334C4D63310098F0AF905D61ABE6139B6A866752ADF"
+    },
+    {
+      "id": "41a",
+      "title": "dépôt par erin (credential valide, expire bientôt)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/8A7950F91170A77951DFF068AB68C5258865E45C7E385C27805AB8AB5EFF314A"
+    },
+    {
+      "id": "42a",
+      "title": "dépôt par alice (credential valide)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/6E57B14B587748E163A3C74E5AB3325FB2AD2182A7FF70FE7990A29177473214"
+    },
+    {
+      "id": "44.set",
+      "title": "PermissionedDomainSet: AcceptedCredentials ← [KYB] (KYC éjecté)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/C6DFD0A031FB005386184555F978BD532980BC5FB0E75577D5D9436DD2C8DE7B"
+    },
+    {
+      "id": "44.dep",
+      "title": "alice (KYC) dépose après l'éviction de KYC",
+      "sent": "",
+      "code": "tecNO_AUTH",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/946372FF9167C6F7695A286AE357B59C56D3FA4AAD7C83CB80DC0FE1184A2F52"
+    },
+    {
+      "id": "44.wd",
+      "title": "alice (KYC) RETIRE après l'éviction — enfermée ?",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/2F7D825824C4EB754E7DBC360683E9B7C309834C977E61C510BA55EC2AC46358"
+    },
+    {
+      "id": "45.set",
+      "title": "AcceptedCredentials ← [KYC, KYB]",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/CDB2408D777236BBCB1123C0DBCF30EB3CF1DCFB6CB3E8752A81A040AED60125"
+    },
+    {
+      "id": "45",
+      "title": "alice (KYC seulement) dépose — un seul credential suffit ?",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/5DB06BBFA787CD3D47F9BC440BC2A30D46A67610AC7DE68BF8F2EBFA7033CBE6"
+    },
+    {
+      "id": "46.10",
+      "title": "domaine avec 10 AcceptedCredentials",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/429C554A28E2C9C0803DD932D73DFD1B0AE1D0B41C6DF38BF529809F8897376D"
+    },
+    {
+      "id": "46.11",
+      "title": "domaine avec 11 AcceptedCredentials",
+      "sent": "",
+      "code": "PermissionedDomainSet: Credentials length cannot exceed 10 elements",
+      "message": "PermissionedDomainSet: Credentials length cannot exceed 10 elements",
+      "verdict": "",
+      "note": "",
+      "url": ""
+    },
+    {
+      "id": "47",
+      "title": "domaine acceptant un credential de carol (jamais émis)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/49AB9D523A6267F730EC64C5A41F679370546CC476BF3EFAFC26CAADD7354721"
+    },
+    {
+      "id": "49.pn",
+      "title": "privé + non-transférable",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "shares.Flags=4 DomainID=présent",
+      "url": "https://devnet.xrpl.org/transactions/30014A871AD14A077BCD792807E05D85E8513663CD290B203A6052B43D1FCEAA"
+    },
+    {
+      "id": "49",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "rappel: public transférable=56 (A1) · privé transférable=60 (A16/D) · public non-transférable=0 (A19)",
+      "url": ""
+    },
+    {
+      "id": "41b.dep",
+      "title": "erin dépose APRÈS expiration du credential",
+      "sent": "",
+      "code": "tecEXPIRED",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/B475D1F59A8F07F027922E9B64A76539E45AE80F84406B5DAB078AFE9599FD60"
+    },
+    {
+      "id": "41b.wd",
+      "title": "erin retire APRÈS expiration — enfermée ?",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/51958910F05E8C59C0E7FB4F102CC8571CA8C0A1CA9391ADDFF2574AE87FDF34"
+    },
+    {
+      "id": "41b",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "parts d'erin restantes: 4000000",
+      "url": ""
+    },
+    {
+      "id": "42b.del",
+      "title": "CredentialDelete alice par l'émetteur",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/8511949F237B03AE3CB2DA01003411570CEACF7BED2D332D1A71A5F7D228DAA2"
+    },
+    {
+      "id": "42b.dep",
+      "title": "alice dépose après révocation",
+      "sent": "",
+      "code": "tecNO_AUTH",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/903F812FCE2B808B655FF798789ACFA8B6D782B74F83018816C0217511FC4C7B"
+    },
+    {
+      "id": "42b.wd",
+      "title": "alice retire après révocation — enfermée ?",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/D68F30DBF8D13A76D23204EDFDF27F7BDC143481481975E506FC8EB77B7F51D9"
+    },
+    {
+      "id": "42b",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "parts d'alice restantes: 9000000",
+      "url": ""
+    }
+  ]
+}

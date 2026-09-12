@@ -3,22 +3,22 @@
  * SecondWave — démonstration en terminal.
  *
  *   npm run world              génère le monde sur le Devnet (une fois)
- *   npm run cli vaults         les quatre vaults, notés par l'analyste
+ *   npm run cli vaults         les vaults, notés par l'analyste
  *   npm run cli book <acheteur>   le carnet tel que cet acheteur le voit
  *   npm run cli sell <vault> <parts> <prixXRP>
  *   npm run cli buy  <offre> <acheteur>
  *   npm run cli demo           le chemin complet, de l'offre au règlement
  *
  * Les acteurs se nomment `<vault>.<rôle><n>` : `sain.d0` est le premier
- * déposant du vault sain, `concentre.b0` son emprunteur unique.
+ * déposant du vault sain, `predateur.b0` son emprunteur unique.
  */
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { connect, Wallet, readVaultGraph, holderMap, shareBalance, txUrl } from '@secondwave/core'
+import { connect, Wallet, readVaultGraph, holderMap } from '@secondwave/core'
 import { SettlementEngine } from '@secondwave/settlement'
 import { OrderBook, priceHistory } from '@secondwave/orderbook'
-import { analyse } from '@secondwave/analyst'
+import { analyse, classifyDiscount, toAnalystInput } from '@secondwave/analyst'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
 const XRP = d => (Number(d) / 1e6).toFixed(2)
@@ -57,8 +57,9 @@ const book = new OrderBook(join(ROOT, 'orderbook.json'))
 const c = await connect(world.network)
 const engine = new SettlementEngine(c)
 
-const COULEUR = { sain: '🟢', prudence: '🟡', risqué: '🟠', 'à fuir': '🔴' }
+const VERDICT = { sain: '🟢', prudence: '🟡', risqué: '🟠', 'à fuir': '🔴' }
 const PUCE = { info: '·', alerte: '⚠️ ', rouge: '🔴' }
+const PASTILLE = { liquidity: '🟢 décote de liquidité', distress: '🔴 décote de DÉTRESSE', fair: '⚪ prix ≈ NAV' }
 
 const [cmd, ...args] = process.argv.slice(2)
 try {
@@ -76,16 +77,39 @@ try {
 } finally { await c.disconnect() }
 
 // ─────────────────────────────────────────────────────────────
-async function noteDe(v, order) {
+/** Lecture live + `analyse()`. `order` n'est passé que pour un prix total. */
+async function lire(v, order) {
   const graph = await readVaultGraph(c, v.vaultId)
   const holders = await holderMap(c, graph.vault)
   return { graph, holders, note: analyse({ graph, holders, order }) }
 }
 
+/**
+ * Décote d'une offre. `note.nav` est ×1e6 (1e6 = pair) ; `price`/`shares`
+ * sont en drops et parts — le ratio est le même qu'avec navPerShare (~1 au pair).
+ */
+function decoteDe(note, o) {
+  const nav = Number(note.nav) / 1e6
+  const pps = Number(o.price) / Number(o.shares)
+  return { nav, pps, decote: nav > 0 ? Math.max(0, 1 - pps / nav) : 0 }
+}
+
+/** Verdict liquidité vs détresse d'Hugo, sur le pire broker du vault. */
+function classement(graph, decote) {
+  const { vault, brokers } = toAnalystInput(graph)
+  const now = Number(graph.at ?? 0)
+  if (!brokers.length) {
+    return { kind: 'fair', reasons: [], headline: 'aucun broker — le capital dort' }
+  }
+  const notes = brokers.map(({ broker, loans }) =>
+    classifyDiscount({ vault, broker, loans, offer: { discount: decote }, nowRipple: now }))
+  return notes.find(n => n.kind === 'distress') ?? notes.find(n => n.kind === 'liquidity') ?? notes[0]
+}
+
 async function cmdVaults() {
   for (const v of world.vaults) {
-    const { graph, holders, note } = await noteDe(v)
-    console.log(`\n${COULEUR[note.verdict]}  ${v.key}  —  ${note.verdict} (${note.score}/100)`)
+    const { graph, holders, note } = await lire(v)
+    console.log(`\n${VERDICT[note.verdict]}  ${v.key}  —  ${note.verdict} (${note.score}/100)`)
     console.log(`    ${v.label}`)
     console.log(`    ${v.vaultId}`)
     console.log(`    phase ${graph.phase} · actifs ${montant(graph, graph.vault.AssetsTotal)}`
@@ -105,16 +129,21 @@ async function cmdBook(acheteur) {
   if (!offres.length) return console.log('\nCarnet vide.\n')
 
   console.log(`\nCarnet vu par ${acheteur} (${w.classicAddress})\n`)
-  const notes = new Map()
+  const cache = new Map()
   for (const o of offres) {
     const v = world.vaults.find(x => x.vaultId === o.vaultId)
-    if (!notes.has(o.vaultId)) notes.set(o.vaultId, (await noteDe(v)).note)
-    const n = notes.get(o.vaultId)
+    if (!v) continue
+    if (!cache.has(o.vaultId)) cache.set(o.vaultId, await lire(v))
+    const { graph, note } = cache.get(o.vaultId)
+    const { decote } = decoteDe(note, o)
+    const n = classement(graph, decote)
     console.log(`  ${o.id}  ${v.key.padEnd(14)} ${o.shares} parts pour ${XRP(o.price)} XRP`
-      + `   ${COULEUR[n.verdict]} ${n.verdict} ${n.score}/100`)
+      + `  —  décote ${(decote * 100).toFixed(1)} %   ${VERDICT[note.verdict]} ${note.verdict} ${note.score}/100`)
     console.log(`       ${o.eligible ? '✅' : '⛔'} ${o.reason}`)
-    for (const s of n.signaux.filter(x => x.niveau === 'rouge'))
+    console.log(`       ${PASTILLE[n.kind]}`)
+    for (const s of note.signaux.filter(x => x.niveau === 'rouge'))
       console.log(`       🔴 ${s.titre}`)
+    for (const r of n.reasons) console.log(`       🔴 ${r}`)
   }
   console.log()
 }
@@ -139,13 +168,16 @@ async function cmdBuy(orderId, acheteur) {
     ?? fatal('seed du vendeur absente de state.json')
 
   console.log(`\n─── ANALYSE ───`)
-  // L'ordre est indispensable : sans lui `fairPrice` est null et on comparerait
-  // un prix par part au prix total demandé.
-  const { note } = await noteDe(v, { shares: o.shares })
-  console.log(`  ${COULEUR[note.verdict]} ${v.key} : ${note.verdict} (${note.score}/100)`)
-  console.log(`  ${o.shares} parts · prix demandé ${XRP(o.price)} XRP`
-    + ` · prix « juste » selon l'analyste ${note.fairPrice == null ? 'n/a (parts non transférables)' : `${XRP(note.fairPrice)} XRP`}`)
+  const { graph, note } = await lire(v, { shares: o.shares })
+  const { nav, pps, decote } = decoteDe(note, o)
+  const n = classement(graph, decote)
+  console.log(`  ${VERDICT[note.verdict]} ${v.key} : ${note.verdict} (${note.score}/100)`)
+  console.log(`  ${o.shares} parts · demandé ${XRP(o.price)} XRP`
+    + ` · juste ${note.fairPrice == null ? 'n/a (parts non transférables)' : `${XRP(note.fairPrice)} XRP`}`)
+  console.log(`  NAV ${nav.toFixed(4)}/part · payé ${pps.toFixed(4)} · décote ${(decote * 100).toFixed(1)} %`)
+  console.log(`  ${PASTILLE[n.kind]} — ${n.headline}`)
   for (const s of note.signaux) console.log(`  ${PUCE[s.niveau]} ${s.titre} — ${s.detail}`)
+  for (const r of n.reasons) console.log(`  🔴 ${r}`)
 
   console.log(`\n─── RÈGLEMENT ───`)
   const r = await engine.executeSwap({
@@ -191,6 +223,6 @@ async function cmdDemo() {
   const partsRisque = BigInt(risque.holders[0].shares) / 2n
   book.post({ vaultId: sain.vaultId, seller: sain.holders[0].account, shares: partsSain, price: String(partsSain * 90n / 100n) })
   book.post({ vaultId: risque.vaultId, seller: risque.holders[0].account, shares: partsRisque, price: String(partsRisque * 90n / 100n) })
-  console.log('Deux offres au même prix par part. L\'analyste les sépare :\n')
+  console.log('Deux offres à la MÊME décote. L\'analyste sépare la liquidité de la détresse :\n')
   await cmdBook('sain.d1')
 }

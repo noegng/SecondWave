@@ -1,0 +1,136 @@
+{
+  "name": "z4",
+  "secs": 121,
+  "rows": [
+    {
+      "id": "Z4.L1",
+      "title": "LoanSet 6 XRP interval 120 total 2",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/F94DE56DC5B3F92E21FBDD5225FE4EA8F05B8BCD88208E94A5F73D2BE031B784"
+    },
+    {
+      "id": "Z4.L2",
+      "title": "LoanSet 6 XRP interval 120 total 2",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/43A766F426DD6628C26DE4D994B420B4B32A728BE172EE63F7BD094A20226C94"
+    },
+    {
+      "id": "Z4.L3",
+      "title": "LoanSet 6 XRP interval 120 total 2",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "",
+      "url": "https://devnet.xrpl.org/transactions/B6DAEDCE63719220FAB2CF86380553AA9DDBDB5DEAC800C9C24C9826A3B98561"
+    },
+    {
+      "id": "Z4.noflag+1",
+      "title": "LoanPay 7000018 SANS flag (TVO était 6000018, mi-période 1)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "→ prêt SOLDÉ (champs purgés)",
+      "url": "https://devnet.xrpl.org/transactions/101E1799D45C1A986800ABEC5537AF0B82DE41D7661691B918812C7491CBDAAD"
+    },
+    {
+      "id": "Z4.noflag+1",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "  rLMMgtG7: 6000018 drops",
+      "url": ""
+    },
+    {
+      "id": "Z4.noflag+1",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "  rNNS8MHM: -6000019 drops",
+      "url": ""
+    },
+    {
+      "id": "Z4.noflag=",
+      "title": "LoanPay 6000018 SANS flag (TVO était 6000018, mi-période 1)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "→ prêt SOLDÉ (champs purgés)",
+      "url": "https://devnet.xrpl.org/transactions/97CF6BF3173CAAC4DE105B312EF8119CEC22043FF81678668DD38FB0395521C9"
+    },
+    {
+      "id": "Z4.noflag=",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "  rLMMgtG7: 6000018 drops",
+      "url": ""
+    },
+    {
+      "id": "Z4.noflag=",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "  rNNS8MHM: -6000019 drops",
+      "url": ""
+    },
+    {
+      "id": "Z4.fullflag",
+      "title": "LoanPay 7000018 +flag 131072 (TVO était 6000018, mi-période 1)",
+      "sent": "",
+      "code": "tesSUCCESS",
+      "message": "",
+      "verdict": "",
+      "note": "→ prêt SOLDÉ (champs purgés)",
+      "url": "https://devnet.xrpl.org/transactions/79749662BBD7785D5915AA5F38FE335C28C18C46084F026EA1D9F7741A6DBD18"
+    },
+    {
+      "id": "Z4.fullflag",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "  rLMMgtG7: 6000000 drops",
+      "url": ""
+    },
+    {
+      "id": "Z4.fullflag",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "  rNNS8MHM: -6000001 drops",
+      "url": ""
+    },
+    {
+      "id": "Z4",
+      "title": "(mesure)",
+      "sent": "",
+      "code": "",
+      "message": "",
+      "verdict": "",
+      "note": "vault final: AssetsTotal=40000036 AssetsAvailable=40000036",
+      "url": ""
+    }
+  ]
+}
