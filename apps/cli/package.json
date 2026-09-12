@@ -1,1 +1,14 @@
-{ "name": "@secondwave/cli", "version": "0.0.0", "private": true, "type": "module", "main": "src/index.mjs" }
+{
+  "name": "@secondwave/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.mjs",
+  "dependencies": {
+    "@secondwave/core": "*",
+    "@secondwave/vault": "*",
+    "@secondwave/settlement": "*",
+    "@secondwave/orderbook": "*",
+    "@secondwave/analyst": "*"
+  }
+}

@@ -3,5 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "main": "src/index.mjs"
+  "main": "src/index.mjs",
+  "dependencies": {
+    "ripple-binary-codec": "^2.11.0",
+    "ripple-keypairs": "^2.0.0",
+    "xrpl": "5.2.0-beta.0"
+  }
 }

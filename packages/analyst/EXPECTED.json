@@ -1,0 +1,42 @@
+{
+  "note": "Cas attendus par vault du monde généré. Cible de l'analyste et test de non-régression. Les 'redFlags' NE doivent PAS disparaître ; le verdict est indicatif.",
+  "vaults": {
+    "sain": {
+      "verdict": "prudence",
+      "redFlags": ["undeclared-default"],
+      "alerts": []
+    },
+    "predateur": {
+      "verdict": "à fuir",
+      "redFlags": ["no-cover", "self-loan", "undeclared-default"],
+      "alerts": ["concentration"]
+    },
+    "deprecie": {
+      "verdict": "risqué",
+      "redFlags": ["undeclared-default"],
+      "alerts": ["unrealized-loss"]
+    },
+    "iou": {
+      "verdict": "risqué",
+      "redFlags": ["clawback-armed", "undeclared-default"],
+      "alerts": []
+    },
+    "verrouille": {
+      "verdict": "prudence",
+      "redFlags": [],
+      "alerts": ["non-transferable"],
+      "fairPrice": null
+    },
+    "redemption": {
+      "verdict": "sain",
+      "redFlags": [],
+      "alerts": []
+    },
+    "solde": {
+      "verdict": "sain",
+      "redFlags": [],
+      "alerts": ["withdrawable-cover"],
+      "note": "prêt soldé et supprimé (LoanDelete) ; DebtTotal=0 ⇒ cover 100% retirable"
+    }
+  }
+}

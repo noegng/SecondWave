@@ -25,3 +25,13 @@ build/
 coverage/
 *.log
 .DS_Store
+
+# état local du carnet (régénérable)
+orderbook.json
+
+# sondes : états avec seeds + notes de sécurité (transmises de vive voix, jamais commitées)
+probes/state-*.json
+SECURITY-NOTES.md
+
+# sondes exploratoires
+probes*/*.log

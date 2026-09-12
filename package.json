@@ -2,13 +2,23 @@
   "name": "secondwave",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*", "apps/*"],
-  "engines": { "node": ">=20" },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "world": "node fixtures/generate.mjs",
     "cli": "node apps/cli/src/index.mjs",
+    "analyse": "node packages/analyst/src/run.mjs",
     "analyst": "node packages/analyst/src/cli.mjs",
-    "test": "npm run test --workspace=@secondwave/analyst",
+    "test": "node --test packages/core/test/analytics.test.mjs packages/vault/test/rules.test.mjs && npm run test --workspace=@secondwave/analyst",
+    "test:integration": "node fixtures/test-vault-lifecycle.mjs",
     "test:analyst": "npm run test --workspace=@secondwave/analyst"
+  },
+  "dependencies": {
+    "xrpl": "5.2.0-beta.0"
   }
 }
