@@ -337,3 +337,18 @@ export async function isDomainMember(client, account, domainId) {
 }
 
 export { Wallet }
+
+// ── Ré-exports de la couche analyste (Noé) fusionnés depuis main ──
+export {
+  TENTH_BPS,
+  MANAGEMENT_FEE_RATE_MAX,
+  MIN_INVESTMENT_PERIOD,
+  LOAN_REDEMPTION_BUFFER,
+  VaultKind,
+  VaultPhase,
+  LoanFlags,
+  ScoreWeights,
+  RatingBands,
+} from './constants.mjs'
+
+import './types.mjs'

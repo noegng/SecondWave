@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "xrpl-docs": {
+      "url": "https://xrpl.org/mcp"
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp"
+    }
+  }
+}

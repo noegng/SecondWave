@@ -53,9 +53,21 @@ fixtures/      générateur de monde de démo
 
 ```bash
 npm install
-npm run world     # génère l'écosystème de démo sur le Devnet
+npm test              # moteur analyst (pas besoin du Devnet)
+npm run world         # génère l'écosystème de démo sur le Devnet (Hugo)
 npm run cli
 ```
+
+### Analyst (Noé)
+
+Moteur pur dans `packages/analyst` : il consomme les snapshots définis dans `@secondwave/core` et sort **score AAA→D**, **NAV**, **implied APY**, **stress First-Loss**, et le verdict **liquidité vs détresse**.
+
+```bash
+npm test -w @secondwave/analyst
+```
+
+Point d'entrée : `analyzeOffer({ vault, broker, loans, offer, nowRipple })`.
+Hugo n'a qu'à remplir `core` (lecteurs `vault_info` / `account_objects`) pour brancher le ledger — le moteur est déjà testé hors chaîne.
 
 ## Réseau
 
