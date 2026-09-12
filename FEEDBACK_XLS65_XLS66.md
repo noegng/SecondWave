@@ -1,5 +1,8 @@
 # XLS-65 / XLS-66 — Rapport DevX (Track 2)
 
+> **Version lisible pour le rendu :** [FEEDBACK_RENDU.md](./FEEDBACK_RENDU.md)  
+> Ce fichier reste la fiche technique (Noé) : formules first-loss, preuves, portefeuille.
+
 **Équipe :** SecondWave · **Focus :** Closed-Ended Vault + First-Loss  
 **Statut :** monde Devnet généré le 2026-09-12T14:09:46Z (`npm run world`) · `network_id` 2 · `wss://s.devnet.rippletest.net:51233`  
 **Explorer :** https://devnet.xrpl.org

@@ -5,7 +5,8 @@
 amendements `LendingProtocolV1_1` et `fixCleanup3_4_0` actifs
 **Lib** `xrpl.js@5.2.0-beta.1` · `ripple-binary-codec@2.11.0` · Node 24
 
-> Le rapport remis au jury est `FEEDBACK.md` (3 pages). Ce fichier en est
+> Le rapport remis au jury est `FEEDBACK_RENDU.md`. L’annexe technique courte est
+> `FEEDBACK.md`. Ce fichier en est
 > l'annexe : la version longue des frictions relevées côté règlement et marché
 > secondaire, avec les repros complètes. Le pendant côté vault est
 > `probes/FRICTIONS.md`.

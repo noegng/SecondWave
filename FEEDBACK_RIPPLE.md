@@ -1,7 +1,10 @@
 # Feedback Ripple
 
-Livrable jury : **[FEEDBACK_XLS65_XLS66.md](./FEEDBACK_XLS65_XLS66.md)**
+**Livrable jury (lisible) :** [FEEDBACK_RENDU.md](./FEEDBACK_RENDU.md)
 
-Point majeur : le capital de première perte **ne couvre pas** l’intégralité d’un gros défaut. Le protocole ne liquide que `DebtTotal × CoverRateMinimum × CoverRateLiquidation`, pas `CoverAvailable`.
+Annexes techniques :
 
-Monde Devnet (2026-09-12T14:09:46Z) — cas 0/0 : vault `predateur` `64B3C650A8A561E1DDC83811061A8A46A58FD94EA531315839B22B19B06B2E94`.
+- [FEEDBACK.md](./FEEDBACK.md) — Hugo, codes et repros
+- [FEEDBACK_XLS65_XLS66.md](./FEEDBACK_XLS65_XLS66.md) — Noé, first-loss + portefeuille
+
+Point majeur : la réserve de première perte **ne couvre pas** tout un gros défaut. Le réseau ne prend qu’une petite tranche prévue par les taux, pas tout l’argent affiché en caisse.

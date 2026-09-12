@@ -130,7 +130,7 @@ l'est plus. **Relancer `npm run world` moins de dix minutes avant la démo.**
 - [ ] **P6.1 — ⚠️ Réécrire le README pour la remise**
   - la version actuelle est **une note technique pour l'agent de Noé**, pas une présentation
   - version finale : le problème, la solution, la démo, l'installation, l'équipe — pour un lecteur extérieur
-- [ ] **P6.2 — ⭐ Le rapport de friction** *(la moitié de la note)* — **commencé : `FEEDBACK.md`**
+- [ ] **P6.2 — ⭐ Le rapport de friction** *(la moitié de la note)* — **brouillon lisible : `FEEDBACK_RENDU.md`** (annexes `FEEDBACK.md` + `FEEDBACK_XLS65_XLS66.md`)
   - 8 points déjà rédigés au format imposé, mesurés pendant le build
   - source : `datablockchain/4 - XRPL/XRP Ledger (L1)/Hackathons/⚠️ Frictions & contournements — le projet.md` — **34 points déjà documentés**
   - les P0 : `LoanSet` cassé dans les SDK (avec le fix) · le Batch qui ment sur son résultat · aucune RPC de lecture côté XLS-66 · la doc qui pointe un réseau mort · `LendingProtocolV1_1` non documenté

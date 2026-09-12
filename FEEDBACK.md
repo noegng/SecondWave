@@ -1,5 +1,8 @@
 # Rapport de feedback développeur — SecondWave
 
+> **Version lisible pour le rendu :** [FEEDBACK_RENDU.md](./FEEDBACK_RENDU.md)  
+> Ce fichier reste l’annexe technique (Hugo) : codes, scripts, versions.
+
 **Track** 2 — Lending Protocol · **Flavour** Loaded (Permissioned Domains + Credentials)
 **Environnement** Devnet public XRPL, `wss://s.devnet.rippletest.net:51233`
 **rippled** 3.4.0-rc5 — `LendingProtocolV1_1` et `fixCleanup3_4_0` actifs

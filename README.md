@@ -72,7 +72,7 @@ npm run cli
 | Brancher `world.json` / `snapshot.json` | **fait** — `npm run analyse -- all` |
 | Lecture live Devnet + vaults publics | **fait** — `live` / `vault` / `scan` |
 | Historique (Loan disparaît au `LoanDelete`) | après le dump : timeline via `account_tx` |
-| Fiche DevX jury (first-loss ≠ CoverAvailable) | **fait** — [FEEDBACK_XLS65_XLS66.md](./FEEDBACK_XLS65_XLS66.md) |
+| Fiche DevX jury | **brouillon rendu** — [FEEDBACK_RENDU.md](./FEEDBACK_RENDU.md) (annexes : [FEEDBACK.md](./FEEDBACK.md), [FEEDBACK_XLS65_XLS66.md](./FEEDBACK_XLS65_XLS66.md)) |
 
 Deux points d'entrée : `analyse({ graph, holders, order, meta })` sur un graphe
 `core.readVaultGraph` (c'est celui que le CLI et le runner utilisent), et
