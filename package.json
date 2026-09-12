@@ -6,6 +6,8 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "world": "node fixtures/generate.mjs",
-    "cli": "node apps/cli/src/index.mjs"
+    "cli": "node apps/cli/src/index.mjs",
+    "test": "npm run test --workspace=@secondwave/analyst",
+    "test:analyst": "npm run test --workspace=@secondwave/analyst"
   }
 }
