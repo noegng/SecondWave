@@ -1,5 +1,6 @@
 import { scoreBroker } from './score.mjs'
 import { toAnalystInput } from './bridge.mjs'
+import { resolveMeta } from './catalog.mjs'
 
 const HHI_CONCENTRE = 2500
 const LOSS_ALERT = 0.001
@@ -17,6 +18,7 @@ const big = (v) => {
 export function analyse({ graph, holders = {}, order, meta } = {}) {
   if (!graph) throw new Error('analyse() attend { graph }')
 
+  meta = resolveMeta(graph, meta)
   const m = graph.metrics ?? {}
   const signaux = collectSignals({ graph, holders, meta })
   const codes = {

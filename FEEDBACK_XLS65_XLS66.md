@@ -1,7 +1,34 @@
 # XLS-65 / XLS-66 — Rapport DevX (Track 2)
 
 **Équipe :** SecondWave · **Focus :** Closed-Ended Vault + First-Loss  
-**Statut :** fiche majeure rédigée hors dump Devnet ; hashes de tx à coller dès que `fixtures/` sort.
+**Statut :** monde Devnet généré le 2026-09-12T14:09:46Z (`npm run world`) · `network_id` 2 · `wss://s.devnet.rippletest.net:51233`  
+**Explorer :** https://devnet.xrpl.org
+
+### Catalogue on-chain (world.json)
+
+| Clé | Signal analyste | `vault_id` | Broker / prêt |
+|---|---|---|---|
+| `sain` | défaillable non déclaré | [`501A62B4…20641`](https://devnet.xrpl.org/transactions/B1849EB1A7AEE566C026E73E71CA833DD3D120C5215E3DA5A74A52B290CCDCBF) | broker `062C562B106D0113651C8AB80657FBDE43C1F6491B31D9A4897F820B5C852391` · loans `276C3B87…` (défaillable), `621539E3…` |
+| `predateur` | cover 0/0 + auto-prêt | [`64B3C650…2E94`](https://devnet.xrpl.org/transactions/99D3817A284737FA5DF19401A98D4A9A54F536AEB9E1E3ED9DCCE73AA6086341) | broker `92D86F2F2EE55A905B5B66030BC33A3EB4AF41960CD9B1D97ACC3C648BE12323` · loan `D249EAA34EBDECA654FE28D58DE4B5EF1F79EC4DB19E0D59035C7C825D9A4AB1` (borrower = owner) |
+| `deprecie` | perte latente + impair | [`AECC188F…22FD`](https://devnet.xrpl.org/transactions/D7C6B7AF137AC6DBEA228BE60432CE1AEDAEE957769FD5970184F7D444AF0853) | broker `BBB9E744A63741BFDD257EE2C38E346B948984A28F225725B2226AD81B7257BD` · loans `80BE5049…` (impairé), `9D38AC4F…` |
+| `iou` | clawback armé | [`E8C07618…ED5B`](https://devnet.xrpl.org/accounts/r8itRq6L6GkTrgG33sKA1kkhwJCcBjExr) | issuer `r8itRq6L6GkTrgG33sKA1kkhwJCcBjExr` · broker `1463504188DE6EF7B5B6D18993F561315BCB587EAF98501309754A69B80FC12C` · loan `89AB3399F244BDC09E28F3A19F87FA0982EBDF831A260D96DA7D70D1D1886B62` |
+| `verrouille` | parts non transférables | `4CDED64F3AF15A9B0E0848D04885A2429C73FB7F5CDE04E436ECAA33C2E97385` | broker `CD078A0A83A6068F8314B191FE5761C515390F9B81F453CA6BA15F843A177C3D` |
+| `redemption` | phase Redemption | `6A1EBB0AB83453F1A6946E8F5806FC2545CC4CDF492145F09792B35943E86F07` | aucun broker (sortie normale ouverte) |
+| `solde` | cover 100 % retirable | `F8C3E8AC1959FDED72CDE280B17F85B7D1B5E75A4510852CB3A3B406D5EA752B` | broker `3CAFBC6DAAF2687848046630D8293B09FF240C12791ADB9DB0AC936E92549C07` · `DebtTotal = 0`, `CoverAvailable = 5000000` |
+
+IDs complets (vault) :
+
+```
+sain        501A62B4E3D28FEEF032FC5DC64E583828D8CF7CA5EFAA0AA6310AEF21820641
+predateur   64B3C650A8A561E1DDC83811061A8A46A58FD94EA531315839B22B19B06B2E94
+deprecie    AECC188FD5656990E302355C67A3559EDA83F1C07937502404C5474F145322FD
+iou         E8C07618C25A087EF9BDAB9CAEAD0C34DAE0F927AF53B157AB4435270EABED5B
+verrouille  4CDED64F3AF15A9B0E0848D04885A2429C73FB7F5CDE04E436ECAA33C2E97385
+redemption  6A1EBB0AB83453F1A6946E8F5806FC2545CC4CDF492145F09792B35943E86F07
+solde       F8C3E8AC1959FDED72CDE280B17F85B7D1B5E75A4510852CB3A3B406D5EA752B
+```
+
+Lecture : `vault_info { vault_id }` puis `account_objects` du pseudo-compte. Relire : `npm run analyse -- live`.
 
 ---
 
@@ -103,7 +130,16 @@ VaultLoss      = DefaultAmount − DefaultCovered
 
 La phrase est exacte et **facile à rater**. Rien dans le tableau ne donne `max_payout_on_default = DebtTotal × min × liq`.
 
-Hash Devnet : *à coller après `npm run world`* — `LoanBrokerCoverDeposit` 5 000 + `LoanManage`/`tfLoanDefault` + lecture `CoverAvailable` avant/après.
+Objets Devnet (monde 2026-09-12T14:09:46Z) — le vault `predateur` est le cas 0/0 (aucun first-loss, donc cap = 0) :
+
+| | |
+|---|---|
+| `vault_id` | `64B3C650A8A561E1DDC83811061A8A46A58FD94EA531315839B22B19B06B2E94` |
+| LoanBroker | `92D86F2F2EE55A905B5B66030BC33A3EB4AF41960CD9B1D97ACC3C648BE12323` · `CoverRateMinimum=0` · `CoverRateLiquidation=0` · `CoverAvailable=0` · `DebtTotal=22000000` |
+| Loan (auto-prêt) | `D249EAA34EBDECA654FE28D58DE4B5EF1F79EC4DB19E0D59035C7C825D9A4AB1` |
+| Dernière tx vault | [`99D3817A…`](https://devnet.xrpl.org/transactions/99D3817A284737FA5DF19401A98D4A9A54F536AEB9E1E3ED9DCCE73AA6086341) |
+
+Le vault `solde` montre P1.1 (cover encore là, dette nulle) : `vault_id` `F8C3E8AC1959FDED72CDE280B17F85B7D1B5E75A4510852CB3A3B406D5EA752B`, broker `3CAFBC6DAAF2687848046630D8293B09FF240C12791ADB9DB0AC936E92549C07`.
 
 ### Suggestion
 

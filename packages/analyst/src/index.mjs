@@ -20,5 +20,6 @@ export { adaptVault, adaptBroker, adaptLoan, adaptLoans, adaptCase } from './ada
 export { analyzeOffer } from './analyze.mjs'
 export { formatReport, formatBoard } from './report.mjs'
 export { analyse, collectSignals } from './analyse.mjs'
+export { lookupVaultMeta, resolveMeta } from './catalog.mjs'
 export { toAnalystInput } from './bridge.mjs'
 export { fetchVaultLive, isVaultId, scanPublicVaults, withClient } from './live.mjs'

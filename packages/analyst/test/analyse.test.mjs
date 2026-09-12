@@ -30,3 +30,18 @@ describe('analyse() vs EXPECTED.json', () => {
     })
   }
 })
+
+describe('clawbackArmed depuis world.json / snapshot', () => {
+  it('iou sans meta : le catalogue pose le rouge clawback', () => {
+    const row = snapshot.vaults.iou
+    const note = analyse({ graph: row.graph, holders: row.holders })
+    assert.ok(note.codes.red.includes('clawback-armed'))
+    assert.equal(note.verdict, 'risqué')
+  })
+
+  it('sain sans meta : pas de clawback', () => {
+    const row = snapshot.vaults.sain
+    const note = analyse({ graph: row.graph, holders: row.holders })
+    assert.ok(!note.codes.red.includes('clawback-armed'))
+  })
+})
