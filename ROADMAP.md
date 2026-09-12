@@ -13,7 +13,8 @@
 > | `analyst` | livré par Noé, branché au CLI |
 > | `probes/` · `probes-marche/` | ~420 cas mesurés, 3 rapports |
 >
-> 🔴 **Trois fichiers de feedback coexistent à la racine** — voir P7.1.
+> ✅ **README et rapport de feedback livrés.** `FEEDBACK.pdf` fait 3 pages pile.
+> 🔴 Deux rapports concurrents traînent encore à la racine — voir P7.1.
 
 > **Livrable double :** un prototype **ET** un retour structuré sur les frictions de tooling et de docs.
 > Le second compte pour la moitié — il n'est pas optionnel.
@@ -146,10 +147,12 @@ l'est plus. **Relancer `npm run world` moins de dix minutes avant la démo.**
 
 # P6 — Livrables *(à ne pas commencer le dimanche matin)*
 
-- [ ] **P6.1 — ⚠️ Réécrire le README pour la remise**
+- [x] **P6.1 — ✅ README réécrit** — track, environnement, version de lib, les 18 transactions
+  XLS-65/66 avec un lien on-chain vérifié chacune, et les limites assumées en fin de page
   - la version actuelle est **une note technique pour l'agent de Noé**, pas une présentation
   - version finale : le problème, la solution, la démo, l'installation, l'équipe — pour un lecteur extérieur
-- [ ] **P6.2 — ⭐ Le rapport de friction** *(la moitié de la note)* — **commencé : `FEEDBACK.md`**
+- [x] **P6.2 — ✅ Le rapport de friction livré** — `FEEDBACK.pdf`, **3 pages exactement**,
+  6 points en *problème · vécu · proposition*. Source `FEEDBACK.tex`, recompilable par `tectonic`.
   - 8 points déjà rédigés au format imposé, mesurés pendant le build
   - source : `datablockchain/4 - XRPL/XRP Ledger (L1)/Hackathons/⚠️ Frictions & contournements — le projet.md` — **34 points déjà documentés**
   - les P0 : `LoanSet` cassé dans les SDK (avec le fix) · le Batch qui ment sur son résultat · aucune RPC de lecture côté XLS-66 · la doc qui pointe un réseau mort · `LendingProtocolV1_1` non documenté
@@ -164,7 +167,8 @@ l'est plus. **Relancer `npm run world` moins de dix minutes avant la démo.**
   - mener **par les découvertes**, pas par le produit : le défaut à 95 %, la déposante piégée, le cover vidé
   - puis la sortie, puis l'analyste
   - le moment clé : **deux offres au même prix, deux notes opposées, et pourquoi**
-- [ ] **P6.5 — Questions à poser aux gens de Ripple**
+- [x] **P6.5 — Questions posées dans le rapport** — section « Une question ouverte » sur XLS-82
+  et les Permissioned Domains
   - `MPTokensV2` (XLS-82) est-il prévu ? *(si les parts se tradent sur le DEX natif, le marché P2P perd son intérêt)*
   - le blocage en phase Investment est-il définitif ?
   - le swap de parts via Batch est-il un usage supporté ou un effet de bord ?
@@ -200,23 +204,23 @@ Tout le reste est fait. Voilà ce qui manque, dans l'ordre où ça doit être tr
   → Le reste (rug-pull, clawback IOU, cover à dette nulle, gel par le domaine)
   part **dans le pitch** comme signaux que l'analyste détecte — c'est sa raison d'être.
 
-- [ ] **P7.1 — 🔴 Trancher entre les trois rapports de feedback**
-  Trois fichiers coexistent à la racine et un seul sera lu :
-  `FEEDBACK.md` (1 990 mots, 12 frictions, format jury) ·
-  `FEEDBACK_XLS65_XLS66.md` (1 526 mots) · `FEEDBACK_RIPPLE.md` (44 mots).
-  **Un seul doit rester à la racine**, les autres fusionnés ou déplacés en annexe.
+- [ ] **P7.1 — 🔴 Supprimer les deux rapports concurrents**
+  `FEEDBACK.pdf` est le livrable. Mais `FEEDBACK_XLS65_XLS66.md` (1 526 mots) et
+  `FEEDBACK_RIPPLE.md` (44 mots) traînent encore à la racine — un juré ne saura pas
+  lequel lire. Les relire une fois pour récupérer ce qui manque, puis **les supprimer**.
 - [ ] **P7.2 — 🔴 Remonter `SECURITY-NOTES.md` de vive voix à Maxime ou Shota**
   *Obligation du règlement, avant toute présentation.* Le gel perpétuel de
   l'escrow et la recette de rug-pull en font partie.
-- [ ] **P7.3 — Réécrire le README**
+- [x] **P7.3 — ✅ README réécrit** *(voir P6.1)*
   La version actuelle est la note technique pour l'agent de Noé. Il faut : ce que
   fait le projet, l'installation, **le track, l'environnement, la version de lib,
   et toutes les transactions XLS-65/66 utilisées** (la liste est dans `PROJET.md`).
 - [ ] **P7.4 — Ranger la racine**
-  `PLAN_SecondWave.md`, `PLAN_SecondWave_v1.1.md`, `PLAN_BUILD_FINAL.md`,
-  `PLAN_RISKLENS.md`, `QA-hugo1.md`, `xls-65-full_doc.md`, `xls-66_full_doc.md`
-  — brouillons de travail, à archiver dans un dossier ou à supprimer. Un dépôt
-  public remis à un jury ne doit pas ressembler à un bureau en fin de sprint.
+  Neuf fichiers de travail à archiver ou supprimer : `PLAN_SecondWave.md`,
+  `PLAN_SecondWave_v1.1.md`, `PLAN_BUILD_FINAL.md`, `PLAN_RISKLENS.md`,
+  `QA-hugo1.md`, `BUILD.md`, `FRICTIONS-annexe.md`, `xls-65-full_doc.md`,
+  `xls-66_full_doc.md`. **À garder** : `README.md`, `FEEDBACK.pdf`/`.tex`,
+  `PROJET.md`, `ROADMAP.md`, `HACKATHON.md`, `PATCH-loanset-counterparty.md`.
 - [ ] **P7.5 — Le deck** — 10 slides maximum
 - [ ] **P7.6 — Régénérer le monde** *(`npm run world`, puis re-snapshot)*
   ⚠️ **Moins de 30 minutes avant la démo.** Les échéances tombent toutes les
@@ -237,8 +241,8 @@ public, un README, des liens de transaction, un deck et le rapport de feedback.
 **Arbitrage** : ne commencer un front que si le reste de P7 est bouclé. Un CLI qui
 tourne bat une page web à moitié finie qui plante sur scène.
 
-- [ ] **P8.1 — Décider : front ou pas.** Si non, l'écrire dans le README comme un
-  choix assumé (« l'interface est le terminal »), pas comme un manque.
+- [x] **P8.1 — Décidé : pas de front.** Le README l'assume — « l'interface est le
+  terminal », avec la version web en lecture seule citée comme suite naturelle.
 - [ ] **P8.2 — Version minimale, si oui** — **lecture seule**, aucune signature :
   - la liste des vaults avec la note de l'analyste et ses signaux
   - le carnet d'offres, avec décote et verdict liquidité / détresse
