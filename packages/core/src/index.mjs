@@ -3,9 +3,9 @@
  *
  * Contrat d'interface entre la partie vault/marché (Hugo) et l'analyste (Noé).
  *
- * ⚠️ Requiert xrpl.js@5.2.0-beta.0 : cette version embarque les champs V1_1
+ * ⚠️ Requiert xrpl.js@5.2.0-beta.1 : LendingProtocolV1_1 + champs closed-ended
  *    (VaultKind, SubscriptionDate, RedemptionDate, LEVersion) dans
- *    ripple-binary-codec 2.11.0. Aucune definition custom n'est nécessaire.
+ *    ripple-binary-codec. Aucune definition custom n'est nécessaire.
  */
 import { Client, Wallet } from 'xrpl'
 import { encode, encodeForSigning, encodeForSigningCounterparty,
