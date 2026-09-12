@@ -145,9 +145,15 @@ décoté par le risque (ton score). Une part non transférable ⇒ `fairPrice = 
 
 ## 4. Le runner
 
-`npm run analyse -- <clé>` charge `snapshot.json`, imprime les **faits dérivés**
-(ta matière première) puis le résultat de `analyse()`. Aucun réseau. Itère
-dessus : modifie `src/index.mjs`, relance, compare aux cas attendus ci-dessous.
+`analyse({ graph, holders, order, meta })` est implémentée. Le runner :
+
+```bash
+npm run analyse -- <clé>        # snapshot.json, hors ligne
+npm run analyse -- all
+npm run analyse -- live         # relit world.json sur le Devnet
+npm run analyse -- vault <id>   # n'importe quel vault_id (public inclus)
+npm run analyse -- scan         # ledger_data type=vault
+```
 
 ---
 

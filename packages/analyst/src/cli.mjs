@@ -50,6 +50,13 @@ async function main() {
   const file = process.argv[2]
   if (file) {
     const dump = JSON.parse(await readFile(file, 'utf8'))
+    if (dump.vaults && !dump.cases) {
+      console.log('world.json / snapshot détecté — utiliser le runner Hugo :')
+      console.log('  npm run analyse -- all')
+      console.log('  npm run analyse -- live')
+      console.log('  npm run analyse -- scan')
+      return
+    }
     const cases = dump.cases ?? [dump]
     console.log(formatBoard(cases))
     return

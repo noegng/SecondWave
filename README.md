@@ -55,7 +55,9 @@ fixtures/      générateur de monde de démo
 npm install
 npm test              # moteur + adapter analyst (pas besoin du Devnet)
 npm run analyst       # rapport des 3 scénarios (A sain / B spéculatif / C crise)
-npm run analyst -- dumps/world.json   # même rapport sur un dump ledger Hugo
+npm run analyse -- all          # les 7 vaults de snapshot.json (hors ligne)
+npm run analyse -- live         # relit world.json sur le Devnet
+npm run analyse -- scan         # découvre les vaults publics du ledger
 npm run world         # génère l'écosystème de démo sur le Devnet (Hugo)
 npm run cli
 ```
@@ -67,8 +69,8 @@ npm run cli
 | Moteur pur (score, NAV, APY, cover, stress, liquidité vs détresse) | **fait** |
 | Adapter `vault_info` / `ledger_entry` → snapshots | **fait** — `adaptVault`, `adaptBroker`, `adaptLoan` |
 | Rapport CLI 3 scénarios | **fait** — `npm run analyst` |
-| Brancher un dump `world.json` d'Hugo | **prochaine** dès que `fixtures/` écrit un fichier |
-| Lecteurs live Devnet | **Hugo / `core`** — on ne les réécrit pas |
+| Brancher `world.json` / `snapshot.json` | **fait** — `npm run analyse -- all` |
+| Lecture live Devnet + vaults publics | **fait** — `live` / `vault` / `scan` |
 | Historique (Loan disparaît au `LoanDelete`) | après le dump : timeline via `account_tx` |
 | Fiche DevX jury (first-loss ≠ CoverAvailable) | **fait** — [FEEDBACK_XLS65_XLS66.md](./FEEDBACK_XLS65_XLS66.md) |
 
