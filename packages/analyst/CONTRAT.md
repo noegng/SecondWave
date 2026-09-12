@@ -14,33 +14,38 @@ npm run analyse                  # liste les vaults disponibles
 
 ---
 
-## 1. La signature (déjà figée dans `src/index.mjs`)
+## 1. L'API réellement implémentée (Noé) et le pont depuis core
+
+L'analyste travaille **par broker / par offre** sur un modèle **normalisé** (champs
+camelCase), pas sur l'objet ledger brut :
 
 ```js
-export function analyse({ graph, holders, order = null }) → Note
+scoreBroker({ broker, vault, loans, nowRipple }) → { riskScore, rating, … }
+ratingFromScore(riskScore) → 'AAA' | 'AA' | 'A' | 'B' | … | 'D'
+analyzeOffer({ vault, broker, loans, offer, nowRipple, stressRate }) → { phase, nav, score, yield, classification, stress }
 ```
 
-```
-graph    ← core.readVaultGraph(vaultId)      (dans snapshot.json : vaults[clé].graph)
-holders  ← core.holderMap(graph.vault)       (dans snapshot.json : vaults[clé].holders)
-order    ← une offre du carnet, ou null pour une analyse de vault seule
-           { id, vaultId, seller, shares, price, expiry }
-```
+**Modèle normalisé attendu** (cf. `test/fixtures.mjs`) :
 
 ```
-Note = {
-  score:     0-100,                      // plus haut = plus sûr
-  verdict:   'sain' | 'prudence' | 'risqué' | 'à fuir',
-  nav:       string,                     // valeur d'une part, en drops (×1e6)
-  fairPrice: string | null,              // ce que l'offre devrait valoir, ou null
-  signaux:   [{ niveau, titre, detail }] // niveau : 'info' | 'alerte' | 'rouge'
-}
+vault  { vaultId, assetsTotal, assetsAvailable, lossUnrealized, sharesOutstanding,
+         vaultKind, subscriptionDate, redemptionDate }
+broker { loanBrokerId, vaultId, debtTotal, coverAvailable, coverRateMinimum,
+         coverRateLiquidation, managementFeeRate, didVerified }
+loan   { loanId, principalOutstanding, totalValueOutstanding, managementFeeOutstanding,
+         nextPaymentDueDate, gracePeriod, flags }
 ```
 
-**Règle d'or** : tu ne lis jamais un objet ledger brut ni ne calcules une date
-Ripple. Tout est pré-dérivé dans `graph.metrics`, `broker.metrics`, `loan.metrics`
-et `holders`. Les grands entiers sont des **strings** (drops, parts) ; les ratios
-sont des **numbers** (0..1). Passe les strings par `BigInt(...)` si tu calcules.
+**Le pont core → analyste** est fait par `toAnalystInput(graph)` dans
+`src/run.mjs` : il mappe `core.readVaultGraph()` (brut + `.metrics`) vers ce modèle.
+Lance `npm run analyse -- <clé>` : ça charge `snapshot.json`, imprime les faits
+dérivés par core **et** la note de ton analyste, entièrement **hors ligne**.
+
+> Les grands entiers restent des **strings** (drops, parts) tout au long — `num()`
+> de ton `num.mjs` les convertit. Les ratios de `graph.metrics` sont des `number`.
+
+Ci-dessous, la forme des données **telles que core les livre** (dans
+`snapshot.json`), pour référence : c'est la source du pont ci-dessus.
 
 ---
 
