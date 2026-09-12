@@ -51,6 +51,21 @@ export async function issueCredential(client, { issuer, subject, type = 'KYC', e
   return accept
 }
 
+/**
+ * Émet un credential sans l'accepter — pour un wallet externe (extension)
+ * dont on n'a pas la seed. Le sujet doit ensuite soumettre `CredentialAccept`.
+ */
+export function createCredential(client, { issuer, subject, type = 'KYC', expiration }) {
+  const address = typeof subject === 'string' ? subject : subject.classicAddress
+  return submit(client, {
+    TransactionType: 'CredentialCreate',
+    Account: issuer.classicAddress,
+    Subject: address,
+    CredentialType: hex(type),
+    ...(expiration ? { Expiration: expiration } : {}),
+  }, issuer)
+}
+
 export async function createDomain(client, { owner, issuer, type = 'KYC' }) {
   const r = await submit(client, {
     TransactionType: 'PermissionedDomainSet',
