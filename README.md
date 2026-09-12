@@ -53,21 +53,25 @@ fixtures/      générateur de monde de démo
 
 ```bash
 npm install
-npm test              # moteur analyst (pas besoin du Devnet)
+npm test              # moteur + adapter analyst (pas besoin du Devnet)
+npm run analyst       # rapport des 3 scénarios (A sain / B spéculatif / C crise)
+npm run analyst -- dumps/world.json   # même rapport sur un dump ledger Hugo
 npm run world         # génère l'écosystème de démo sur le Devnet (Hugo)
 npm run cli
 ```
 
 ### Analyst (Noé)
 
-Moteur pur dans `packages/analyst` : il consomme les snapshots définis dans `@secondwave/core` et sort **score AAA→D**, **NAV**, **implied APY**, **stress First-Loss**, et le verdict **liquidité vs détresse**.
+| Fait | Suite |
+|---|---|
+| Moteur pur (score, NAV, APY, cover, stress, liquidité vs détresse) | **fait** |
+| Adapter `vault_info` / `ledger_entry` → snapshots | **fait** — `adaptVault`, `adaptBroker`, `adaptLoan` |
+| Rapport CLI 3 scénarios | **fait** — `npm run analyst` |
+| Brancher un dump `world.json` d'Hugo | **prochaine** dès que `fixtures/` écrit un fichier |
+| Lecteurs live Devnet | **Hugo / `core`** — on ne les réécrit pas |
+| Historique (Loan disparaît au `LoanDelete`) | après le dump : timeline via `account_tx` |
 
-```bash
-npm test -w @secondwave/analyst
-```
-
-Point d'entrée : `analyzeOffer({ vault, broker, loans, offer, nowRipple })`.
-Hugo n'a qu'à remplir `core` (lecteurs `vault_info` / `account_objects`) pour brancher le ledger — le moteur est déjà testé hors chaîne.
+Point d'entrée : `analyzeOffer(adaptCase(rawLedgerJson))`.
 
 ## Réseau
 

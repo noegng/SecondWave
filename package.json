@@ -7,6 +7,7 @@
   "scripts": {
     "world": "node fixtures/generate.mjs",
     "cli": "node apps/cli/src/index.mjs",
+    "analyst": "node packages/analyst/src/cli.mjs",
     "test": "npm run test --workspace=@secondwave/analyst",
     "test:analyst": "npm run test --workspace=@secondwave/analyst"
   }
