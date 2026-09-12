@@ -180,6 +180,22 @@ L’analyste SecondWave marque ce cas en **décote de détresse latente**.
 
 Pas de `loan_info`, `loan_broker_info`, `mpt_holders`. Traversée imposée : `vault_info` → `account_objects` du pseudo-vault → `account_objects` de chaque pseudo-broker. Un `Loan` disparaît au `LoanDelete` : **pas d’historique on-chain** pour le NPL. Tout score de crédit exige un indexeur hors-chaîne.
 
+### P1.4 — L’extension wallet Ripple sérialise `VaultDeposit.Amount` comme un IOU
+
+L’UI officielle construit toujours :
+
+```json
+"Amount": { "currency": "XRP", "value": "10000000" }
+```
+
+Sur un vault XRP le ledger exige une **string de drops** (`"10000000"`). Le wallet répond `invalid field Amount` sans dire que le type JSON est faux, et **l’utilisateur ne peut pas éditer le JSON**. Impasse : on ne peut pas souscrire à un vault XLS-65 XRP depuis l’extension.
+
+- Compte : `rhZH7Nb76CRNQ6wMMCZr48ZVdnA1zNH5zw`
+- Vault : `AE297588323475AB4FA98C35E9BA07044029A3E51175125F6FC801712541B8D4` (Devnet, Asset XRP)
+- Capture DevEx : `sdk` / `error_message` / `VaultDeposit`
+
+**Fix attendu :** si `vault.Asset.currency === "XRP"`, envoyer `Amount` en string ; garder l’objet `{currency, issuer, value}` uniquement pour un IOU.
+
 ---
 
 ## File d’attente (à documenter avec hashes Devnet)
