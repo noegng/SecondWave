@@ -19,7 +19,8 @@
     "test": "node --test packages/core/test/analytics.test.mjs packages/vault/test/rules.test.mjs 'packages/settlement/test/*.test.mjs' 'packages/orderbook/test/*.test.mjs' && npm run test --workspace=@secondwave/analyst",
     "test:integration": "node fixtures/test-vault-lifecycle.mjs",
     "test:analyst": "npm run test --workspace=@secondwave/analyst",
-    "test:rails": "node packages/settlement/scripts/batch.mjs && node packages/settlement/scripts/htlc.mjs && node packages/settlement/scripts/iou.mjs"
+    "test:rails": "node packages/settlement/scripts/batch.mjs && node packages/settlement/scripts/htlc.mjs && node packages/settlement/scripts/iou.mjs",
+    "test:matrice": "node packages/settlement/scripts/matrice.mjs"
   },
   "dependencies": {
     "xrpl": "5.2.0-beta.1"

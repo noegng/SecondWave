@@ -1,5 +1,20 @@
 # Roadmap — SecondWave
 
+> ## État au samedi soir
+>
+> **P0 → P5 sont faits.** Le socle tourne, les tests passent, le CLI démarre.
+> Ce qui reste tient en une liste courte, et elle est en bas de ce fichier (**P7**).
+>
+> | | |
+> |---|---|
+> | `core` · `vault` · `fixtures` | durcis, règles encodées, monde v2 + `snapshot.json` |
+> | `settlement` | **deux rails** — Batch et HTLC — plus moyens de paiement et preflight complété |
+> | `orderbook` | carnet, éligibilité, historique de prix |
+> | `analyst` | livré par Noé, branché au CLI |
+> | `probes/` · `probes-marche/` | ~420 cas mesurés, 3 rapports |
+>
+> 🔴 **Trois fichiers de feedback coexistent à la racine** — voir P7.1.
+
 > **Livrable double :** un prototype **ET** un retour structuré sur les frictions de tooling et de docs.
 > Le second compte pour la moitié — il n'est pas optionnel.
 
@@ -34,7 +49,7 @@ Le contrat d'interface entre nos deux moitiés. Tant qu'il n'existe pas, Noé tr
     → `reconciles: true` et `concentration` sortent gratuitement.
   - ⚠️ `mpt_holders` n'existe pas sur rippled. C'est le contournement.
 - [x] **P0.5 — Éligibilité** : `isDomainMember(account, domainId)` *(credential émis **et** accepté **et** non expiré)*
-- [ ] **P0.6 — Merge sur `main` + prévenir Noé**
+- [x] **P0.6 — Merge sur `main` + prévenir Noé**
 
 ---
 
@@ -79,11 +94,15 @@ Une commande, un écosystème complet. **C'est le jeu de test de Noé et la dém
   - un **cover vidé** après coup *(possible quand `DebtTotal = 0`)*
 - [x] **P2.4 — Positions à vendre** : des déposants avec des parts, prêts à être mis au carnet
 - [x] **P2.5 — Persistance** : dump du monde en JSON ⚠️ **contient des seeds → `state*.json` est gitignoré**
-- [ ] **P2.6 — Livrer à Noé** : le dump + `readVaultGraph` = il peut tout tester
+- [x] **P2.6 — Livrer à Noé** — `snapshot.json` + `npm run analyse`, il travaille hors ligne
 
 ---
 
-# P3 — `packages/settlement` — la revente ✅ *porté, simplifié pour 5.2.0-beta.1*
+# P3 — `packages/settlement` — la revente ✅ *dépassé : deux rails livrés*
+
+**Au-delà du plan initial** : `batch.mjs` · `htlc.mjs` (deux escrows liés par une
+`Condition`) · `condition.mjs` · `amounts.mjs` (XRP · IOU · MPT) · `preflight.mjs`
+avec le seuil de solvabilité au drop près. Lancer : `npm run test:rails`.
 
 Source : `~/Projet/xrpl-xls6566/settlement.mjs`
 
@@ -94,7 +113,7 @@ Source : `~/Projet/xrpl-xls6566/settlement.mjs`
   - ⚠️ l'autorisation **en première position** · `tfAllOrNothing` · `signMultiBatch()` · minimum 2 jambes
 - [x] **P3.3 — Evidence** : reconstruire le `BatchExecutions` manquant via `account_tx` sur la plage `[ledgerIndex, ledgerIndex]`
 - [x] **P3.4 — Réconciliation** : soldes avant/après. **La seule vérité** → `stage: 'silent-failure'` si rien n'a bougé
-- [ ] **P3.5 — Tests** : les 3 cas — acheteur éligible, non éligible, preflight contourné
+- [x] **P3.5 — Tests** — `fixtures/test-settlement.mjs` (3 cas) + `npm run test:rails`
 
 ---
 
@@ -117,7 +136,7 @@ Source : `~/Projet/xrpl-xls6566/settlement.mjs`
 - [x] **P5.3 — Chemin complet** — `cli buy <offre> <acheteur>` enchaîne
   analyse → preflight → batch → evidence → réconciliation → `fill()`
 - [x] **P5.4 — `apps/cli`** : `vaults`, `book`, `sell`, `buy`, `history`, `demo`
-- [ ] **P5.5 — Brancher le vrai analyste** quand Noé livre
+- [x] **P5.5 — Le vrai analyste est branché** — le CLI affiche sa notation
 
 ⚠️ **Le monde vieillit.** Les échéances des prêts tombent toutes les 120 s : un
 monde généré il y a une heure a tous ses prêts en retard et le vault « sain » ne
@@ -159,3 +178,90 @@ l'est plus. **Relancer `npm run world` moins de dix minutes avant la démo.**
 P2 avant P1 peut surprendre : écrire le générateur de monde **force** à faire fonctionner toute la chaîne de bout en bout, et il débloque Noé immédiatement. Les briques individuelles se peaufinent ensuite.
 
 **Le code des phases P1 et P3 existe déjà**, testé, dans `~/Projet/xrpl-xls6566/` — c'est surtout du portage.
+
+---
+
+# P7 — Avant la remise · dimanche 13:00
+
+Tout le reste est fait. Voilà ce qui manque, dans l'ordre où ça doit être traité.
+
+- [ ] **P7.0 — ⭐ Trier `SECURITY-NOTES.md` avant d'en parler à qui que ce soit**
+  Douze notes, réparties sur deux fichiers. **La plupart décrivent le modèle de
+  menace assumé de XLS-66**, pas des failles : crédit non collatéralisé, analyse
+  hors chaîne, aucune liquidation. Annoncer « on a trouvé un rug-pull » sur un
+  protocole conçu comme ça coûte en crédibilité.
+  → **Ne garder que ce qui ressemble à un défaut, pas à une conséquence.**
+  Candidat unique à ce stade : le **gel perpétuel de l'escrow** (`Finish`
+  `tecNO_AUTH` **et** `Cancel` `tecNO_PERMISSION` — les deux sorties fermées,
+  objet immortel). C'est une interaction MPT-escrow × domaine permissionné, et
+  les MPT dans l'escrow ne sont documentés nulle part.
+  → Le formuler **en question** : « on n'arrive ni à dénouer ni à annuler cet
+  escrow, est-ce qu'on rate quelque chose ? »
+  → Le reste (rug-pull, clawback IOU, cover à dette nulle, gel par le domaine)
+  part **dans le pitch** comme signaux que l'analyste détecte — c'est sa raison d'être.
+
+- [ ] **P7.1 — 🔴 Trancher entre les trois rapports de feedback**
+  Trois fichiers coexistent à la racine et un seul sera lu :
+  `FEEDBACK.md` (1 990 mots, 12 frictions, format jury) ·
+  `FEEDBACK_XLS65_XLS66.md` (1 526 mots) · `FEEDBACK_RIPPLE.md` (44 mots).
+  **Un seul doit rester à la racine**, les autres fusionnés ou déplacés en annexe.
+- [ ] **P7.2 — 🔴 Remonter `SECURITY-NOTES.md` de vive voix à Maxime ou Shota**
+  *Obligation du règlement, avant toute présentation.* Le gel perpétuel de
+  l'escrow et la recette de rug-pull en font partie.
+- [ ] **P7.3 — Réécrire le README**
+  La version actuelle est la note technique pour l'agent de Noé. Il faut : ce que
+  fait le projet, l'installation, **le track, l'environnement, la version de lib,
+  et toutes les transactions XLS-65/66 utilisées** (la liste est dans `PROJET.md`).
+- [ ] **P7.4 — Ranger la racine**
+  `PLAN_SecondWave.md`, `PLAN_SecondWave_v1.1.md`, `PLAN_BUILD_FINAL.md`,
+  `PLAN_RISKLENS.md`, `QA-hugo1.md`, `xls-65-full_doc.md`, `xls-66_full_doc.md`
+  — brouillons de travail, à archiver dans un dossier ou à supprimer. Un dépôt
+  public remis à un jury ne doit pas ressembler à un bureau en fin de sprint.
+- [ ] **P7.5 — Le deck** — 10 slides maximum
+- [ ] **P7.6 — Régénérer le monde** *(`npm run world`, puis re-snapshot)*
+  ⚠️ **Moins de 30 minutes avant la démo.** Les échéances tombent toutes les
+  120 s : le monde actuel est entièrement en phase Redemption, les prêts sont tous
+  en retard, et le vault « sain » ne l'est plus.
+- [ ] **P7.7 — Répéter la démo une fois en entier**, monde fraîchement régénéré
+- [ ] **P7.8 — Formulaire DevEx** : membres et handles GitHub
+
+---
+
+# P8 — Le front *(jamais entré dans la roadmap — décision à prendre)*
+
+Repoussé au premier jour (« on voit pour le front plus tard »), jamais planifié
+depuis. **Le CLI fait déjà la démo complète et il marche.** Un front est du
+confort de présentation, pas une exigence du règlement — qui demande un dépôt
+public, un README, des liens de transaction, un deck et le rapport de feedback.
+
+**Arbitrage** : ne commencer un front que si le reste de P7 est bouclé. Un CLI qui
+tourne bat une page web à moitié finie qui plante sur scène.
+
+- [ ] **P8.1 — Décider : front ou pas.** Si non, l'écrire dans le README comme un
+  choix assumé (« l'interface est le terminal »), pas comme un manque.
+- [ ] **P8.2 — Version minimale, si oui** — **lecture seule**, aucune signature :
+  - la liste des vaults avec la note de l'analyste et ses signaux
+  - le carnet d'offres, avec décote et verdict liquidité / détresse
+  - l'historique des prix relu on-chain
+  - alimentée par `snapshot.json` → **aucun réseau, rien ne peut planter en démo**
+- [ ] **P8.3 — Version connectée** *(seulement si tout le reste est fait)*
+  - `xrpl-connect` (l'adaptateur de portefeuille listé dans les ressources du Notion)
+  - l'utilisateur signe **depuis son propre portefeuille**, plus de seeds en clair
+  - ⚠️ change le modèle : aujourd'hui le CLI signe avec les seeds de `state.json`
+
+---
+
+# P9 — Tests avec un vrai portefeuille
+
+Aujourd'hui **tout est signé avec des seeds en clair** lus dans `state.json`.
+C'est parfait pour des sondes, ce n'est pas ce qu'un utilisateur ferait.
+
+- [ ] **P9.1 — Monter `xrpl-connect`** et se connecter avec un portefeuille de dev
+- [ ] **P9.2 — Rejouer le chemin complet en signant depuis le portefeuille** :
+  `MPTokenAuthorize` → l'offre → le `Batch` co-signé
+  ⚠️ le point dur : **l'acheteur doit co-signer le Batch** (`BatchSigners`). Vérifier
+  que l'adaptateur sait faire signer autre chose qu'une transaction simple — si non,
+  c'est une friction à remonter, et une vraie.
+- [ ] **P9.3 — Le rail HTLC depuis un portefeuille** — quatre signatures au lieu d'une
+- [ ] **P9.4 — Noter ce qui manque côté portefeuille** pour les transactions
+  XLS-65/66 : sont-elles seulement affichées correctement avant signature ?
