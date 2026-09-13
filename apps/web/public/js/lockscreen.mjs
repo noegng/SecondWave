@@ -143,14 +143,19 @@ export function initLock(world, onEnter) {
     entering = true
     idPanel.hidden = true
     led.classList.add('ok')
-    // Aucune transition : dès la validation, on est sur l'order book.
-    document.body.classList.add('inside')            // parois + jetons du coffre
-    onEnter?.()                                      // le marché est prêt en dessous
+    const who = loadSession()?.account
+    await show(0, `XLS-70 · credential <span class="ok">accepted ✓</span>`)
+    await show(1, `XLS-80 · domain ${domain} — <span class="ok">member ✓</span>`)
+    if (who) await show(2, `${short(who)} — <span class="ok">session open ✓</span>`)
+    await recenterAndFill()                          // le coffre remplit ~86% de l'écran, de face
+    document.body.classList.add('inside')            // le marché est prêt en dessous
+    onEnter?.()
+    lock.classList.add('open')                       // la porte s'ouvre vers nous
     stopTick()
     window.removeEventListener('keydown', onKey)
-    lock.style.transition = 'opacity .2s ease'       // fondu court et net
-    lock.classList.add('done')
-    setTimeout(() => { lock.hidden = true }, 230)
+    // PAS de plongée : la porte ouverte, on fond directement vers l'order book.
+    setTimeout(() => { lock.style.transition = 'opacity .45s ease'; lock.classList.add('done') }, 850)
+    setTimeout(() => { lock.hidden = true }, 1350)
   }
 
   function validateCode() {
