@@ -1134,3 +1134,23 @@ body.inside #coins-fg { display: block; }
 .commit-panel .pending-row + .pending-row {
   border-top-color: color-mix(in srgb, currentColor 10%, transparent);
 }
+
+/* Consultation seule : le déploiement statique n'a pas de backend de règlement.
+   Le dire une fois, en haut, plutôt que de laisser des boutons échouer. */
+.preview-banner {
+  border: 1px dashed color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 10px;
+  padding: 11px 14px;
+  margin: 0 0 16px;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  opacity: 0.78;
+}
+.preview-banner code {
+  padding: 1px 5px; border-radius: 4px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.pill-preview {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  opacity: 0.6;
+}

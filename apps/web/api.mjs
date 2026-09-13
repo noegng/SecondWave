@@ -115,7 +115,8 @@ export function createApi(repo) {
         offers: b.orders.map(publique),
         pending: account ? b.pending(account).map(publique) : [],
         commitments: account
-          ? b.orders.filter(o => o.buyer === account && o.status === STATUS.MATCHED).map(publique)
+          ? b.orders.filter(o => o.buyer === account
+              && (o.status === STATUS.MATCHED || o.status === STATUS.ARMED)).map(publique)
           : [],
         canSign: existsSync(join(repo, 'state.json')),
       }
@@ -242,6 +243,8 @@ export function createApi(repo) {
       const o = b.get(id)
       if (!o) throw new ApiError('no-offer', `offre inconnue : ${id}`)
       if (!o.buyer) throw new ApiError('state', `offre « ${o.status} » — aucun acheteur engagé à retirer`)
+      if (o.status === STATUS.FILLED)
+        throw new ApiError('state', 'offre déjà réglée — le Batch est dans le ledger')
       if (buyer && buyer !== o.buyer) throw new ApiError('forbidden', 'seul l\'acheteur engagé peut se retirer')
 
       const w = await walletDe(o.buyer)

@@ -137,7 +137,10 @@ export class OrderBook {
   async withdrawCommitment(client, buyerWallet, id, { withdrawCommitment }) {
     const o = this.get(id)
     if (!o) return { ok: false, reason: 'offre inconnue', order: null }
-    if (o.status !== STATUS.MATCHED)
+    // `armed` compte aussi : si la soumission a échoué après la confirmation du
+    // vendeur, l'offre s'y immobilise. Le vendeur pouvait en sortir (EN_COURS),
+    // pas l'acheteur — il restait pris dans un Batch qui ne partait pas.
+    if (o.status !== STATUS.MATCHED && o.status !== STATUS.ARMED)
       return { ok: false, reason: `offre « ${o.status} » — aucun engagement à retirer`, order: o }
     if (buyerWallet.classicAddress !== o.buyer)
       return { ok: false, reason: 'seul l\'acheteur engagé peut se retirer', order: o }

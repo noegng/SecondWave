@@ -35,6 +35,7 @@ const state = {
   pending: [],       // les offres qui attendent MA confirmation de vendeur
   commitments: [],   // les offres où JE suis l'acheteur engagé
   canSign: false,    // state.json présent côté serveur
+  apiLive: false,    // un backend répond (npm run web). Faux sur un déploiement statique.
 }
 
 const DATA = await loadWorld()
@@ -143,6 +144,9 @@ const STATUS_FR = {
 }
 
 function buyCell(o, v, mine, live) {
+  // Déploiement statique : le carnet se lit, il ne se règle pas. Un bouton qui
+  // ne peut qu'échouer vaut moins qu'une étiquette qui dit pourquoi.
+  if (live && !state.apiLive) return `<span class="pill pill-preview">preview</span>`
   if (!live) return o.txHash
     ? `<a class="seller" href="https://devnet.xrpl.org/transactions/${o.txHash}" target="_blank" rel="noopener" onclick="event.stopPropagation()">proof ↗</a>`
     : ''
@@ -236,7 +240,29 @@ function askAdvice(v, discount) {
   }
 }
 
+/**
+ * Le bandeau du mode consultation.
+ *
+ * Le déploiement Vercel est statique : `apps/web/build.mjs` copie `public/` et
+ * les trois JSON, rien d'autre. Les routes `/api/*` vivent dans
+ * `apps/web/server.mjs`, qui ne tourne pas là-bas — et c'est voulu, puisque le
+ * règlement signe avec les seeds de `state.json`, qui est gitignoré.
+ */
+function renderPreviewBanner(box) {
+  const deja = box.querySelector(':scope > .preview-banner')
+  // `renderBook()` tourne à chaque rendu : sans ça, les bandeaux s'empileraient.
+  if (state.apiLive) { deja?.remove(); return }
+  if (deja) return
+  const b = el('div', 'preview-banner')
+  b.innerHTML = `<strong>Read-only preview.</strong> The book, the ratings and the
+    on-chain proofs are live. Posting, buying, confirming and withdrawing need the
+    local server — <code>npm run web</code> — because settlement signs with seeds
+    that never leave the machine.`
+  box.prepend(b)
+}
+
 function renderBook() {
+  renderPreviewBanner($('#view-book') ?? document.body)
   const body = $('#book-body')
   body.innerHTML = ''
   const now = rippleNow()
@@ -640,6 +666,10 @@ function renderTicket() {
     const price = toNative(priceUi, v)
     const okPrice = price > 0 && nav > 0
     $('#s-shares-hint').classList.toggle('error', $sh.value !== '' && !okShares)
+    if (!state.apiLive) {
+      $post.disabled = true
+      $post.title = 'Read-only preview — run npm run web to post offers'
+    }
 
     const navUi = toUi(nav, v)
     if (okShares && navUi > 0) {
@@ -758,13 +788,23 @@ function renderTicket() {
  * de le traduire en « something went wrong ».
  */
 async function api(route, body = null) {
-  const r = await fetch(`/api/${route}`, body
-    ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
-    : {})
-  const data = await r.json().catch(() => ({}))
+  let r
+  try {
+    r = await fetch(`/api/${route}`, body
+      ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
+      : {})
+  } catch {
+    throw new Error(HORS_LIGNE)
+  }
+  // Un déploiement statique (Vercel) renvoie la page d'erreur, pas du JSON :
+  // le distinguer d'un refus métier évite d'afficher « erreur 404 » à l'écran.
+  const data = await r.json().catch(() => null)
+  if (data == null) throw new Error(HORS_LIGNE)
   if (!r.ok) throw new Error(data.error ?? `erreur ${r.status}`)
   return data
 }
+
+const HORS_LIGNE = 'Read-only preview — settlement runs against a local server (npm run web).'
 
 /** Relit le carnet depuis le serveur — la CLI écrit le même fichier. */
 async function reloadOffers({ repaint = true } = {}) {
@@ -774,6 +814,7 @@ async function reloadOffers({ repaint = true } = {}) {
   state.pending = r.pending
   state.commitments = r.commitments ?? []
   state.canSign = r.canSign
+  state.apiLive = true
   if (repaint) render()
   return r
 }
