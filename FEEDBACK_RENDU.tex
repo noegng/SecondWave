@@ -5,7 +5,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage[english]{babel}
-\usepackage[a4paper,top=1.3cm,bottom=1.2cm,left=1.7cm,right=1.7cm,footskip=0.7cm]{geometry}
+\usepackage[a4paper,top=1.15cm,bottom=1.0cm,left=1.55cm,right=1.55cm,footskip=0.55cm]{geometry}
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{xcolor}
@@ -18,16 +18,16 @@
 \definecolor{rule}{HTML}{C3CDD3}
 \definecolor{ink2}{HTML}{3A4854}
 
-\titlespacing*{\section}{0pt}{9pt plus 2pt minus 1pt}{3pt}
+\titlespacing*{\section}{0pt}{7pt plus 1pt minus 1pt}{2pt}
 \titlespacing*{\subsection}{0pt}{5pt plus 1pt minus 1pt}{1pt}
 \titleformat{\section}{\large\bfseries\color{accent}}{}{0pt}{}
 \titleformat{\subsection}{\normalsize\bfseries\color{ink2}}{}{0pt}{}
 
-\setlist[itemize]{leftmargin=1.1em,itemsep=1.5pt,topsep=3pt,parsep=0pt}
-\setlist[enumerate]{leftmargin=1.5em,itemsep=1.5pt,topsep=3pt,parsep=0pt}
-\setlength{\parskip}{3pt}
+\setlist[itemize]{leftmargin=1.1em,itemsep=1pt,topsep=2pt,parsep=0pt}
+\setlist[enumerate]{leftmargin=1.5em,itemsep=1pt,topsep=2pt,parsep=0pt}
+\setlength{\parskip}{2.4pt}
 \setlength{\parindent}{0pt}
-\linespread{1.0}\selectfont
+\linespread{0.98}\selectfont
 \setlength{\emergencystretch}{3em}
 \renewcommand{\arraystretch}{1.08}
 \newcommand{\tc}[1]{\texttt{\small #1}}
@@ -59,13 +59,10 @@ Technical evidence (scripts, hashes, versions) is in the \href{\#where-the-proof
 
 \begin{enumerate}
   \item \textbf{A lender's ``collateral'' is almost never what you think it is.} A default can push \textbf{95 \% of the loss onto depositors}, even when the broker shows a large reserve.
-  \item \textbf{While the money is locked in, the displayed price can stay beautiful.} A late loan changes nothing on screen until someone formally records the problem. We found \textbf{22 vaults in exactly that state} among the 40 largest on the network, without having created a single one.
-  \item \textbf{``Success'' does not mean the trade happened.} Delivery and no-op are indistinguishable in the response, and three send modes out of four hand over the shares without collecting the price.
-  \item \textbf{A signed offer did not survive waiting} --- 72 seconds, and invalidated the moment either party did anything else. We found how to make it durable; it is documented nowhere.
-  \item \textbf{Nothing in the wallet ecosystem can sign a batched exchange}, so any peer-to-peer market is forced to be custodial.
+  \item \textbf{While the money is locked in, the displayed price can stay beautiful.} A late loan changes nothing on screen until someone formally records it. We found \textbf{22 vaults in exactly that state} among the 40 largest on the network, without having created a single one.
+  \item \textbf{``Success'' does not mean the trade happened.} Delivery and no-op are indistinguishable in the response --- we froze two Devnet transactions side by side to prove it.
+  \item \textbf{The error messages name neither the field nor the rule}, which turned two of our findings into lost afternoons.
 \end{enumerate}
-
-\vspace{2pt}{\color{rule}\hrule height 0.5pt}\vspace{4pt}
 
 \section*{What we built}
 
@@ -240,207 +237,32 @@ Same family: three fields are all called ``rate'' and do not mean the same thing
 
 \vspace{2pt}{\color{rule}\hrule height 0.5pt}\vspace{4pt}
 
-\section*{6. You can't simply ask ``show me this loan''}
+\section*{In closing}
 
-There is a read method for \textbf{the vault}. There is \textbf{none} for a loan, for a broker, or for the list of share holders.
+Five findings, one shape. \textbf{The protocol is sound; what is missing is what it tells you.} The vault holds, all-or-nothing holds, the identity gate is watertight, rounding is exact over hundreds of round trips --- we tried to break these and could not. What cost us days was never the ledger being wrong, it was the ledger being silent: a collateral figure that does not mean what it says, a price that does not move when the risk does, a success code covering two opposite outcomes, and refusals naming neither field nor rule.
 
-To analyse a vault we have to:
+Every one of those is a documentation or a reporting fix, not a protocol change. That is the good news.
 
-\begin{enumerate}
-  \item read the vault;
-  \item list the objects of the vault's pseudo-account (the brokers);
-  \item for each broker, list its loans again;
-  \item for share holders, \textbf{replay the entire history} of the account, because nobody provides the list.
-\end{enumerate}
-
-A loan repaid and deleted \textbf{disappears}. There is no on-chain credit history. Any serious risk rating requires an indexer alongside.
-
-You also cannot \textbf{simulate} a loan before sending it (the second signature is missing), nor simulate a batched exchange. The hardest operations to build are the ones you cannot dry-run.
-
-\textbf{What we're asking for:} three business reads --- the loan, the broker, the share holders --- and the right to simulate a loan and a batched exchange.
-
-\vspace{2pt}{\color{rule}\hrule height 0.5pt}\vspace{4pt}
-
-\section*{7. What runs on the network isn't in the docs}
-
-Devnet already runs a \textbf{newer version} of the protocol (three-phase vaults: subscription, investment, redemption). The fields exist. The SDK knows them. \textbf{No published page describes them.}
-
-We learned everything by trial and error:
+\textbf{Cut for length}, each measured and reproducible in the repository:
 
 \begin{itemize}
-  \item a broker \textbf{only exists} on a fixed-term vault;
-  \item a ``start date'' field is \textbf{forbidden} at loan creation (it is computed automatically);
-  \item a ``free data'' field is \textbf{accepted then dropped} --- apparent success, information lost;
-  \item an XRP vault \textbf{refuses} a scale field that only exists for tokens.
+  \item \textbf{No read method for a loan, a broker, the share holders --- or the list of vaults.} We sweep 489 vaults in 11 s and re-read each one to find anything.
+  \item \textbf{Devnet is ahead of the docs} (three-phase vaults, date rules, share escrow). We learned it by typing next to the target.
+  \item \textbf{A signed offer did not survive waiting} --- 72 s, and dead the moment either party transacted. Reserved transaction numbers fix it entirely; that is written nowhere, and it is the difference between an order book and an appointment.
+  \item \textbf{No wallet can sign a batched exchange}, so every peer-to-peer market is forced to be custodial.
+  \item \textbf{A proposal:} let an escrow point at a \textbf{permissioned domain} instead of a named destination. In a private vault everyone who could answer is already credentialled --- naming the destination twice adds no safety, it only removes the possibility of a market.
 \end{itemize}
-
-Same surprise on the resale side: \textbf{escrowing shares works}, up to an atomic swap without any batched operation. Nothing says so. We found it by typing next to the target.
-
-Conversely, the native order book still \textbf{refuses} to quote these shares (``this logic is disabled''). The code is there, the switch is off. We don't know whether that's for tomorrow or for two years from now --- and it decides whether our peer-to-peer market still makes sense.
-
-\vspace{2pt}{\color{rule}\hrule height 0.5pt}\vspace{4pt}
-
-\section*{8. A signed offer does not survive waiting}
-
-This is the problem that decides whether you build a \textbf{market} or a \textbf{handshake}. We only understood it by trying to make an offer wait.
-
-When two people swap shares against money, each one signs. But what each one signs contains \textbf{the other's transaction counter}. As a result, as soon as either party does any other operation, the already-signed offer becomes invalid. And the envelope carries a short deadline --- we measured \textbf{72 seconds} on Devnet.
-
-Concretely: the seller cannot sign now and let the buyer show up later. Both must be at their screens, at the same time, for about a minute. That is not an order book, it is an appointment.
-
-\textbf{What we found, and it changes everything.} The protocol can reserve a transaction number in advance. Using it instead of the ordinary counter unlocks the whole thing. We measured seven cases:
-
-\vspace{3pt}
-\begin{tabularx}{\linewidth}{lX}
-\toprule
-\textbf{What we tested} & \textbf{Result} \\
-\midrule
-Reserved number on the envelope & accepted \\
-Reserved number on each inner leg & accepted \\
-\textbf{Offer signed, then both accounts do other things, then we send it} & \textbf{it goes through} \\
-Deadline pushed to 10 min, 1 h, 24 h, 7 days, 8 years & all accepted \\
-No deadline at all & accepted \\
-\bottomrule
-\end{tabularx}
-\vspace{3pt}
-
-A signed offer therefore becomes \textbf{durable}. And cancellation exists too: consuming the reserved number makes the offer permanently unexecutable, \textbf{even if the other party has already signed it}. Measured cost: \textbf{1 drop}.
-
-Two remarks that matter for what follows:
-
-\begin{itemize}
-  \item \textbf{None of this is written down.} The JavaScript SDK already reads the reserved number when it assembles signatures --- the mechanism is anticipated. No page says a batched exchange can be carried that way, nor what it enables.
-  \item \textbf{An offer with no deadline is not desirable either.} As long as the buyer has signed and the seller has not, the seller holds a \textbf{free option}: they execute on the day that suits them, possibly a year later, on a vault that will have changed nature in the meantime. The buyer would pay yesterday's price for today's asset. So we put a deadline back --- but on the buyer's \textbf{commitment}, not on the seller's listing, which commits nobody.
-\end{itemize}
-
-\textbf{What we're asking for:} document that a batched exchange can be carried by a reserved transaction number, and what that implies --- it is the difference between a market and an appointment. And, on the same page, say that having no deadline transfers a free option to whoever signs last.
-
-\vspace{2pt}{\color{rule}\hrule height 0.5pt}\vspace{4pt}
-
-\section*{9. You can't ask for the list of vaults}
-
-To rate a vault's risk, you first have to find it. There is \textbf{no read method} that answers ``here are the vaults''. The only route is to \textbf{sweep the ledger} filtering by object type.
-
-Measured on Devnet: \textbf{489 vaults in 11 seconds}, across 60 pages --- and the sweep was still \textbf{truncated}. Then, knowing whether any of them deserves a look means re-reading each one in full: for the 40 largest, about 27 seconds more.
-
-This is not a performance detail. It decides whether an independent analyst can exist at all. And it is worth the trouble: among those 40 vaults, \textbf{22 had an undeclared defaulted loan}. The signal we were looking for does exist in the wild, on addresses that are not ours --- but nobody can see it without sweeping the whole chain.
-
-Same family as point 6: the loan, the broker, the share holders are missing\ldots{} and so is the list of vaults itself.
-
-\textbf{What we're asking for:} a read method that lists vaults, with at minimum a filter by owner and by type. Failing that, say clearly in the docs that any product in this space needs an indexer, and what it should look like.
-
-\vspace{2pt}{\color{rule}\hrule height 0.5pt}\vspace{4pt}
-
-\section*{10. No wallet can sign a batched exchange}
-
-This is our last point, and possibly the most damaging one for the ecosystem.
-
-The batched exchange works on-chain. We used it dozens of times. But it is \textbf{out of reach of a wallet}. We read the source of the official developer wallet: \textbf{the word appears nowhere}. Neither batched exchange nor escrow. It can create and send tokens, accept a credential, and it does have a vault deposit screen --- the one from point 3, which does not work in XRP. But it can sign \textbf{neither} of the two operations that enable an atomic swap.
-
-The connection protocol between a site and a wallet does declare a ``sign on behalf of another account'' method, which is exactly what would be needed. No wallet implements it for batched exchanges.
-
-The consequence is brutal for a product: \textbf{any peer-to-peer market has to sign server-side}, with its users' keys. In other words, become custodial --- precisely what this protocol is trying to avoid. Our interface does it, locally, and we own that as a demo limitation. We would not put it online.
-
-\textbf{What we're asking for:} bring the batched exchange into the official wallet and into the connection standard, with a readable review screen (``you deliver X, you receive Y, all or nothing''). Until then, the most interesting part of the protocol stays reserved for people who write scripts.
-
-\vspace{2pt}{\color{rule}\hrule height 0.5pt}\vspace{4pt}
-
-\section*{11. A proposal: escrow without a named destination}
-
-The previous points converge on the same wall, and we would like to propose a way out.
-
-Today, \textbf{the seller must know their buyer before committing}. This is true on both rails:
-
-\begin{itemize}
-  \item the batched exchange: the buyer's address is \textbf{inside} what the seller signs;
-  \item escrow: it requires a \textbf{named destination} at creation.
-\end{itemize}
-
-So there is no way to say ``I sell 1,000 shares at this price, to whoever takes them first''. The native order book still refuses to quote these shares. A seller who wants out must \textbf{find their buyer elsewhere}, then come back and sign. That is why our order book is off-chain --- not an architectural choice, an unavailability.
-
-**Why we think a bearer escrow would be reasonable \emph{here}.**
-
-The usual objection is obvious: an escrow anyone can claim is an open door. But in a private vault, \textbf{``anyone'' does not exist}. Access is already bounded by a permissioned domain (XLS-0080) and the credentials it accepts (XLS-0070). Only domain members can hold these shares --- the network checks it at deposit, at transfer, and \textbf{again when the escrow is finished}, which we tested.
-
-In other words, the control a named destination provides is \textbf{already provided by the domain}. Naming it a second time adds no security: it only removes the possibility of a market.
-
-\textbf{What we're asking for:} the ability to create a share escrow pointing at \textbf{a domain} instead of a destination. The first member in good standing to finish takes the position, against the agreed price. The seller commits once, publicly, without knowing who will answer --- and without any loss of trust, since every possible responder is already authenticated.
-
-That would give the protocol a real order book for private vaults, without waiting for the native book to accept these shares --- and without anyone having to trust an off-chain intermediary like ours.
-
-\vspace{2pt}{\color{rule}\hrule height 0.5pt}\vspace{4pt}
-
-\section*{What reassured us}
-
-Not everything is broken. These held, and they deserve to be kept.
-
-\begin{itemize}
-  \item \textbf{The vault owner cannot push back the redemption date.} Once written, it is written. No ``six more months'' decided after the fact.
-  \item \textbf{Losing your credential does not prevent withdrawal} at the scheduled date. Only a token freeze (reversible) blocks an exit.
-  \item \textbf{Vault money does not leak} into ordinary payments. You also cannot nest a vault inside another vault.
-  \item \textbf{Not one drop lost to rounding} over hundreds of round trips, in XRP as in tokens.
-  \item \textbf{All-or-nothing really holds.} We could not break it. If the buyer signs and the seller then changes the price, the network refuses.
-  \item \textbf{The identity gate is watertight} and re-checked everywhere: deposit, transfer, escrow, including at escrow finish.
-\end{itemize}
-
-\vspace{2pt}{\color{rule}\hrule height 0.5pt}\vspace{4pt}
-
-\section*{What we're asking for, in seven points}
-
-\begin{enumerate}
-  \item \textbf{Tell the truth about collateral}, in one sentence, where people read it. The pot is not the protection.
-  \item \textbf{Error messages that name the field and the rule.} Fewer catch-all ``malformed'', ``expired'', ``no permission''.
-  \item \textbf{Be able to read a loan, a broker, who holds the shares --- and the list of vaults} --- without rebuilding the world by hand.
-  \item \textbf{Make ``success'' mean ``the trade happened'':} the index of the failing leg and its code, and a warning about the choice of send mode.
-  \item \textbf{Document what already runs} (three-phase vaults, date rules, the real meaning of the rates, share escrow) --- and say whether the native book will ever quote these shares.
-  \item \textbf{Document that a batched exchange can be carried by a reserved transaction number.} That is what separates a market from a 72-second appointment, and it is written nowhere.
-  \item \textbf{Put the batched exchange into wallets.} As long as none can sign it, every peer-to-peer market is forced to be custodial.
-\end{enumerate}
-
-And a proposal rather than a request: \textbf{an escrow addressed to a domain} rather than to a person (point 11). The official wallet should also be able to deposit XRP into a vault (point 3).
-
-\vspace{2pt}{\color{rule}\hrule height 0.5pt}\vspace{4pt}
-
-\section*{Questions for Ripple}
-
-\begin{enumerate}
-  \item \textbf{The native order book} --- will it ever quote vault shares, and will it respect private vaults? If yes, our peer-to-peer market becomes a temporary bridge. If no, it stays the product.
-  \item \textbf{The ban on exiting during investment} --- is it final, including for someone who is no longer a member?
-  \item \textbf{Reselling through a batched operation} --- is that a supported use, or a side effect you may break later?
-  \item \textbf{An over-prudent broker} (more money in the pot than the cap) --- will they ever be able to offer genuinely more protection, without gaming the rates?
-  \item \textbf{Carrying a batched operation on a reserved transaction number} --- is that intended, tolerated, or accidental? The SDK already does half of it; we built on top and we would like to know whether we were right.
-  \item \textbf{An escrow addressed to a domain} rather than to a person --- does it collide with something we cannot see? It is our only real lead towards an on-chain order book for private shares.
-\end{enumerate}
 
 \vspace{2pt}{\color{rule}\hrule height 0.5pt}\vspace{4pt}
 
 \section*{Where the proofs are}
 
-This text merges the work of both sides of the team. The long versions remain the reference for a mentor or a reproduction.
+\begin{itemize}
+  \item \textbf{\href{./probes-marche/PREUVES.md}{probes-marche/PREUVES.md}} --- 8 Devnet transactions, openable in the explorer, including the A / E pair of section 4.
+  \item \href{./FEEDBACK.md}{FEEDBACK.md}, \href{./FEEDBACK_XLS65_XLS66.md}{FEEDBACK\_XLS65\_XLS66.md} --- long technical reports. \href{./probes/FRICTIONS.md}{probes/FRICTIONS.md}, \href{./probes-marche/FRICTIONS.md}{probes-marche/FRICTIONS.md}, \href{./FRICTIONS-annexe.md}{FRICTIONS-annexe.md} --- reproductions. \tc{probes-marche/12}\ldots{}\tc{16} --- the measurements behind the cut findings.
+\end{itemize}
 
-\vspace{3pt}
-\begin{tabularx}{\linewidth}{lXX}
-\toprule
-\textbf{File} & \textbf{Who} & \textbf{What} \\
-\midrule
-\href{./FEEDBACK.md}{FEEDBACK.md} & mostly Hugo & Technical report (SDK, batched operations, messages, missing reads) \\
-\href{./FEEDBACK_XLS65_XLS66.md}{FEEDBACK\_XLS65\_XLS66.md} & mostly Noé & First-loss + wallet note, with formulas and proofs \\
-\href{./probes/FRICTIONS.md}{probes/FRICTIONS.md} & Hugo & Vault / loan reproductions \\
-\href{./probes-marche/FRICTIONS.md}{probes-marche/FRICTIONS.md} & Hugo & Resale / escrow reproductions \\
-\href{./FRICTIONS-annexe.md}{FRICTIONS-annexe.md} & Hugo & Long version, market side \\
-\href{./probes-marche/13-tickets-et-batch.mjs}{probes-marche/13-tickets-et-batch.mjs} & Hugo & Durable offer: 7 cases, legs verified in the ledger (point 8) \\
-\href{./probes-marche/14-annulation-par-ticket.mjs}{probes-marche/14-annulation-par-ticket.mjs} & Hugo & Enforceable cancellation of an already-signed offer (point 8) \\
-\href{./probes-marche/15-fenetre-maximale.mjs}{probes-marche/15-fenetre-maximale.mjs} & Hugo & How far the deadline can be pushed: 10 min $\rightarrow$ 8 years (point 8) \\
-\href{./probes-marche/16-deux-achats-en-parallele.mjs}{probes-marche/16-deux-achats-en-parallele.mjs} & Hugo & Two simultaneous purchases, and a no-funds send that answers ``success'' (point 4) \\
-\href{./probes-marche/12-vaults-publics.mjs}{probes-marche/12-vaults-publics.mjs} & Hugo & Network sweep: 489 vaults, 22 in undeclared default (point 9) \\
-\textbf{\href{./probes-marche/PREUVES.md}{probes-marche/PREUVES.md}} & Hugo & \textbf{8 Devnet transactions openable in the explorer --- points 4 and 8} \\
-\bottomrule
-\end{tabularx}
-\vspace{3pt}
-
-About 450 cases replayed on Devnet, around thirty vaults created and 489 swept. Every technical point has a script in the repository.
-
-\emph{Security leads are passed on verbally, as the rules require. They are not in this document.}
+About 450 cases replayed on Devnet, thirty vaults created and 489 swept. Library \tc{xrpl@5.2.0-beta.1}, rippled 3.4.0-rc5. \emph{Security leads are passed on verbally, as the rules require.}
 
 
 \end{document}
