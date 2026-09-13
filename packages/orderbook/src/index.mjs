@@ -40,6 +40,20 @@ export const STATUS = {
 /** Les états où l'offre est encore en cours de vie — ni réglée ni morte. */
 export const EN_COURS = [STATUS.OPEN, STATUS.MATCHED, STATUS.ARMED]
 
+/**
+ * Durée de vie d'une ANNONCE, par défaut — deux jours.
+ *
+ * Quand on décide de vendre, c'est qu'on en a envie maintenant : une annonce
+ * qui traîne des semaines ne reflète plus une intention, et elle immobilise des
+ * parts dans le calcul de couverture. Rien n'est signé à ce stade, donc cette
+ * échéance est une convention du carnet, pas une règle du ledger — et c'est
+ * suffisant, puisqu'une annonce n'engage personne.
+ *
+ * À ne pas confondre avec `COMMITMENT_LEDGERS` (settlement/durable.mjs), qui
+ * borne l'ENGAGEMENT signé de l'acheteur et que le ledger, lui, fait respecter.
+ */
+export const OFFER_TTL = 2 * 24 * 3600
+
 export class OrderBook {
   constructor(path = 'orderbook.json') {
     this.path = path
@@ -53,10 +67,13 @@ export class OrderBook {
    *
    * `sellerTickets` rend l'offre DURABLE : [ticket d'enveloppe, ticket de la
    * jambe des parts]. Sans eux, l'offre reste éphémère (rail batch classique).
-   * `ttl: null` = pas d'expiration côté carnet — cohérent avec une enveloppe
-   * sans `LastLedgerSequence`.
+   *
+   * `ttl` borne la durée de vie de l'ANNONCE — deux jours par défaut, parce
+   * qu'une intention de vendre vieillit. `null` pour une annonce sans fin.
+   * Cette échéance ne survit pas à l'engagement : dès qu'un acheteur a signé,
+   * c'est l'échéance de SON engagement qui gouverne, et elle est on-chain.
    */
-  post({ vaultId, seller, shares, price, ttl = 3600, sellerTickets = null }) {
+  post({ vaultId, seller, shares, price, ttl = OFFER_TTL, sellerTickets = null }) {
     const now = rippleNow()
     const order = {
       id: `o${String(this.orders.length + 1).padStart(3, '0')}`,
@@ -79,8 +96,18 @@ export class OrderBook {
 
   get(id) { return this.orders.find(o => o.id === id) ?? null }
 
-  /** Une offre sans `expiry` ne périme jamais — c'est tout l'intérêt du rail durable. */
-  expired(o, now = rippleNow()) { return o.expiry != null && o.expiry <= now }
+  /**
+   * L'annonce a-t-elle vieilli ?
+   *
+   * ⚠️ Ne vaut que tant que personne ne s'est engagé. Une fois l'acheteur
+   *    signé, l'échéance qui compte est celle de son engagement — bornée par
+   *    le ledger — et laisser le TTL de l'annonce bloquer le règlement
+   *    empêcherait le vendeur de confirmer une offre parfaitement valide.
+   */
+  expired(o, now = rippleNow()) {
+    if (o.status !== STATUS.OPEN) return false
+    return o.expiry != null && o.expiry <= now
+  }
 
   /**
    * ⭐ L'engagement de l'acheteur, lui, a une échéance — et c'est le ledger qui

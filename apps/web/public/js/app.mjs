@@ -166,8 +166,16 @@ function buyCell(o, v, mine, live) {
 }
 
 /** liquidité ou détresse — la question centrale de l'analyste. */
-/** Une offre sans `expiry` ne périme jamais — c'est le principe du rail durable. */
-function isExpired(o) { return o.expiry != null && o.expiry <= rippleNow() }
+/**
+ * L'annonce a-t-elle vieilli ? Ne vaut que tant que personne ne s'est engagé :
+ * une fois l'acheteur signé, c'est l'échéance de SON engagement qui gouverne,
+ * et elle est bornée par le ledger. Sinon une offre engagée s'afficherait
+ * comme périmée alors qu'elle est parfaitement réglable.
+ */
+function isExpired(o) {
+  if (o.status !== 'open') return false
+  return o.expiry != null && o.expiry <= rippleNow()
+}
 
 function readingOf(v, discount) {
   if (v.rating.tone === 'bad' || (v.rating.tone === 'warn' && discount >= 0.12))

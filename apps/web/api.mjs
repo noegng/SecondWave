@@ -28,7 +28,7 @@ import {
   cancelOffer, withdrawCommitment, offerAlive,
   commitmentDeadline, commitmentSeconds, COMMITMENT_LEDGERS, SECONDS_PER_LEDGER,
 } from '@secondwave/settlement'
-import { OrderBook, STATUS, EN_COURS } from '@secondwave/orderbook'
+import { OrderBook, STATUS, EN_COURS, OFFER_TTL } from '@secondwave/orderbook'
 
 export class ApiError extends Error {
   constructor(code, message) { super(message); this.code = code }
@@ -156,7 +156,7 @@ export function createApi(repo) {
 
       const o = b.post({
         vaultId: v.vaultId, seller, shares: String(shares), price: String(price),
-        ttl: null, sellerTickets: t.free.slice(0, TICKETS_SELLER),
+        ttl: OFFER_TTL, sellerTickets: t.free.slice(0, TICKETS_SELLER),
       })
       return {
         offer: publique(o), ticketsCreated: t.created,

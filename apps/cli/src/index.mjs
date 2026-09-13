@@ -30,7 +30,7 @@ import {
   cancelOffer, withdrawCommitment, offerAlive,
   commitmentDeadline, commitmentSeconds, COMMITMENT_LEDGERS, SECONDS_PER_LEDGER,
 } from '@secondwave/settlement'
-import { OrderBook, priceHistory, STATUS, EN_COURS } from '@secondwave/orderbook'
+import { OrderBook, priceHistory, STATUS, EN_COURS, OFFER_TTL } from '@secondwave/orderbook'
 import { analyse, classifyDiscount, toAnalystInput } from '@secondwave/analyst'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
@@ -287,12 +287,12 @@ async function cmdOffer(vaultKey, parts, prixXrp) {
   const o = book.post({
     vaultId: v.vaultId, seller, shares: parts,
     price: String(Math.round(prixXrp * 1e6)),
-    ttl: null,                 // pas d'expiration : c'est tout l'intérêt
+    ttl: OFFER_TTL,            // une intention de vendre vieillit
     sellerTickets: tickets,
   })
   console.log(`\nOffre ${o.id} publiée : ${o.shares} parts de ${v.key} pour ${XRP(o.price)} XRP`)
   console.log(`  vendeur ${seller}`)
-  console.log(`  durable — aucune expiration. Rien n'est signé, rien n'est engagé.`)
+  console.log(`  annonce valable ${OFFER_TTL / 3600} h — rien n'est signé, rien n'est engagé.`)
   console.log(`  l'acheteur : npm run cli take ${o.id} <acheteur>\n`)
 }
 
