@@ -13,6 +13,7 @@ import {
   fmtAsset, fmtDuration, fmtNav, fmtNum, fmtShares, shortAddr,
 } from './data.mjs'
 import { loadSession, saveSession, candidates, holdingsOf, fetchLiveHoldings, connectExternal } from './wallet.mjs'
+import { icon, scenarioIcon } from './icons.mjs'
 
 startCoinsForeground(document.getElementById('coins-fg'))
 
@@ -49,15 +50,38 @@ $('#brand-home').addEventListener('click', reopenLock)
 
 /* ============ onglets ============ */
 
-for (const tab of document.querySelectorAll('.tab')) {
-  tab.addEventListener('click', () => {
-    state.tab = tab.dataset.tab
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('is-active', t === tab))
-    document.querySelectorAll('.view').forEach(v =>
-      v.classList.toggle('is-active', v.id === `view-${state.tab}`))
-    render()
+const tabs = [...document.querySelectorAll('.tab')]
+
+function activateTab(tab, { focusTab = false } = {}) {
+  state.tab = tab.dataset.tab
+  tabs.forEach(t => {
+    const on = t === tab
+    t.classList.toggle('is-active', on)
+    t.setAttribute('aria-selected', String(on))
+    t.tabIndex = on ? 0 : -1
   })
+  document.querySelectorAll('.view').forEach(v => {
+    const on = v.id === `view-${state.tab}`
+    v.classList.toggle('is-active', on)
+    v.hidden = !on
+  })
+  if (focusTab) tab.focus()
+  render()
 }
+
+for (const tab of tabs) {
+  tab.addEventListener('click', () => activateTab(tab))
+}
+document.querySelector('.tabs')?.addEventListener('keydown', e => {
+  const i = tabs.indexOf(document.activeElement)
+  if (i < 0) return
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    e.preventDefault()
+    const dir = e.key === 'ArrowRight' ? 1 : -1
+    activateTab(tabs[(i + dir + tabs.length) % tabs.length], { focusTab: true })
+  } else if (e.key === 'Home') { e.preventDefault(); activateTab(tabs[0], { focusTab: true }) }
+  else if (e.key === 'End') { e.preventDefault(); activateTab(tabs[tabs.length - 1], { focusTab: true }) }
+})
 
 /* ============ filtres carnet ============ */
 
@@ -90,13 +114,13 @@ function offerRow(o) {
     ? `<span class="status-pill status-${o.status}">${STATUS_FR[o.status] ?? o.status}</span>`
     : ''
 
-  const left = timeLeft(o)
-
+  tr.tabIndex = 0
+  tr.setAttribute('aria-label', `Offer ${o.id}, ${v.short}, ${reading.label}`)
   tr.innerHTML = `
     <td><span class="oid">${o.id}</span>${mine ? '<span class="tag-mine">you</span>' : ''}</td>
     <td>
       <div class="vault-cell">
-        <span class="grade tone-${v.rating.tone}">${v.rating.grade}</span>
+        ${gradeMark(v)}
         <div>
           <div class="v-name">${v.short}</div>
           <div class="v-asset">${v.asset}</div>
@@ -104,16 +128,19 @@ function offerRow(o) {
       </div>
     </td>
     <td class="num">${fmtNum(Number(o.shares), true)}</td>
-    <td class="num">${fmtAsset(Number(o.price), v)}</td>
+    <td class="num price-cell">${fmtAsset(Number(o.price), v)}</td>
     <td class="num"><span class="discount ${deep ? 'deep' : ''}">−${(d * 100).toFixed(1)} %</span></td>
-    <td>${live ? `<span class="reading ${reading.cls}">${reading.label}</span>` : status}</td>
-    <td><span class="seller">${shortAddr(o.seller)}</span></td>
-    <td class="num">${live ? left.label : '—'}</td>
+    <td>${live ? readingPill(reading) : status}</td>
     <td class="num">${buyCell(o, v, mine, live)}</td>
   `
+  const open = () => openDrawer(o, v)
   tr.addEventListener('click', e => {
-    if (e.target.closest('button')) return
-    openDrawer(o, v)
+    if (e.target.closest('button, a')) return
+    open()
+  })
+  tr.addEventListener('keydown', e => {
+    if (e.target !== tr) return
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open() }
   })
   const buyBtn = tr.querySelector('[data-buy]')
   if (buyBtn) buyBtn.addEventListener('click', () => buyFlow(o, v))
@@ -128,17 +155,28 @@ function buyCell(o, v, mine, live) {
   if (!live) return o.txHash
     ? `<a class="seller" href="https://devnet.xrpl.org/transactions/${o.txHash}" target="_blank" rel="noopener" onclick="event.stopPropagation()">proof ↗</a>`
     : ''
-  if (mine) return `<button class="btn btn-mine btn-sm" data-cancel>Withdraw</button>`
-  return `<button class="btn btn-ghost btn-sm" data-buy>Buy back</button>`
+  if (mine) return `<button class="btn btn-mine btn-sm" data-cancel aria-label="Withdraw offer ${o.id}">${icon('exit', { size: 13 })} Withdraw</button>`
+  return `<button class="btn btn-ghost btn-sm" data-buy aria-label="Buy ${fmtNum(Number(o.shares), true)} shares of ${v.short}">${icon('buy', { size: 13 })} Buy</button>`
 }
 
 /** liquidité ou détresse — la question centrale de l'analyste. */
 function readingOf(v, discount) {
   if (v.rating.tone === 'bad' || (v.rating.tone === 'warn' && discount >= 0.12))
-    return { cls: 'distress', label: 'distress discount' }
+    return { cls: 'distress', label: 'distress discount', icon: 'distress' }
   if (discount >= 0.005)
-    return { cls: 'liquidity', label: 'liquidity discount' }
-  return { cls: '', label: 'at par' }
+    return { cls: 'liquidity', label: 'liquidity discount', icon: 'liquidity' }
+  return { cls: '', label: 'at par', icon: 'par' }
+}
+
+function readingPill(reading) {
+  return `<span class="reading ${reading.cls}">${icon(reading.icon || 'par', { size: 13 })}<span>${reading.label}</span></span>`
+}
+
+function gradeMark(v) {
+  return `<span class="grade-wrap">
+    <span class="grade tone-${v.rating.tone}">${v.rating.grade}</span>
+    ${scenarioIcon(v.key, { label: v.short, size: 15 })}
+  </span>`
 }
 
 /** Décote que la note du vault peut justifier — l'ancre « Suggested ». */
@@ -172,7 +210,7 @@ function askAdvice(v, discount) {
   const suggestPct = (suggestedDiscount(v) * 100).toFixed(0)
   if (discount < -0.005) {
     return {
-      reading: { cls: 'premium', label: 'premium' },
+      reading: { cls: 'premium', label: 'premium', icon: 'premium' },
       headline: `Premium +${pct} %`,
       body: 'Above NAV. A buyer only pays this if they need this exact vault — expect a thin book.',
     }
@@ -238,25 +276,27 @@ function renderVaults() {
     const card = el('div', ['vault-card', v.transferable ? '' : 'is-locked', mine ? 'has-mine' : ''].filter(Boolean).join(' '))
     card.innerHTML = `
       <div class="vc-head">
-        <span class="grade tone-${v.rating.tone}">${v.rating.grade}</span>
+        ${gradeMark(v)}
         <span class="v-name">${v.short}</span>
-        ${v.clawbackArmed ? '<span class="badge-claw">clawback armed</span>' : ''}
+        ${v.clawbackArmed ? `<span class="badge-claw">${icon('claw', { size: 11 })} clawback</span>` : ''}
+        ${v.transferable ? '' : `<span class="badge-phase">${icon('lock', { size: 11 })} locked</span>`}
         <span class="badge-phase">${v.phase}</span>
       </div>
       <div class="vc-why">${v.rating.why}</div>
-      <div class="vc-stats">
-        <div class="vc-stat"><div class="k">Total NAV</div><div class="v">${fmtAsset(v.assetsTotal, v, { compact: true })}</div></div>
-        <div class="vc-stat"><div class="k">Available</div><div class="v">${fmtAsset(v.assetsAvailable, v, { compact: true })}</div></div>
-        <div class="vc-stat"><div class="k">Shares issued</div><div class="v">${fmtNum(v.outstanding, true)}</div></div>
-        <div class="vc-stat"><div class="k">NAV / share</div><div class="v">${fmtNav(v.navPerShare)}</div></div>
-        <div class="vc-stat"><div class="k">Total term</div><div class="v">${fmtDuration(v.redemptionDate - v.subscriptionDate)}</div></div>
-        <div class="vc-stat"><div class="k">To maturity</div><div class="v">${v.redemptionDate > rippleNow() ? fmtDuration(v.redemptionDate - rippleNow()) : 'matured'}</div></div>
+      <div class="vc-hero">
+        <div class="vc-stat"><div class="k">NAV / share</div><div class="v big">${fmtNav(v.navPerShare)}</div></div>
+        <div class="vc-stat"><div class="k">Your position</div><div class="v big">${mine ? `${fmtNum(mine.shares, true)} · ${fmtAsset(mine.value, v, { compact: true })}` : '—'}</div></div>
       </div>
-      ${mine
-        ? `<div class="vc-you has">You hold <strong>${fmtNum(mine.shares, true)}</strong> shares · ${fmtAsset(mine.value, v, { compact: true })}</div>`
-        : state.session
-          ? '<div class="vc-you">No shares on this wallet</div>'
-          : ''}
+      <details class="vc-more">
+        <summary>Details</summary>
+        <div class="vc-stats">
+          <div class="vc-stat"><div class="k">Total NAV</div><div class="v">${fmtAsset(v.assetsTotal, v, { compact: true })}</div></div>
+          <div class="vc-stat"><div class="k">Available</div><div class="v">${fmtAsset(v.assetsAvailable, v, { compact: true })}</div></div>
+          <div class="vc-stat"><div class="k">Shares issued</div><div class="v">${fmtNum(v.outstanding, true)}</div></div>
+          <div class="vc-stat"><div class="k">Total term</div><div class="v">${fmtDuration(v.redemptionDate - v.subscriptionDate)}</div></div>
+          <div class="vc-stat"><div class="k">To maturity</div><div class="v">${v.redemptionDate > rippleNow() ? fmtDuration(v.redemptionDate - rippleNow()) : 'matured'}</div></div>
+        </div>
+      </details>
     `
     grid.appendChild(card)
   }
@@ -272,6 +312,10 @@ function renderShares() {
   if (refresh) {
     refresh.hidden = !state.session
     refresh.disabled = state.chain.status === 'loading'
+    if (!refresh.dataset.iconed) {
+      refresh.innerHTML = `${icon('refresh', { size: 13 })} Refresh`
+      refresh.dataset.iconed = '1'
+    }
   }
   if (!state.session) {
     sub.textContent = 'Connect a wallet to see your positions.'
@@ -297,7 +341,7 @@ function renderShares() {
     <div class="ws-item"><div class="k">Vaults</div><div class="v">${holdings.length}</div></div>
     <div class="ws-item"><div class="k">NAV value (XRP vaults)</div><div class="v">${fmtAsset(totalXrp, { isXrp: true })}</div></div>
     <div class="ws-item"><div class="k">Open offers</div><div class="v">${myOffers.length}</div></div>
-    <div class="ws-item"><div class="k">Source</div><div class="v shares-status ${sourceClass()}">${src}</div></div>
+    <div class="ws-item"><div class="k">Source</div><div class="v shares-status ${sourceClass()}">${icon('chain', { size: 13 })} ${src}</div></div>
   `
   box.appendChild(summary)
 
@@ -319,24 +363,24 @@ function renderShares() {
     const inBook = locked.get(h.vault.key) ?? 0
     const row = el('div', 'holding-row')
     row.innerHTML = `
-      <span class="grade tone-${h.vault.rating.tone}">${h.vault.rating.grade}</span>
+      ${gradeMark(h.vault)}
       <div class="grow">
         <div class="v-name">${h.vault.short}</div>
-        <div class="k">${h.vault.phase}${h.vault.transferable ? '' : ' · non-transferable'}</div>
+        <div class="k">${h.vault.phase}${h.vault.transferable ? '' : ` · ${icon('lock', { size: 11 })} locked`}</div>
       </div>
       <div>
         <div class="k">Shares</div>
-        <div class="mono">${fmtNum(h.shares, true)}</div>
+        <div class="hold-val">${fmtNum(h.shares, true)}</div>
       </div>
       <div>
         <div class="k">NAV value</div>
-        <div class="mono">${fmtAsset(h.value, h.vault, { compact: true })}</div>
+        <div class="hold-val">${fmtAsset(h.value, h.vault, { compact: true })}</div>
       </div>
       <div>
         <div class="k">Listed</div>
-        <div class="mono">${inBook ? fmtNum(inBook, true) : '—'}</div>
+        <div class="hold-val">${inBook ? fmtNum(inBook, true) : '—'}</div>
       </div>
-      ${h.vault.transferable ? '<button class="btn btn-ghost btn-sm" data-sell>Sell</button>' : ''}
+      ${h.vault.transferable ? `<button class="btn btn-ghost btn-sm" data-sell aria-label="Sell shares of ${h.vault.short}">${icon('sell', { size: 13 })} Sell</button>` : ''}
     `
     row.querySelector('[data-sell]')?.addEventListener('click', () => focusTicket(h.vault.key))
     list.appendChild(row)
@@ -362,6 +406,7 @@ function openDrawer(o, v) {
       <div class="kv"><span class="k">NAV value</span><span class="v">${fmtAsset(nav, v)}</span></div>
       <div class="kv"><span class="k">Discount</span><span class="v">−${(d * 100).toFixed(2)} %</span></div>
       <div class="kv"><span class="k">Seller</span><span class="v">${shortAddr(o.seller)}</span></div>
+      <div class="kv"><span class="k">Expires</span><span class="v">${timeLeft(o).label}</span></div>
     </div>
 
     <div class="d-section">
@@ -376,6 +421,7 @@ function openDrawer(o, v) {
     </div>
 
     <div class="d-verdict">
+      ${readingPill(reading)}
       <strong>${reading.label === 'at par' ? 'At par.' : reading.label === 'liquidity discount' ? 'Liquidity discount.' : 'Distress discount.'}</strong>
       ${v.rating.why}.
       ${reading.cls === 'distress'
@@ -399,25 +445,52 @@ function openDrawer(o, v) {
   $('#drawer-content').querySelector('[data-d-cancel]')?.addEventListener('click', () => { closeDrawer(); cancelOffer(o) })
   $('#drawer').classList.add('is-open')
   $('#drawer').setAttribute('aria-hidden', 'false')
+  lastFocus = document.activeElement
+  $('#drawer-close').focus()
 }
 
 function closeDrawer() {
   $('#drawer').classList.remove('is-open')
   $('#drawer').setAttribute('aria-hidden', 'true')
+  if (lastFocus && document.contains(lastFocus)) lastFocus.focus()
 }
 $('#drawer-close').addEventListener('click', closeDrawer)
 $('#drawer').addEventListener('click', e => { if (e.target === $('#drawer')) closeDrawer() })
 
 /* ============ modales ============ */
 
+let lastFocus = null
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+
+function trapFocus(root, e) {
+  if (e.key !== 'Tab') return
+  const nodes = [...root.querySelectorAll(FOCUSABLE)].filter(n => !n.disabled && n.offsetParent !== null)
+  if (!nodes.length) return
+  const first = nodes[0], last = nodes[nodes.length - 1]
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+}
+
 function openModal(html) {
+  lastFocus = document.activeElement
   $('#modal-box').innerHTML = html
   $('#modal-root').hidden = false
-  return $('#modal-box')
+  const box = $('#modal-box')
+  box.querySelector(FOCUSABLE)?.focus()
+  return box
 }
-function closeModal() { $('#modal-root').hidden = true }
+function closeModal() {
+  $('#modal-root').hidden = true
+  if (lastFocus && document.contains(lastFocus)) lastFocus.focus()
+}
 document.querySelector('.modal-backdrop').addEventListener('click', closeModal)
-window.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeDrawer() } })
+$('#modal-box').addEventListener('keydown', e => trapFocus($('#modal-box'), e))
+$('#drawer .drawer-panel')?.addEventListener('keydown', e => trapFocus($('#drawer .drawer-panel'), e))
+window.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return
+  if (!$('#modal-root').hidden) closeModal()
+  else closeDrawer()
+})
 
 /* ============ connexion wallet ============ */
 
@@ -555,15 +628,15 @@ function renderTicket() {
         <span>+10%</span>
       </div>
       <div class="t-anchors">
-        <button type="button" class="t-anchor" data-ask="suggest" id="s-ask-suggest">Suggested</button>
-        <button type="button" class="t-anchor" data-ask="nav">At NAV</button>
-        <button type="button" class="t-anchor" data-ask="book" id="s-ask-book" hidden>Book</button>
+        <button type="button" class="t-anchor" data-ask="suggest" id="s-ask-suggest">${icon('target', { size: 12 })} Suggested</button>
+        <button type="button" class="t-anchor" data-ask="nav">${icon('equal', { size: 12 })} At NAV</button>
+        <button type="button" class="t-anchor" data-ask="book" id="s-ask-book" hidden>${icon('book', { size: 12 })} Book</button>
       </div>
       <div class="hint" id="s-price-hint"></div>
     </div>
     <div class="t-reading" id="s-reading" hidden></div>
     <div class="t-grow"></div>
-    <button class="btn btn-primary" data-s-post disabled>Post offer</button>
+    <button class="btn btn-primary" data-s-post disabled>${icon('sell', { size: 14 })} Post offer</button>
   `
 
   const $v = box.querySelector('#s-vault')
@@ -599,6 +672,7 @@ function renderTicket() {
     const okPrice = price > 0 && nav > 0
     $('#s-shares-hint').classList.toggle('error', $sh.value !== '' && !okShares)
 
+    $sl.setAttribute('aria-label', 'Ask price versus NAV')
     const navUi = toUi(nav, v)
     if (okShares && navUi > 0) {
       $sl.min = String(navUi * 0.50)
@@ -610,12 +684,12 @@ function renderTicket() {
       $sl.disabled = true
     }
 
-    box.querySelector('#s-ask-suggest').textContent = `Suggested −${(suggest * 100).toFixed(0)} %`
+    box.querySelector('#s-ask-suggest').innerHTML = `${icon('target', { size: 12 })} Suggested −${(suggest * 100).toFixed(0)} %`
     const book = okShares ? bookMedianNative(v.vaultId, shares) : null
     if (book && nav > 0) {
       const bd = 1 - book / nav
       $book.hidden = false
-      $book.textContent = `Book ${bd >= 0 ? '−' : '+'}${(Math.abs(bd) * 100).toFixed(1)} %`
+      $book.innerHTML = `${icon('book', { size: 12 })} Book ${bd >= 0 ? '−' : '+'}${(Math.abs(bd) * 100).toFixed(1)} %`
     } else $book.hidden = true
 
     if (okShares && okPrice) {
@@ -625,12 +699,13 @@ function renderTicket() {
       $read.className = `t-reading ${advice.reading.cls}`
       $read.innerHTML = `
         <div class="t-read-top">
-          <span class="reading ${advice.reading.cls}">${advice.reading.label}</span>
+          ${readingPill(advice.reading)}
           <span class="t-read-pct">${advice.headline}</span>
         </div>
         <p>${advice.body}</p>
         <div class="t-read-nav">${fmtShares(shares)} shares · NAV ${fmtAsset(nav, v)} → ${fmtAsset(price, v)}</div>
       `
+      $sl.setAttribute('aria-valuetext', advice.headline)
       $('#s-price-hint').textContent = 'slider is the ask — 50 % of NAV to +10 %'
     } else {
       $read.hidden = true
@@ -787,10 +862,12 @@ function renderWalletChip() {
   const label = $('#wallet-label')
   if (state.session) {
     chip.classList.add('is-connected')
-    label.innerHTML = `<span class="addr">${shortAddr(state.session.account)}</span>`
+    chip.setAttribute('aria-label', `Wallet ${shortAddr(state.session.account)}`)
+    label.innerHTML = `${icon('wallet', { size: 14 })}<span class="addr">${shortAddr(state.session.account)}</span>`
   } else {
     chip.classList.remove('is-connected')
-    label.textContent = 'Connect'
+    chip.setAttribute('aria-label', 'Connect a wallet')
+    label.innerHTML = `${icon('wallet', { size: 14 })} Connect`
   }
 }
 

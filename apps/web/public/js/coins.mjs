@@ -10,6 +10,7 @@
  * Rendu argent réaliste (bevel + spéculaire), logos vectoriels fidèles,
  * Canvas 2D, sans dépendance.
  */
+import { reduceMotion } from './icons.mjs'
 
 const TAU = Math.PI * 2
 
@@ -156,10 +157,10 @@ export function startCoinsBackground(canvas) {
     bg.addColorStop(0, '#0c0c0e'); bg.addColorStop(1, '#08080a')
     ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h)
     for (const c of coins) {
-      const squash = Math.cos(t * c.sp + c.ph)
+      const squash = reduceMotion() ? 1 : Math.cos(t * c.sp + c.ph)
       faceCoin(ctx, c.x * w, c.y * h, c.r, squash, 0.09, c.kind)
     }
-    requestAnimationFrame(draw)
+    if (!reduceMotion()) requestAnimationFrame(draw)
   }
   window.addEventListener('resize', resize)
   resize(); requestAnimationFrame(draw)
@@ -232,7 +233,7 @@ export function startCoinsForeground(canvas) {
     leaner(gx - R * 1.2, base - R * 1.8, R * 1.05, -0.30, 'xrp')
     leaner(gx + R * 3.15, base - R * 1.3, R * 0.98, 0.28, 'ripple')
 
-    requestAnimationFrame(draw)
+    if (!reduceMotion()) requestAnimationFrame(draw)
   }
   window.addEventListener('resize', resize)
   resize(); requestAnimationFrame(draw)
