@@ -51,6 +51,7 @@ export async function loadWorld() {
       label: v.meta.label,
       short: SHORT[key] ?? key,
       vaultId: v.meta.vaultId,
+      shareMptId: v.meta.shareMptId ?? g.ShareMPTID ?? wv?.shareMptId ?? null,
       asset: currency,
       isXrp,
       assetsTotal,

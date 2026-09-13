@@ -367,6 +367,7 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .vault-card:hover { border-color: #33405f; transform: translateY(-2px); }
 
 .vault-card.is-locked { opacity: 0.55; }
+.vault-card.has-mine { border-color: rgba(232, 232, 238, 0.32); }
 
 .vc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .vc-head .v-name { font-weight: 700; font-size: 15px; flex: 1; }
@@ -417,6 +418,28 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 }
 .ws-item .k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); }
 .ws-item .v { font-family: var(--mono); font-size: 16px; }
+
+.vc-you {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  font-size: 12px;
+  color: var(--dim);
+}
+.vc-you.has { color: var(--steel); }
+.vc-you strong { font-family: var(--mono); color: var(--text); font-weight: 600; }
+
+.shares-status { font-size: 13px; color: var(--muted); }
+.shares-status.is-live { color: var(--good); }
+.shares-status.is-error { color: var(--bad); }
+
+.holdings-empty {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 8px 4px 4px;
+}
+.holdings-empty .mono { font-family: var(--mono); font-size: 12px; }
 
 /* ---------- drawer ---------- */
 

@@ -12,7 +12,7 @@ import {
   loadWorld, vaultById, discountOf, timeLeft, rippleNow,
   fmtAsset, fmtDuration, fmtNav, fmtNum, fmtShares, shortAddr,
 } from './data.mjs'
-import { loadSession, saveSession, candidates, holdingsOf, connectExternal } from './wallet.mjs'
+import { loadSession, saveSession, candidates, holdingsOf, fetchLiveHoldings, connectExternal } from './wallet.mjs'
 
 startCoinsForeground(document.getElementById('coins-fg'))
 
@@ -31,6 +31,7 @@ const state = {
   filter: 'open',
   tab: 'book',
   ticket: { vault: '', shares: '', price: '' },   // le formulaire de vente, persistant
+  chain: { account: null, holdings: null, status: 'idle', error: null },
 }
 
 const DATA = await loadWorld()
@@ -42,6 +43,7 @@ state.offers = DATA.offers
 initLock(DATA.world, () => {
   state.session = loadSession()
   render()
+  refreshHoldings()
 })
 $('#brand-home').addEventListener('click', reopenLock)
 
@@ -166,8 +168,10 @@ function renderBook() {
 function renderVaults() {
   const grid = $('#vault-grid')
   grid.innerHTML = ''
+  const mineByKey = new Map(sessionHoldings().map(h => [h.vault.key, h]))
   for (const v of Object.values(state.vaults)) {
-    const card = el('div', `vault-card ${v.transferable ? '' : 'is-locked'}`)
+    const mine = mineByKey.get(v.key)
+    const card = el('div', ['vault-card', v.transferable ? '' : 'is-locked', mine ? 'has-mine' : ''].filter(Boolean).join(' '))
     card.innerHTML = `
       <div class="vc-head">
         <span class="grade tone-${v.rating.tone}">${v.rating.grade}</span>
@@ -184,6 +188,11 @@ function renderVaults() {
         <div class="vc-stat"><div class="k">Total term</div><div class="v">${fmtDuration(v.redemptionDate - v.subscriptionDate)}</div></div>
         <div class="vc-stat"><div class="k">To maturity</div><div class="v">${v.redemptionDate > rippleNow() ? fmtDuration(v.redemptionDate - rippleNow()) : 'matured'}</div></div>
       </div>
+      ${mine
+        ? `<div class="vc-you has">You hold <strong>${fmtNum(mine.shares, true)}</strong> shares · ${fmtAsset(mine.value, v, { compact: true })}</div>`
+        : state.session
+          ? '<div class="vc-you">No shares on this wallet</div>'
+          : ''}
     `
     grid.appendChild(card)
   }
@@ -194,7 +203,12 @@ function renderVaults() {
 function renderShares() {
   const box = $('#shares-content')
   const sub = $('#shares-sub')
+  const refresh = $('#btn-refresh-shares')
   box.innerHTML = ''
+  if (refresh) {
+    refresh.hidden = !state.session
+    refresh.disabled = state.chain.status === 'loading'
+  }
   if (!state.session) {
     sub.textContent = 'Connect a wallet to see your positions.'
     const b = el('button', 'btn btn-primary', 'Connect a wallet')
@@ -202,7 +216,7 @@ function renderShares() {
     box.appendChild(b)
     return
   }
-  const holdings = holdingsOf(state.vaults, state.session.account)
+  const holdings = sessionHoldings()
   const myOffers = state.offers.filter(o => o.seller === state.session.account && o.status === 'open' && o.expiry > rippleNow())
   const locked = new Map()
   for (const o of myOffers) {
@@ -210,16 +224,31 @@ function renderShares() {
     if (v) locked.set(v.key, (locked.get(v.key) ?? 0) + Number(o.shares))
   }
   const totalXrp = holdings.filter(h => h.vault.isXrp).reduce((s, h) => s + h.value, 0)
+  const src = holdingsSourceLabel()
 
-  sub.textContent = `Positions of ${shortAddr(state.session.account)} — domain member.`
+  sub.textContent = `Positions of ${shortAddr(state.session.account)} — ${src}.`
 
   const summary = el('div', 'wallet-summary')
   summary.innerHTML = `
     <div class="ws-item"><div class="k">Vaults</div><div class="v">${holdings.length}</div></div>
     <div class="ws-item"><div class="k">NAV value (XRP vaults)</div><div class="v">${fmtAsset(totalXrp, { isXrp: true })}</div></div>
     <div class="ws-item"><div class="k">Open offers</div><div class="v">${myOffers.length}</div></div>
+    <div class="ws-item"><div class="k">Source</div><div class="v shares-status ${sourceClass()}">${src}</div></div>
   `
   box.appendChild(summary)
+
+  if (state.chain.status === 'loading' && !holdings.length) {
+    box.appendChild(el('p', 'holdings-empty', 'Reading MPToken balances on Devnet…'))
+    return
+  }
+  if (!holdings.length) {
+    const empty = el('p', 'holdings-empty')
+    empty.innerHTML = state.chain.status === 'error'
+      ? `Could not read the ledger (${state.chain.error ?? 'unreachable'}). This address is not in the snapshot either.`
+      : `This wallet holds no share MPTokens of the listed vaults.<br>Offers on the book come from the test world — your position is read live via <span class="mono">account_objects</span>.`
+    box.appendChild(empty)
+    return
+  }
 
   const list = el('div', 'holdings')
   for (const h of holdings) {
@@ -341,6 +370,7 @@ function connectFlow() {
     box.querySelector('[data-x-close]').addEventListener('click', closeModal)
     box.querySelector('[data-x-disconnect]').addEventListener('click', () => {
       state.session = null
+      state.chain = { account: null, holdings: null, status: 'idle', error: null }
       saveSession(null)
       closeModal(); render()
       toast('Wallet disconnected')
@@ -368,6 +398,7 @@ function connectFlow() {
       state.session = { account, via }
       saveSession(state.session)
       closeModal(); render()
+      refreshHoldings()
       toast(`Connected via ${via} — ${shortAddr(account)}`)
     } catch (err) {
       toast(err.message)
@@ -388,6 +419,7 @@ function connectFlow() {
       state.session = { account: c.account }
       saveSession(state.session)
       closeModal(); render()
+      refreshHoldings()
       toast(`Connected — ${shortAddr(c.account)}`)
     })
     list.appendChild(b)
@@ -419,12 +451,15 @@ function renderTicket() {
     return
   }
 
-  const holdings = holdingsOf(state.vaults, state.session.account).filter(h => h.vault.transferable)
+  const holdings = sessionHoldings().filter(h => h.vault.transferable)
   if (!holdings.length) {
+    const waiting = state.chain.status === 'loading'
     box.innerHTML = `
       <div class="t-head">Sell shares</div>
       <div class="t-sub">${shortAddr(state.session.account)}</div>
-      <p class="t-empty">No transferable shares on this account.</p>
+      <p class="t-empty">${waiting
+        ? 'Reading share balances on Devnet…'
+        : 'No transferable shares on this account.'}</p>
     `
     return
   }
@@ -637,6 +672,54 @@ function updateVaultFrame() {
   }
 }
 
+function sessionHoldings() {
+  if (!state.session) return []
+  if (state.chain.account === state.session.account && Array.isArray(state.chain.holdings))
+    return state.chain.holdings
+  return holdingsOf(state.vaults, state.session.account)
+}
+
+function holdingsSourceLabel() {
+  if (state.chain.status === 'loading') return 'reading Devnet'
+  if (state.chain.status === 'live') return 'on-chain · Devnet'
+  if (state.chain.status === 'snapshot') return 'snapshot (ledger unreachable)'
+  if (state.chain.status === 'error') return state.chain.error ?? 'ledger error'
+  return 'snapshot'
+}
+
+function sourceClass() {
+  if (state.chain.status === 'live') return 'is-live'
+  if (state.chain.status === 'error') return 'is-error'
+  return ''
+}
+
+let holdingsReq = 0
+async function refreshHoldings() {
+  const account = state.session?.account
+  if (!account) {
+    state.chain = { account: null, holdings: null, status: 'idle', error: null }
+    return
+  }
+  const req = ++holdingsReq
+  state.chain = { ...state.chain, account, status: 'loading', error: null }
+  render()
+  try {
+    const rows = await fetchLiveHoldings(state.vaults, account)
+    if (req !== holdingsReq) return
+    state.chain = { account, holdings: rows, status: 'live', error: null }
+  } catch (e) {
+    if (req !== holdingsReq) return
+    const fallback = holdingsOf(state.vaults, account)
+    state.chain = {
+      account,
+      holdings: fallback,
+      status: fallback.length ? 'snapshot' : 'error',
+      error: e.message,
+    }
+  }
+  render()
+}
+
 function render() {
   renderWalletChip()
   renderBook()
@@ -646,7 +729,10 @@ function render() {
   requestAnimationFrame(updateVaultFrame)
 }
 
+$('#btn-refresh-shares')?.addEventListener('click', () => refreshHoldings())
+
 render()
+if (state.session) refreshHoldings()
 window.addEventListener('resize', () => requestAnimationFrame(updateVaultFrame))
 
 // le compte à rebours des expirations vit
