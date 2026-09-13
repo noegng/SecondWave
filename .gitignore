@@ -36,6 +36,7 @@ SECURITY-NOTES.md
 # sondes exploratoires
 probes*/*.log
 
-# Sortie du build web (Vercel)
+# Sortie locale / ancien chemin. Ne PAS ignorer `apps/web/out` :
+# c'est le outputDirectory Vercel — s'il est ignoré, le deploy est vide.
 apps/web/dist/
 .vercel
