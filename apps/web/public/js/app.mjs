@@ -141,6 +141,70 @@ function readingOf(v, discount) {
   return { cls: '', label: 'at par' }
 }
 
+/** Décote que la note du vault peut justifier — l'ancre « Suggested ». */
+function suggestedDiscount(v) {
+  if (v.rating.tone === 'bad') return 0.22
+  if (v.rating.tone === 'warn') return 0.10
+  return 0.031
+}
+
+function toUi(native, v) { return v.isXrp ? native / 1_000_000 : native }
+function toNative(ui, v) { return v.isXrp ? Math.round(ui * 1_000_000) : ui }
+function fmtUi(ui, v) {
+  if (!Number.isFinite(ui) || ui <= 0) return ''
+  return v.isXrp ? ui.toFixed(4) : String(Math.round(ui * 100) / 100)
+}
+
+/** Médiane du carnet ouvert, ramenée à la taille de l'ordre. */
+function bookMedianNative(vaultId, shares) {
+  const now = rippleNow()
+  const open = state.offers.filter(o =>
+    o.vaultId === vaultId && o.status === 'open' && o.expiry > now && Number(o.shares) > 0)
+  if (!open.length) return null
+  const pers = open.map(o => Number(o.price) / Number(o.shares)).sort((a, b) => a - b)
+  return pers[Math.floor(pers.length / 2)] * shares
+}
+
+/** Le texte que le slider doit faire bouger : nature de la décote vs NAV. */
+function askAdvice(v, discount) {
+  const reading = readingOf(v, discount)
+  const pct = Math.abs(discount * 100).toFixed(1)
+  const suggestPct = (suggestedDiscount(v) * 100).toFixed(0)
+  if (discount < -0.005) {
+    return {
+      reading: { cls: 'premium', label: 'premium' },
+      headline: `Premium +${pct} %`,
+      body: 'Above NAV. A buyer only pays this if they need this exact vault — expect a thin book.',
+    }
+  }
+  if (reading.cls === 'distress') {
+    return {
+      reading,
+      headline: `Distress −${pct} %`,
+      body: v.rating.tone === 'bad'
+        ? `${v.rating.why}. The discount does not make this cheap — the grade already reads the vault as a trap.`
+        : `${v.rating.why}. Past ~12 % the book reads this as distress, not an exit fee.`,
+    }
+  }
+  if (reading.cls === 'liquidity') {
+    const delta = discount - suggestedDiscount(v)
+    return {
+      reading,
+      headline: `Liquidity −${pct} %`,
+      body: Math.abs(delta) < 0.015
+        ? `${v.rating.why}. Around −${suggestPct} % is the exit fee this grade can justify — you pay for cash, the buyer takes the spread.`
+        : delta > 0
+          ? `Deeper than the −${suggestPct} % this grade can justify. Still a liquidity read, but you leave money on the table.`
+          : `Tighter than −${suggestPct} %. Faster to post, slower to fill — buyers compare this to NAV.`,
+    }
+  }
+  return {
+    reading,
+    headline: 'At par',
+    body: `${v.rating.why}. Asking NAV means the buyer funds your exit for free. A small liquidity discount is what fills.`,
+  }
+}
+
 function renderBook() {
   const body = $('#book-body')
   body.innerHTML = ''
@@ -482,11 +546,22 @@ function renderTicket() {
       <div class="hint" id="s-shares-hint"></div>
     </div>
     <div class="field">
-      <label>Ask price</label>
+      <label>Ask price <span class="t-ask-unit" id="s-price-unit"></span></label>
       <input id="s-price" type="number" min="0" step="any" placeholder="0.00" value="${t.price}">
+      <input id="s-price-slider" class="t-slider" type="range" min="0" max="1" step="any" disabled>
+      <div class="t-slider-scale">
+        <span>−50%</span>
+        <span class="nav">NAV</span>
+        <span>+10%</span>
+      </div>
+      <div class="t-anchors">
+        <button type="button" class="t-anchor" data-ask="suggest" id="s-ask-suggest">Suggested</button>
+        <button type="button" class="t-anchor" data-ask="nav">At NAV</button>
+        <button type="button" class="t-anchor" data-ask="book" id="s-ask-book" hidden>Book</button>
+      </div>
       <div class="hint" id="s-price-hint"></div>
     </div>
-    <div class="m-preview" id="s-preview" hidden></div>
+    <div class="t-reading" id="s-reading" hidden></div>
     <div class="t-grow"></div>
     <button class="btn btn-primary" data-s-post disabled>Post offer</button>
   `
@@ -494,9 +569,17 @@ function renderTicket() {
   const $v = box.querySelector('#s-vault')
   const $sh = box.querySelector('#s-shares')
   const $pr = box.querySelector('#s-price')
+  const $sl = box.querySelector('#s-price-slider')
   const $post = box.querySelector('[data-s-post]')
+  const $read = box.querySelector('#s-reading')
+  const $book = box.querySelector('#s-ask-book')
 
   const current = () => holdings.find(h => h.vault.key === $v.value)
+
+  function setAsk(native, v) {
+    $pr.value = fmtUi(toUi(native, v), v)
+    refresh()
+  }
 
   function refresh() {
     t.vault = $v.value
@@ -504,29 +587,94 @@ function renderTicket() {
     t.price = $pr.value
     const h = current()
     const v = h.vault
+    const suggest = suggestedDiscount(v)
     $('#s-shares-hint').textContent = `available: ${fmtShares(h.shares)} shares`
+    $('#s-price-unit').textContent = v.isXrp ? 'XRP' : v.asset
     const shares = Number($sh.value)
-    const priceUi = Number($pr.value)
-    const price = v.isXrp ? Math.round(priceUi * 1_000_000) : priceUi
     const nav = shares * v.navPerShare
     const okShares = shares > 0 && shares <= h.shares
-    const okPrice = price > 0
+    if (okShares && $pr.value === '') $pr.value = fmtUi(toUi(nav * (1 - suggest), v), v)
+    const priceUi = Number($pr.value)
+    const price = toNative(priceUi, v)
+    const okPrice = price > 0 && nav > 0
     $('#s-shares-hint').classList.toggle('error', $sh.value !== '' && !okShares)
-    $('#s-price-hint').textContent = v.isXrp ? 'in XRP — converted to drops' : `in ${v.asset}`
-    const prev = box.querySelector('#s-preview')
+
+    const navUi = toUi(nav, v)
+    if (okShares && navUi > 0) {
+      $sl.min = String(navUi * 0.50)
+      $sl.max = String(navUi * 1.10)
+      $sl.step = v.isXrp ? '0.0001' : '1'
+      $sl.disabled = false
+      if (priceUi > 0) $sl.value = String(Math.min(navUi * 1.10, Math.max(navUi * 0.50, priceUi)))
+    } else {
+      $sl.disabled = true
+    }
+
+    box.querySelector('#s-ask-suggest').textContent = `Suggested −${(suggest * 100).toFixed(0)} %`
+    const book = okShares ? bookMedianNative(v.vaultId, shares) : null
+    if (book && nav > 0) {
+      const bd = 1 - book / nav
+      $book.hidden = false
+      $book.textContent = `Book ${bd >= 0 ? '−' : '+'}${(Math.abs(bd) * 100).toFixed(1)} %`
+    } else $book.hidden = true
+
     if (okShares && okPrice) {
       const d = 1 - price / nav
-      prev.hidden = false
-      prev.innerHTML = `
-        <span class="big">${fmtShares(shares)} shares for ${fmtAsset(price, v)}</span>
-        <span>NAV value ${fmtAsset(nav, v)} · ${d >= 0 ? 'discount' : 'premium'} ${Math.abs(d * 100).toFixed(1)} %</span>
-        <span>expires in 1 h — cancellable via sequence bump</span>
+      const advice = askAdvice(v, d)
+      $read.hidden = false
+      $read.className = `t-reading ${advice.reading.cls}`
+      $read.innerHTML = `
+        <div class="t-read-top">
+          <span class="reading ${advice.reading.cls}">${advice.reading.label}</span>
+          <span class="t-read-pct">${advice.headline}</span>
+        </div>
+        <p>${advice.body}</p>
+        <div class="t-read-nav">${fmtShares(shares)} shares · NAV ${fmtAsset(nav, v)} → ${fmtAsset(price, v)}</div>
       `
-    } else prev.hidden = true
+      $('#s-price-hint').textContent = 'slider is the ask — 50 % of NAV to +10 %'
+    } else {
+      $read.hidden = true
+      $('#s-price-hint').textContent = okShares
+        ? 'drag the slider against NAV'
+        : (v.isXrp ? 'in XRP — set a size first' : `in ${v.asset} — set a size first`)
+    }
+    t.price = $pr.value
     $post.disabled = !(okShares && okPrice)
   }
 
-  ;[$v, $sh, $pr].forEach(i => i.addEventListener('input', refresh))
+  $v.addEventListener('input', () => { t.price = ''; $pr.value = ''; refresh() })
+  $sh.addEventListener('input', () => {
+    const v = current().vault
+    const prevShares = Number(t.shares)
+    const prevPrice = Number($pr.value)
+    const nextShares = Number($sh.value)
+    if (prevShares > 0 && nextShares > 0 && prevPrice > 0) {
+      const prevNav = toUi(prevShares * v.navPerShare, v)
+      if (prevNav > 0) {
+        const d = 1 - prevPrice / prevNav
+        $pr.value = fmtUi(toUi(nextShares * v.navPerShare * (1 - d), v), v)
+      }
+    }
+    refresh()
+  })
+  $pr.addEventListener('input', refresh)
+  $sl.addEventListener('input', () => {
+    const v = current().vault
+    $pr.value = fmtUi(Number($sl.value), v)
+    refresh()
+  })
+  box.querySelectorAll('[data-ask]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = current().vault
+      const shares = Number($sh.value)
+      if (!(shares > 0)) return
+      const nav = shares * v.navPerShare
+      const native = btn.dataset.ask === 'nav' ? nav
+        : btn.dataset.ask === 'suggest' ? nav * (1 - suggestedDiscount(v))
+        : bookMedianNative(v.vaultId, shares)
+      if (native) setAsk(native, v)
+    })
+  })
   refresh()
 
   $post.addEventListener('click', () => {
@@ -557,7 +705,11 @@ function renderTicket() {
 /** Amène le ticket sous les yeux, éventuellement pré-rempli sur un vault. */
 function focusTicket(preselect) {
   if (!state.session) return connectFlow()
-  if (preselect) state.ticket.vault = preselect
+  if (preselect) {
+    state.ticket.vault = preselect
+    const held = sessionHoldings().find(h => h.vault.key === preselect)
+    if (held && !state.ticket.shares) state.ticket.shares = String(held.shares)
+  }
   if (state.tab !== 'book') document.querySelector('.tab[data-tab="book"]').click()
   else renderTicket()
   const box = $('#ticket')
