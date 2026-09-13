@@ -14,7 +14,7 @@
   --border-soft: #201f23;
   --text: #f1f1f3;
   --muted: #9a9aa1;
-  --dim: #616168;
+  --dim: #8b8b93;
   --steel: #c4c4ca;
   --mine: #e8e8ee;                       /* vos offres : blanc franc, l'unique marqueur */
   --mine-dim: rgba(232, 232, 238, 0.12);
@@ -54,6 +54,37 @@ body {
 }
 
 ::selection { background: rgba(232, 232, 238, 0.24); }
+
+.skip-link {
+  position: absolute; left: 12px; top: -48px; z-index: 80;
+  background: var(--text); color: #0b0b0d;
+  padding: 8px 12px; border-radius: 6px; font-weight: 600;
+}
+.skip-link:focus { top: 12px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+.ico { display: inline-block; vertical-align: -0.2em; flex: none; }
+.btn .ico { margin-right: 1px; }
+
+:focus-visible {
+  outline: 2px solid var(--steel);
+  outline-offset: 2px;
+}
+.book tbody tr:focus-visible { outline-offset: -2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-dial, .view, .ticket.flash, .modal, .toast, .led.err, .step.is-active .s-ico {
+    animation: none !important;
+  }
+  .drawer-panel, .drawer::before, .vault-card, .tab, .btn, .t-anchor, .wallet-dot {
+    transition: none !important;
+  }
+  .vault-card:hover { transform: none; }
+}
 
 /* ---------- barre haute ---------- */
 
@@ -150,6 +181,7 @@ body {
 .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 5px; }
 
 .wallet-chip { padding-left: 12px; }
+#wallet-label { display: inline-flex; align-items: center; gap: 6px; }
 .wallet-dot {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--dim);
@@ -250,7 +282,7 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
     var(--good) 68%,
     var(--steel) 91%);
 }
-.t-slider:disabled { opacity: 0.28; cursor: not-allowed; }
+.t-slider:disabled { opacity: 0.55; cursor: not-allowed; }
 .t-slider::-webkit-slider-thumb {
   appearance: none;
   width: 14px; height: 14px;
@@ -270,8 +302,8 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 
 .t-slider-scale {
   display: flex; justify-content: space-between;
-  font: 500 9.5px var(--mono);
-  color: var(--dim);
+  font: 500 10.5px var(--mono);
+  color: var(--muted);
   margin-bottom: 8px;
 }
 .t-slider-scale .nav { color: var(--steel); }
@@ -279,6 +311,7 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .t-anchors { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
 .t-anchor {
   appearance: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
   font: 600 10.5px var(--font);
   color: var(--muted);
   background: rgba(255,255,255,0.03);
@@ -358,8 +391,9 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .book tbody tr:hover { background: rgba(255, 255, 255, 0.035); }
 .book tbody tr:last-child td { border-bottom: 0; }
 
-.book .num { text-align: right; font-family: var(--mono); font-size: 11.5px; white-space: nowrap; }
+.book .num { text-align: right; font-family: var(--mono); font-size: 12px; white-space: nowrap; }
 .book th.num { font-family: var(--font); }
+.book .price-cell { font-size: 14px; font-weight: 600; color: var(--text); font-family: var(--font); }
 
 /* vos offres : le seul endroit où le laiton s'allume */
 .book tr.is-mine {
@@ -371,7 +405,7 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .book tr.is-stale { opacity: 0.45; }
 .book tr.is-stale:hover { opacity: 0.7; }
 
-.oid { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.oid { font-family: var(--mono); font-size: 11px; color: var(--muted); }
 
 .tag-mine {
   display: inline-block; margin-left: 8px;
@@ -385,6 +419,11 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .vault-cell { display: flex; align-items: center; gap: 8px; }
 .vault-cell .v-name { font-weight: 600; font-size: 12.5px; white-space: nowrap; }
 .vault-cell .v-asset { color: var(--dim); font-size: 11px; font-family: var(--mono); white-space: nowrap; }
+
+.grade-wrap {
+  display: inline-flex; align-items: center; gap: 5px; flex: none;
+}
+.grade-wrap .ico { color: var(--steel); }
 
 .grade {
   display: inline-flex; align-items: center; justify-content: center;
@@ -404,8 +443,9 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .discount.deep { color: var(--bad); }
 
 .reading {
-  font-size: 10.5px;
-  padding: 2px 7px;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px;
+  padding: 3px 8px;
   border-radius: 4px;
   border: 1px solid var(--border);
   color: var(--muted);
@@ -425,7 +465,16 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .status-filled { color: var(--dim); background: rgba(255,255,255,0.05); }
 .status-cancelled, .status-expired { color: var(--dim); }
 
-.empty { padding: 48px; text-align: center; color: var(--dim); }
+.empty { padding: 48px; text-align: center; color: var(--muted); }
+
+.legend {
+  display: flex; flex-wrap: wrap; gap: 10px 16px;
+  margin: -4px 0 12px;
+  font-size: 12px; color: var(--muted);
+}
+.legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.legend-item.liquidity { color: var(--good); }
+.legend-item.distress { color: var(--bad); }
 
 .footnote {
   margin-top: 14px; font-size: 12px; color: var(--dim); max-width: 720px;
@@ -467,15 +516,38 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .vc-stat .v { font-family: var(--mono); font-size: 13px; color: var(--steel); }
 
 .badge-claw {
+  display: inline-flex; align-items: center; gap: 4px;
   font: 600 10px var(--font); color: var(--bad);
   border: 1px solid rgba(255,90,82,0.5); border-radius: 4px;
   padding: 1px 6px; letter-spacing: 0.04em;
 }
 .badge-phase {
+  display: inline-flex; align-items: center; gap: 4px;
   font: 600 10px var(--font); color: var(--muted);
   border: 1px solid var(--border); border-radius: 4px;
   padding: 1px 6px; letter-spacing: 0.04em;
 }
+
+.vc-hero {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px 16px; margin-top: 14px;
+}
+.vc-hero .v.big {
+  font: 600 17px var(--font);
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+.vc-more { margin-top: 12px; }
+.vc-more summary {
+  cursor: pointer;
+  font: 600 12px var(--font);
+  color: var(--muted);
+  list-style: none;
+}
+.vc-more summary::-webkit-details-marker { display: none; }
+.vc-more summary::after { content: ' ▾'; font-weight: 400; }
+.vc-more[open] summary::after { content: ' ▴'; }
+.vc-more .vc-stats { margin-top: 8px; border-top: 0; padding-top: 4px; }
 
 /* ---------- mes parts ---------- */
 
@@ -513,7 +585,7 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .vc-you.has { color: var(--steel); }
 .vc-you strong { font-family: var(--mono); color: var(--text); font-weight: 600; }
 
-.shares-status { font-size: 13px; color: var(--muted); }
+.shares-status { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--muted); }
 .shares-status.is-live { color: var(--good); }
 .shares-status.is-error { color: var(--bad); }
 

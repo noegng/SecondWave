@@ -19,6 +19,7 @@
  *
  * Le logo en haut à gauche rappelle ce sas à tout moment (reopenLock).
  */
+import { reduceMotion } from './icons.mjs'
 import { loadSession, saveSession, connectExternal } from './wallet.mjs'
 import { wcConnect } from './walletconnect.mjs'
 
@@ -54,7 +55,7 @@ export function initLock(world, onEnter) {
 
   function tick() {
     if (!entering && !dragging) {
-      ry += vy + 0.05
+      ry += vy + (reduceMotion() ? 0 : 0.05)
       rx += vx + (RX0 - rx) * 0.015
       vx *= 0.94; vy *= 0.94
       rx = Math.max(-45, Math.min(45, rx))
