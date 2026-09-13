@@ -1,357 +1,343 @@
-# Retour d’expérience — SecondWave
+# Developer experience report — SecondWave
 
-**À qui s’adresse ce texte :** le jury et l’équipe Ripple.  
-**Ce que c’est :** ce que nous avons vraiment vécu en construisant un produit sur le protocole de prêt XRPL — pas un catalogue de codes d’erreur.
+**Who this is for:** the judges and the Ripple team.
+**What it is:** what we actually went through building a product on the XRPL lending protocol — not a catalogue of error codes.
 
-**Équipe :** Hugo (coffres, prêts, revente) · Noé (analyste de risque, portefeuille)  
-**Piste :** Track 2 — Lending · coffres privés + pièces d’identité on-chain  
-**Réseau :** Devnet public XRPL · septembre 2026
+**Team:** Hugo (vaults, loans, resale) · Noé (risk analyst, wallet)
+**Track:** 2 — Lending · private vaults + on-chain credentials
+**Network:** XRPL public Devnet · September 2026
 
-Les preuves techniques (scripts, hashes, versions) sont dans les [annexes](#où-sont-les-preuves). Ici, on raconte ce qui bloque un humain.
-
----
-
-## En trente secondes
-
-1. **La « garantie » du prêteur n’est presque jamais celle qu’on croit.** Un défaut peut faire porter **95 % de la perte aux déposants**, même quand le courtier affiche une grosse réserve.
-2. **Pendant que l’argent est enfermé, le prix affiché peut rester beau.** Un prêt en retard ne change rien à l’écran tant que personne n’enregistre officiellement le problème. Nous avons retrouvé **22 coffres dans ce cas** sur les 40 plus gros du réseau, sans en avoir créé un seul.
-3. **« Succès » ne veut pas dire que l’échange a eu lieu.** Réussite et non-effet sont indiscernables dans la réponse, et trois modes d’envoi sur quatre livrent les parts sans encaisser le prix.
-4. **Une offre signée ne survivait pas à l’attente** — 72 secondes, et invalidée dès que l’un des deux fait autre chose. Nous avons trouvé comment la rendre durable ; ce n’est écrit nulle part.
-5. **Le kit officiel a longtemps empêché de créer le moindre prêt.** Ripple l’a corrigé en cours d’événement — il reste des trous de documentation, de lecture, un portefeuille qui ne sait pas déposer du XRP dans un coffre, et **aucun portefeuille capable de signer un échange groupé**.
-
-## Ce que nous avons construit
-
-SecondWave est un **marché de sortie** pour des parts de coffre fermé, avec une **note de risque** à côté de chaque offre.
-
-L’idée est simple. Une fois l’argent déposé dans un coffre « à durée fixe », on ne peut plus le retirer jusqu’à la date de sortie. Pendant ce temps, les prêts à l’intérieur peuvent mal tourner. Nous permettons de **revendre sa part** à quelqu’un d’autre, et nous disons si la décote est une **opportunité** (besoin de cash) ou un **piège** (le coffre est déjà malade).
-
-Pour y arriver, il a fallu faire vivre tout le cycle sur le Devnet : identités, coffres, dépôts, courtiers, prêts, défauts, puis revente. C’est ce cycle — pas un tutoriel isolé — qui a fait apparaître les frictions ci-dessous.
+Technical evidence (scripts, hashes, versions) is in the [appendix](#where-the-proofs-are). Here we describe what blocks a human.
 
 ---
 
-## 1. La « garantie » n’est pas ce qu’on croit
+## In thirty seconds
 
-C’est **le** point du projet. Hugo l’a mesuré côté protocole ; Noé l’a mis au cœur de l’analyste.
+1. **A lender's "collateral" is almost never what you think it is.** A default can push **95 % of the loss onto depositors**, even when the broker shows a large reserve.
+2. **While the money is locked in, the displayed price can stay beautiful.** A late loan changes nothing on screen until someone formally records the problem. We found **22 vaults in exactly that state** among the 40 largest on the network, without having created a single one.
+3. **"Success" does not mean the trade happened.** Delivery and no-op are indistinguishable in the response, and three send modes out of four hand over the shares without collecting the price.
+4. **A signed offer did not survive waiting** — 72 seconds, and invalidated the moment either party did anything else. We found how to make it durable; it is documented nowhere.
+5. **Nothing in the wallet ecosystem can sign a batched exchange**, so any peer-to-peer market is forced to be custodial.
 
-On nous parle d’un **capital de première perte** : une réserve que le courtier dépose, et qui devrait être mangée **avant** l’argent des épargnants. Le nom, et souvent l’écran, suggèrent : « s’il a 5 000 en caisse, les 5 000 protègent les déposants. »
+---
 
-Ce n’est pas ce que fait le réseau.
+## What we built
 
-Au moment d’un défaut, le protocole ne prend **qu’une petite tranche calculée** — un pourcentage du pourcentage. Le reste de la caisse **reste chez le courtier**. Les déposants paient la différence. Ils ne peuvent pas sortir du coffre pendant ce temps.
+SecondWave is an **exit market** for closed-ended vault shares, with a **risk rating** next to every offer.
 
-**Même chiffres, deux lectures :**
+The idea is simple. Once money is deposited in a fixed-term vault, it cannot be withdrawn until the redemption date. During that time, the loans inside can go bad. We let you **resell your share** to someone else, and we say whether the discount is an **opportunity** (someone needs cash) or a **trap** (the vault is already sick).
 
-| Ce qu’on voit | Ce qui se passe vraiment |
+Getting there meant running the whole cycle on Devnet: credentials, vaults, deposits, brokers, loans, defaults, then resale. It is that cycle — not an isolated tutorial — that surfaced the frictions below.
+
+---
+
+## 1. "Collateral" is not what you think
+
+This is **the** point of the project. Hugo measured it at the protocol level; Noé put it at the heart of the analyst.
+
+We are told about **first-loss capital**: a reserve the broker deposits, which should be eaten **before** the savers' money. The name — and often the screen — suggests: "if they have 5,000 in the pot, that 5,000 protects depositors."
+
+That is not what the network does.
+
+At default, the protocol takes **only a small computed slice** — a percentage of a percentage. The rest of the pot **stays with the broker**. Depositors pay the difference. And they cannot leave the vault while it happens.
+
+**Same numbers, two readings:**
+
+| What you see | What actually happens |
 |---|---|
-| Réserve affichée : 5 000 | Seuls **500** peuvent partir au défaut |
-| « On est largement couverts » | **95 %** de la perte va aux déposants |
-| Le surplus a l’air rassurant | Les **4 500** restants ne bougent pas |
+| Reserve shown: 5,000 | Only **500** can be taken at default |
+| "We're well covered" | **95 %** of the loss goes to depositors |
+| The surplus looks reassuring | The remaining **4,500** never move |
 
-L’exemple officiel de la documentation **calcule déjà** ce genre de résultat (environ 11 de protection sur 1 090 de défaut). Il ne le dit jamais en une phrase : *presque tout ce défaut n’est pas de la première perte.*
+The official documentation example **already computes** this kind of result (about 11 of protection against a 1,090 default). It never says it in one sentence: *almost none of that default is first loss.*
 
-Deux corollaires, tout aussi simples :
+Two corollaries, just as simple:
 
-- **Dès qu’il n’y a plus de prêt en cours**, le courtier peut **rapatrier 100 %** de sa réserve. Ce n’est pas un matelas permanent.
-- **Un prêt en retard ne fait pas baisser le prix du coffre.** Le chiffre affiché ne bouge que quand quelqu’un déclare officiellement une perte. Jusque-là, le déposant est coincé derrière un prix trop beau.
+- **As soon as no loan is outstanding**, the broker can **pull back 100 %** of the reserve. It is not a permanent cushion.
+- **A late loan does not lower the vault's price.** The displayed figure only moves when someone formally declares a loss. Until then, the depositor is stuck behind a price that is too good.
 
-**Ce que nous demandons :** une phrase unique, bien visible, dans la page « First-Loss Capital » : *la protection réelle au défaut n’est pas l’argent en caisse, c’est le petit plafond prévu par les taux.* Et, plus tard, un champ déjà calculé (« protection maximale ») pour que les portefeuilles n’aient pas à le réinventer.
-
----
-
-## 2. Une fois dedans, on ne sort pas — parfois même plus
-
-Un coffre à durée fixe **interdit le retrait** pendant toute la période d’investissement. C’est le produit. Nous l’avons accepté.
-
-Le piège, c’est la **combinaison** avec l’identité on-chain. Nos coffres sont privés : seuls les titulaires d’une pièce d’identité acceptée peuvent y entrer, et aussi **recevoir** une part.
-
-Si cette pièce expire ou est retirée pendant que l’argent est enfermé :
-
-- on ne peut **pas retirer** (trop tôt) ;
-- on ne peut **pas vendre** à un acheteur pourtant valide (le réseau refuse le transfert).
-
-La personne qui a le plus besoin d’une sortie de secours est celle à qui on l’interdit. Le retrait reste possible **à la date de sortie**, même sans pièce — mais jusque-là, la position est gelée.
-
-**Ce que nous demandons :** trancher clairement si vendre *vers l’extérieur* (sortir du coffre) doit rester possible quand on n’est plus membre. Aujourd’hui, le filet de sécurité arrive trop tard.
+**What we're asking for:** one sentence, clearly visible, on the "First-Loss Capital" page: *the real protection at default is not the money in the pot, it is the small cap set by the rates.* And, later, a pre-computed field ("maximum protection") so wallets don't have to reinvent it.
 
 ---
 
-## 3. Le portefeuille officiel ne peut pas déposer du XRP
+## 2. Once you're in, you don't get out — sometimes not at all
 
-Noé a voulu souscrire depuis **l’extension wallet Ripple**, comme un utilisateur normal, pas comme un script.
+A fixed-term vault **forbids withdrawal** for the whole investment period. That is the product. We accepted it.
 
-Le coffre attend une somme en XRP sous une forme simple. L’extension envoie toujours la somme **comme s’il s’agissait d’un jeton** (un objet avec une devise). Le réseau refuse. Le message dit seulement que le champ est invalide — **sans dire que le type est faux**. L’utilisateur **ne peut pas corriger** le JSON.
+The trap is the **combination** with on-chain identity. Our vaults are private: only holders of an accepted credential can enter, and also **receive** a share.
 
-Résultat : **impasse**. On ne peut pas rejoindre un coffre en XRP depuis l’outil officiel.
+If that credential expires or is revoked while the money is locked in:
 
-Nous avons corrigé le bug dans une copie de l’extension et ouvert une pull request. Le produit SecondWave n’y peut rien : c’est le premier contact réel d’un déposant avec XLS-65.
+- you **cannot withdraw** (too early);
+- you **cannot sell** to an otherwise valid buyer (the network refuses the transfer).
 
-**Ce que nous demandons :** si le coffre est en XRP, envoyer le montant comme une simple chaîne ; garder l’objet « jeton » uniquement pour les IOU. Et un message qui dit *« ce coffre attend du XRP, pas un jeton »*.
+The person who most needs an emergency exit is the one denied it. Withdrawal remains possible **at the redemption date**, even without a credential — but until then the position is frozen.
 
----
-
-## 4. Pendant plusieurs jours, aucun prêt n’était possible
-
-Pour prêter, les deux parties doivent **co-signer** la même opération. Le kit JavaScript officiel signait avec **l’ancienne recette**. Le réseau, lui, exigeait **la nouvelle**. Refus immédiat. L’exemple officiel du site cassait de la même façon.
-
-Conséquence concrète : **la transaction centrale du protocole de prêt était inutilisable** avec l’outil qu’on nous demandait d’utiliser.
-
-Ripple a publié une version corrigée en cours d’événement. Nous l’avons revérifiée sur la chaîne : ça passe. Merci — c’est le genre de correction qui débloque tout un hackathon.
-
-Il reste deux angles morts :
-
-- les **tests automatiques** du kit n’activent pas encore le nouveau régime : le bug peut **revenir sans alerte** ;
-- le kit **Python** a encore l’ancien comportement.
-
-C’est aussi une bonne histoire de pitch : bloquant trouvé, compris, corrigé. Mais un développeur arrivé le premier jour a perdu une journée.
+**What we're asking for:** decide clearly whether selling *outward* (leaving the vault) should stay possible when you are no longer a member. Today the safety net arrives too late.
 
 ---
 
-## 5. « Succès » ne veut pas dire que l’échange a eu lieu
+## 3. The official wallet cannot deposit XRP
 
-C’est la friction qui nous a coûté le plus de code, et celle qu’on n’avait pas vue venir.
+Noé tried to subscribe from the **Ripple wallet extension**, as a normal user would, not as a script.
 
-Pour revendre une part, nous envoyons **plusieurs opérations d’un coup**, en tout ou rien : l’acheteur s’autorise à recevoir les parts, les parts bougent, l’argent bouge. Trois jambes, une seule transaction.
+The vault expects an XRP amount in a plain form. The extension always sends the amount **as if it were a token** (an object with a currency). The network refuses. The message only says the field is invalid — **without saying the type is wrong**. The user **cannot edit** the JSON.
 
-Le réseau répond **succès**. Le problème est que ce mot ne distingue pas deux situations opposées.
+Result: **dead end**. You cannot join an XRP vault from the official tool.
 
-**Ce que le serveur renvoie quand l’échange a eu lieu, et quand il n’a rien fait :**
+We fixed the bug in a copy of the extension and opened a pull request. SecondWave itself is not at fault here: this is a depositor's first real contact with XLS-65.
 
-| Champ | Échange réussi | Rien ne s’est appliqué |
+**What we're asking for:** if the vault is in XRP, send the amount as a plain string; keep the "token" object for IOUs only. And a message that says *"this vault expects XRP, not a token"*.
+
+---
+
+## 4. "Success" does not mean the trade happened
+
+This is the friction that cost us the most code, and the one we did not see coming. It concerns **XLS-56 (Batch)**, the transaction our whole settlement rests on.
+
+To resell a share we send **several operations at once**, all or nothing: the buyer authorises themselves to receive the shares, the shares move, the money moves. Three legs, one transaction.
+
+The network answers **success**. The problem is that this word does not separate two opposite situations.
+
+**What the server returns when the trade happened, and when it did nothing:**
+
+| Field | Trade succeeded | Nothing applied |
 |---|---|---|
-| Réponse | `accepted` | `accepted` |
-| Appliquée | `true` | `true` |
+| Response | `accepted` | `accepted` |
+| Applied | `true` | `true` |
 | Code | `tesSUCCESS` | `tesSUCCESS` |
-| Texte | « The transaction was applied » | « The transaction was applied » |
-| Métadonnée | **aucun mouvement de valeur** | **aucun mouvement de valeur** |
+| Text | "The transaction was applied" | "The transaction was applied" |
+| Metadata | **no value movement** | **no value movement** |
 
-Huit envois rejoués : cinq ont livré, trois n’ont rien fait. **Une seule combinaison observée.** Rien dans la réponse ne permet de les séparer.
+Eight sends replayed: five delivered, three did nothing. **One single observed combination.** Nothing in the response separates them.
 
-Nous avons figé la démonstration sur la chaîne, pour qu’elle soit vérifiable sans nous. Deux transactions du Devnet, ouvrables dans l’explorateur : l’une a livré 3 XRP, l’autre n’a rien fait. Voici tout ce que le ledger enregistre de chacune :
+We froze the demonstration on-chain so it can be checked without us. Two Devnet transactions, openable in the explorer: one delivered 3 XRP, the other did nothing. Here is everything the ledger records about each:
 
-| | A — a livré | E — n’a rien fait |
+| | A — delivered | E — did nothing |
 |---|---|---|
 | Code | `tesSUCCESS` | `tesSUCCESS` |
-| Nœuds de métadonnée | Deleted Ticket, Modified AccountRoot, Modified DirectoryNode | Deleted Ticket, Modified AccountRoot, Modified DirectoryNode |
-| Variation de solde | −150 drops (les frais) | −150 drops (les frais) |
+| Metadata nodes | Deleted Ticket, Modified AccountRoot, Modified DirectoryNode | Deleted Ticket, Modified AccountRoot, Modified DirectoryNode |
+| Balance change | −150 drops (the fee) | −150 drops (the fee) |
 
-**Rigoureusement identiques.** Aucune des deux ne laisse dans sa propre métadonnée la moindre trace de ce qui a bougé — ou pas. Les liens sont dans [probes-marche/PREUVES.md](./probes-marche/PREUVES.md).
+**Rigorously identical.** Neither leaves, in its own metadata, the faintest trace of what moved — or didn't. The links are in [probes-marche/PREUVES.md](./probes-marche/PREUVES.md).
 
-Nous en avons trouvé une illustration de plus en testant tout autre chose : un échange de 900 XRP tenté par un acheteur qui ne les a pas. Aucun centime ne bouge — le tout-ou-rien tient parfaitement — et le serveur répond quand même **succès**. Un marché naïf enregistrerait la vente.
+We are not saying the code is wrong. "Nothing" is a legitimate outcome of all-or-nothing. We are saying you cannot tell which case you are in. XLS-56 does specify a per-leg execution report, **exactly for this**. It is absent from what the server returns.
 
-Nous ne disons pas que ce code est faux. « Rien » est une issue légitime du tout-ou-rien. Nous disons qu’on ne peut pas savoir dans quel cas on se trouve. La spécification prévoit pourtant un champ de compte rendu par jambe, **exactement pour ça**. Il est absent de ce que renvoie le serveur.
+**Three consequences we had to pay for in code:**
 
-**Trois conséquences que nous avons dû payer en code :**
+- **Rebuild the legs by hand.** They exist in the ledger, as separate transactions in the same block, with their own hashes. You have to go and fetch them account by account over the block's range. It is the most fragile part of our settlement, and it only reconstructs what the server already knows.
+- **Compare balances before and after.** That is our only proof a trade happened. Any serious product will have to do the same.
+- **Never pre-check.** The simulation tool refuses batched sends — it answers "not implemented". The transaction everything depends on is the only one you cannot dry-run.
 
-- **Reconstruire les jambes à la main.** Elles existent dans le ledger, comme transactions distinctes du même bloc, avec leurs propres empreintes. Il faut aller les rechercher compte par compte sur l’intervalle du bloc. C’est la partie la plus fragile de notre règlement, et elle ne reconstitue que ce que le serveur sait déjà.
-- **Comparer les soldes avant et après.** C’est notre seule preuve qu’un échange a eu lieu. Tout produit sérieux devra faire la même chose.
-- **Ne jamais pré-vérifier.** L’outil de simulation refuse les envois groupés — il répond « non implémenté ». La transaction dont tout dépend est la seule qu’on ne peut pas tester à blanc.
+**And the choice of mode is a silent trap.** We replayed the same exchange under all four send modes. **Three out of four hand over the shares without collecting the price**, while announcing success. You cannot forget to pick a mode — but you can pick the wrong one, and nothing flags it. For value-against-shares, only one is correct.
 
-**Et le choix du mode est un piège silencieux.** Nous avons rejoué le même échange sous les quatre modes d’envoi. **Trois sur quatre livrent les parts sans encaisser le prix**, en annonçant un succès. On ne peut pas oublier de choisir un mode — mais on peut choisir le mauvais, et rien ne le signale. Pour un échange d’argent contre des parts, un seul est correct.
+Two details from the same family, found by typing next to the target:
 
-Deux détails de la même famille, découverts en tapant à côté :
+- a batched send with **fewer than two legs** is refused with "array is empty", when the array is not;
+- the buyer's authorisation leg **must come first**. Placed anywhere else, the share delivery fails and everything is rolled back. Nothing says so.
 
-- un envoi groupé de **moins de deux jambes** est refusé avec « tableau vide », alors que le tableau ne l’est pas ;
-- la jambe d’autorisation de l’acheteur **doit être la première**. Placée ailleurs, la livraison des parts échoue et tout est annulé. Rien ne le dit.
+**What we're asking for:**
 
-**Ce que nous demandons :**
-
-1. Que la réponse porte **l’index de la jambe en échec et son code**. Un entier et un code — le champ est déjà spécifié, il suffit de le remplir.
-2. Un avertissement en tête de la page : *pour échanger de la valeur, n’utiliser que le mode tout-ou-rien*, et un raccourci dans les kits qui l’impose.
-3. Que l’outil de simulation accepte les envois groupés. C’est la transaction qu’on a le plus besoin de tester.
+1. That the response carry **the index of the failing leg and its code**. One integer and one code — the field is already specified, it just needs filling.
+2. A warning at the top of the page: *to exchange value, use all-or-nothing only*, and a helper in the SDKs that enforces it.
+3. That the simulation tool accept batched sends. It is the transaction we most need to test.
 
 ---
 
-## 6. Les messages d’erreur ne disent pas quoi corriger
+## 5. Error messages don't say what to fix
 
-C’est le fil rouge de tout le week-end. Quelques scènes vécues :
+This was the running theme of the whole weekend. A few scenes from real life:
 
-**« Transaction mal formée. »**  
-Un coffre refusé parce que les dates sont trop rapprochées, trop éloignées, qu’un champ est interdit sur le XRP, ou qu’il manque un drapeau. Le serveur dit la même phrase à chaque fois. Les messages utiles n’existent que **dans le kit JavaScript**. Quelqu’un qui signe autrement n’a rien.
+**"Malformed transaction."**
+A vault refused because the dates are too close, too far apart, because a field is forbidden on XRP, or because a flag is missing. The server says the same sentence every time. The useful messages exist only **inside the JavaScript SDK**. Anyone signing another way gets nothing.
 
-**« Expiré. »**  
-Ce mot unique veut dire quatre choses différentes : un remboursement un peu trop tard, un dépôt hors de la fenêtre d’entrée, un prêt lancé trop tard, une pièce d’identité périmée. Impossible de savoir lequel sans tout relire à la main. Et pour le remboursement en retard, le réseau attend un **drapeau spécial** que le message ne mentionne jamais.
+**"Expired."**
+That single word means four different things: a repayment slightly too late, a deposit outside the entry window, a loan started too late, an expired credential. Impossible to tell which without re-reading everything by hand. And for the late repayment, the network expects a **special flag** the message never mentions.
 
-**« Pas la permission. »**  
-Souvent, ce n’est pas une question de droits. C’est « tes dates de prêt sont trop près de la sortie du coffre » ou « ce type de coffre n’accepte pas de courtier ». On cherche un problème d’identité ; c’est un problème de calendrier.
+**"No permission."**
+Often it is not about rights at all. It is "your loan dates are too close to the vault's redemption" or "this vault type does not accept a broker". You go looking for an identity problem; it is a calendar problem.
 
-**Une règle invisible, une session perdue.**  
-La période de grâce d’un prêt doit durer **au moins une minute**, et **pas plus longtemps** que l’intervalle entre deux échéances. Nulle part dans la doc. Le refus est encore « mal formé ». Nous avons testé trois fausses pistes avant de tout balayer.
+**An invisible rule, a lost session.**
+A loan's grace period must last **at least one minute**, and **no longer** than the interval between two payments. Nowhere in the docs. The refusal is, again, "malformed". We tested three false leads before sweeping everything.
 
-Même famille : trois champs s’appellent tous « taux » et ne veulent pas dire la même chose (intérêt annuel, plancher de réserve, part liquidée au défaut). Sans tableau, on se trompe d’un facteur 10 ou 20 à l’affichage.
+Same family: three fields are all called "rate" and do not mean the same thing (annual interest, reserve floor, share liquidated at default). Without a table you get the display wrong by a factor of 10 or 20.
 
-**Ce que nous demandons :** nommer **le champ** et **la règle** dans le message. `expiré` et `pas la permission` devraient devenir des phrases du type : *« remboursement en retard : ajouter le drapeau correspondant »* ou *« dernière échéance trop proche de la date de sortie »*.
-
----
-
-## 7. Impossible de simplement demander « montre-moi ce prêt »
-
-Il existe une lecture pour **le coffre**. Il n’en existe **aucune** pour un prêt, pour un courtier, ni pour la liste des gens qui tiennent des parts.
-
-Pour analyser un coffre, nous devons :
-
-1. lire le coffre ;
-2. lister les objets du compte technique du coffre (les courtiers) ;
-3. pour chaque courtier, relister ses prêts ;
-4. pour les porteurs de parts, **rejouer tout l’historique** du compte, parce que personne ne fournit la liste.
-
-Un prêt remboursé et effacé **disparaît**. Il n’y a pas d’historique de crédit on-chain. Toute note de risque sérieuse exige un indexeur à côté.
-
-On ne peut pas non plus **simuler** un prêt avant de l’envoyer (il manque la deuxième signature), ni simuler un échange groupé. Les opérations les plus difficiles à construire sont celles qu’on ne peut pas tester à blanc.
-
-**Ce que nous demandons :** trois lectures métier — le prêt, le courtier, les porteurs de parts — et le droit de simuler un prêt et un échange groupé.
+**What we're asking for:** name **the field** and **the rule** in the message. `expired` and `no permission` should become sentences like *"late repayment: add the corresponding flag"* or *"last payment too close to the redemption date"*.
 
 ---
 
-## 8. Ce qui tourne sur le réseau n’est pas dans la doc
+## 6. You can't simply ask "show me this loan"
 
-Le Devnet fait déjà tourner une **version plus récente** du protocole (coffres à trois phases : entrée, investissement, sortie). Les champs existent. Le kit les connaît. **Aucune page publiée ne les décrit.**
+There is a read method for **the vault**. There is **none** for a loan, for a broker, or for the list of share holders.
 
-Nous avons tout appris par essai-erreur :
+To analyse a vault we have to:
 
-- un courtier **n’existe que** sur un coffre à durée fixe ;
-- un champ « date de début » est **interdit** à la création du prêt (il est calculé tout seul) ;
-- un champ « données libres » est **accepté puis jeté** — succès apparent, information perdue ;
-- un coffre en XRP **refuse** un champ d’échelle qui n’existe que pour les jetons.
+1. read the vault;
+2. list the objects of the vault's pseudo-account (the brokers);
+3. for each broker, list its loans again;
+4. for share holders, **replay the entire history** of the account, because nobody provides the list.
 
-Même surprise côté revente : **mettre des parts sous séquestre fonctionne**, jusqu’à un échange atomique sans opération groupée. Rien ne le dit. Nous l’avons découvert en tapant à côté.
+A loan repaid and deleted **disappears**. There is no on-chain credit history. Any serious risk rating requires an indexer alongside.
 
-À l’inverse, le carnet d’ordres natif **refuse encore** de coter ces parts (« cette logique est éteinte »). Le code est là, l’interrupteur est off. On ne sait pas si c’est pour demain ou pour dans deux ans — et ça décide si notre marché pair-à-pair a encore un sens.
+You also cannot **simulate** a loan before sending it (the second signature is missing), nor simulate a batched exchange. The hardest operations to build are the ones you cannot dry-run.
+
+**What we're asking for:** three business reads — the loan, the broker, the share holders — and the right to simulate a loan and a batched exchange.
 
 ---
 
-## 9. Une offre signée ne survit pas à l’attente
+## 7. What runs on the network isn't in the docs
 
-C’est le problème qui décide si on construit un **marché** ou une **poignée de main**. Nous ne l’avons compris qu’en essayant de faire attendre une offre.
+Devnet already runs a **newer version** of the protocol (three-phase vaults: subscription, investment, redemption). The fields exist. The SDK knows them. **No published page describes them.**
 
-Quand deux personnes s’échangent des parts contre de l’argent, chacune signe. Mais ce que chacune signe contient **le compteur de transactions de l’autre**. Résultat : dès que l’un des deux fait n’importe quelle autre opération, l’offre déjà signée devient invalide. Et l’enveloppe porte une date limite courte — nous avons mesuré **72 secondes** sur le Devnet.
+We learned everything by trial and error:
 
-Concrètement : le vendeur ne peut pas signer maintenant et laisser l’acheteur se manifester plus tard. Les deux doivent être devant leur écran, en même temps, pendant une minute. Ce n’est pas un carnet d’ordres, c’est un rendez-vous.
+- a broker **only exists** on a fixed-term vault;
+- a "start date" field is **forbidden** at loan creation (it is computed automatically);
+- a "free data" field is **accepted then dropped** — apparent success, information lost;
+- an XRP vault **refuses** a scale field that only exists for tokens.
 
-**Ce que nous avons trouvé, et qui change tout.** Le protocole a de quoi réserver un numéro de transaction à l’avance. En l’utilisant à la place du compteur ordinaire, tout se débloque. Nous l’avons mesuré sur sept cas :
+Same surprise on the resale side: **escrowing shares works**, up to an atomic swap without any batched operation. Nothing says so. We found it by typing next to the target.
 
-| Ce qu’on a testé | Résultat |
+Conversely, the native order book still **refuses** to quote these shares ("this logic is disabled"). The code is there, the switch is off. We don't know whether that's for tomorrow or for two years from now — and it decides whether our peer-to-peer market still makes sense.
+
+---
+
+## 8. A signed offer does not survive waiting
+
+This is the problem that decides whether you build a **market** or a **handshake**. We only understood it by trying to make an offer wait.
+
+When two people swap shares against money, each one signs. But what each one signs contains **the other's transaction counter**. As a result, as soon as either party does any other operation, the already-signed offer becomes invalid. And the envelope carries a short deadline — we measured **72 seconds** on Devnet.
+
+Concretely: the seller cannot sign now and let the buyer show up later. Both must be at their screens, at the same time, for about a minute. That is not an order book, it is an appointment.
+
+**What we found, and it changes everything.** The protocol can reserve a transaction number in advance. Using it instead of the ordinary counter unlocks the whole thing. We measured seven cases:
+
+| What we tested | Result |
 |---|---|
-| Numéro réservé sur l’enveloppe | accepté |
-| Numéro réservé sur chaque jambe interne | accepté |
-| **Offre signée, puis les deux comptes font autre chose, puis on envoie** | **elle passe** |
-| Date limite portée à 10 min, 1 h, 24 h, 7 jours, 8 ans | toutes acceptées |
-| Aucune date limite du tout | acceptée |
+| Reserved number on the envelope | accepted |
+| Reserved number on each inner leg | accepted |
+| **Offer signed, then both accounts do other things, then we send it** | **it goes through** |
+| Deadline pushed to 10 min, 1 h, 24 h, 7 days, 8 years | all accepted |
+| No deadline at all | accepted |
 
-Une offre signée devient donc **durable**. Et l’annulation existe aussi : consommer le numéro réservé rend l’offre inexécutable pour toujours, **même si l’autre partie l’a déjà signée**. Coût mesuré : **1 drop**.
+A signed offer therefore becomes **durable**. And cancellation exists too: consuming the reserved number makes the offer permanently unexecutable, **even if the other party has already signed it**. Measured cost: **1 drop**.
 
-Deux remarques qui comptent pour la suite :
+Two remarks that matter for what follows:
 
-- **Rien de tout cela n’est écrit.** Le kit JavaScript lit déjà le numéro réservé quand il assemble les signatures — la mécanique est prévue. Aucune page ne dit qu’on peut porter un échange groupé de cette façon, ni ce que ça permet.
-- **Une offre sans date limite n’est pas souhaitable non plus.** Tant que l’acheteur a signé et que le vendeur ne l’a pas fait, le vendeur détient une **option gratuite** : il exécute le jour qui l’arrange, éventuellement un an plus tard, sur un coffre qui aura changé de nature entre-temps. L’acheteur paierait le prix d’hier pour l’actif d’aujourd’hui. Nous avons donc remis une échéance — mais sur **l’engagement** de l’acheteur, pas sur l’annonce du vendeur, qui elle n’engage personne.
+- **None of this is written down.** The JavaScript SDK already reads the reserved number when it assembles signatures — the mechanism is anticipated. No page says a batched exchange can be carried that way, nor what it enables.
+- **An offer with no deadline is not desirable either.** As long as the buyer has signed and the seller has not, the seller holds a **free option**: they execute on the day that suits them, possibly a year later, on a vault that will have changed nature in the meantime. The buyer would pay yesterday's price for today's asset. So we put a deadline back — but on the buyer's **commitment**, not on the seller's listing, which commits nobody.
 
-**Ce que nous demandons :** documenter qu’un échange groupé peut être porté par un numéro réservé, et ce que ça implique — c’est la différence entre un marché et un rendez-vous. Et, dans la même page, dire que l’absence de date limite transfère une option gratuite à celui qui signe en dernier.
-
----
-
-## 10. On ne peut pas demander la liste des coffres
-
-Pour noter le risque d’un coffre, encore faut-il le trouver. Il n’existe **aucune lecture** qui réponde « voici les coffres ». La seule voie est de **balayer le ledger** en filtrant par type d’objet.
-
-Mesuré sur le Devnet : **489 coffres en 11 secondes**, sur 60 pages — et le balayage était encore **tronqué**. Ensuite, savoir si l’un d’eux mérite un regard demande de le relire entièrement, un par un : pour les 40 plus gros, environ 27 secondes de plus.
-
-Ce n’est pas un détail de performance. C’est ce qui décide si un analyste indépendant peut exister. Et le jeu en vaut la chandelle : sur ces 40 coffres, **22 avaient un prêt en défaut non déclaré**. Le signal que nous cherchions existe bel et bien dans la nature, sur des adresses qui ne sont pas les nôtres — mais personne ne peut le voir sans balayer toute la chaîne.
-
-C’est la même famille que le point 7 : il manque le prêt, le courtier, les porteurs de parts… et la liste des coffres elle-même.
-
-**Ce que nous demandons :** une lecture qui liste les coffres, avec au minimum un filtre par propriétaire et par type. À défaut, dire clairement dans la doc que tout produit de ce domaine a besoin d’un indexeur, et à quoi il doit ressembler.
+**What we're asking for:** document that a batched exchange can be carried by a reserved transaction number, and what that implies — it is the difference between a market and an appointment. And, on the same page, say that having no deadline transfers a free option to whoever signs last.
 
 ---
 
-## 11. Aucun portefeuille ne sait signer un échange groupé
+## 9. You can't ask for the list of vaults
 
-C’est notre dernier point, et c’est peut-être le plus gênant pour l’écosystème.
+To rate a vault's risk, you first have to find it. There is **no read method** that answers "here are the vaults". The only route is to **sweep the ledger** filtering by object type.
 
-L’échange groupé fonctionne sur la chaîne. Nous l’avons utilisé des dizaines de fois. Mais il est **hors de portée d’un portefeuille**. Nous avons lu le code du portefeuille de développement officiel : **le mot n’y apparaît nulle part**. Ni l’échange groupé, ni le séquestre. Il sait créer et envoyer des jetons, accepter une pièce d’identité, et il a bien un écran de dépôt dans un coffre — celui du point 3, qui ne passe pas en XRP. Mais il ne sait signer **ni l’une ni l’autre** des deux opérations qui permettent un échange atomique.
+Measured on Devnet: **489 vaults in 11 seconds**, across 60 pages — and the sweep was still **truncated**. Then, knowing whether any of them deserves a look means re-reading each one in full: for the 40 largest, about 27 seconds more.
 
-Le protocole de connexion entre un site et un portefeuille déclare bien une méthode « signer pour le compte d’un tiers », qui est exactement ce qu’il faudrait. Aucun portefeuille ne l’implémente pour les échanges groupés.
+This is not a performance detail. It decides whether an independent analyst can exist at all. And it is worth the trouble: among those 40 vaults, **22 had an undeclared defaulted loan**. The signal we were looking for does exist in the wild, on addresses that are not ours — but nobody can see it without sweeping the whole chain.
 
-La conséquence est brutale pour un produit : **tout marché pair-à-pair doit signer côté serveur**, avec les clés de ses utilisateurs. C’est-à-dire devenir dépositaire — précisément ce que ce protocole cherche à éviter. Notre interface le fait, en local, et nous l’assumons comme une limite de démonstration. Nous ne la mettrions pas en ligne.
+Same family as point 6: the loan, the broker, the share holders are missing… and so is the list of vaults itself.
 
-**Ce que nous demandons :** que l’échange groupé entre dans le portefeuille officiel et dans le standard de connexion, avec un écran de revue lisible (« vous livrez X, vous recevez Y, tout ou rien »). Tant que ce n’est pas le cas, la partie la plus intéressante du protocole reste réservée à ceux qui écrivent des scripts.
-
----
-
-## 12. Une proposition : un séquestre sans destinataire nommé
-
-Les trois points précédents se rejoignent sur un même mur, et nous voudrions proposer une sortie.
-
-Aujourd’hui, **le vendeur doit connaître son acheteur avant de s’engager**. C’est vrai des deux côtés :
-
-- l’échange groupé : l’adresse de l’acheteur est **à l’intérieur** de ce que le vendeur signe ;
-- le séquestre : il exige un **destinataire** nommé à la création.
-
-Il n’existe donc aucune façon de dire « je vends 1 000 parts à ce prix, au premier qui les prend ». Le carnet d’ordres natif refuse encore de coter ces parts. Un vendeur qui veut sortir doit **trouver son acheteur ailleurs**, puis revenir signer. C’est pour ça que notre carnet est hors chaîne — ce n’est pas un choix d’architecture, c’est une indisponibilité.
-
-**Pourquoi nous pensons qu’un séquestre au porteur serait raisonnable *ici*.**
-
-L’objection habituelle est évidente : un séquestre que n’importe qui peut réclamer, c’est une porte ouverte. Mais dans un coffre privé, **« n’importe qui » n’existe pas**. L’accès est déjà borné par un domaine permissionné (XLS-0080) et les pièces d’identité qu’il accepte (XLS-0070). Seuls les membres du domaine peuvent détenir ces parts — le réseau le vérifie au dépôt, au transfert, et **encore au dénouement du séquestre**, nous l’avons testé.
-
-Autrement dit, le contrôle que le destinataire nommé apporte est **déjà apporté par le domaine**. Le nommer une seconde fois n’ajoute pas de sécurité : ça retire seulement la possibilité d’un marché.
-
-**Ce que nous demandons :** pouvoir créer un séquestre de parts en indiquant **un domaine** à la place d’un destinataire. Le premier membre en règle qui dénoue prend la position, contre le prix prévu. Le vendeur s’engage une fois, publiquement, sans savoir qui répondra — et sans que la confiance diminue, puisque tous les répondants possibles sont déjà authentifiés.
-
-Cela donnerait au protocole un vrai carnet d’ordres pour les coffres privés, sans attendre que le carnet natif accepte ces parts — et sans que quiconque ait à faire confiance à un intermédiaire hors chaîne comme le nôtre.
+**What we're asking for:** a read method that lists vaults, with at minimum a filter by owner and by type. Failing that, say clearly in the docs that any product in this space needs an indexer, and what it should look like.
 
 ---
 
-## Ce qui nous a rassurés
+## 10. No wallet can sign a batched exchange
 
-Tout n’est pas cassé. Ces points ont tenu, et ils méritent d’être gardés.
+This is our last point, and possibly the most damaging one for the ecosystem.
 
-- **Le propriétaire du coffre ne peut pas reculer la date de sortie.** Une fois écrite, elle est écrite. Pas d’enfermement « encore six mois » décidé après coup.
-- **Perdre sa pièce d’identité n’empêche pas de retirer** à la date prévue. Seul un gel de jeton (réversible) bloque une sortie.
-- **L’argent du coffre ne fuit pas** vers des paiements ordinaires. On ne peut pas non plus empiler un coffre dans un autre coffre.
-- **Aucun centime perdu en arrondi** sur des centaines d’aller-retours, en XRP comme en jetons.
-- **Le mode tout-ou-rien tient vraiment** : nous n’avons pas réussi à le casser. Si l’acheteur signe puis que le vendeur change le prix, le réseau refuse.
-- **Le contrôle d’identité est étanche** et revérifié partout : dépôt, transfert, séquestre, y compris à la fin du séquestre.
-- **La correction du kit en cours d’événement** a débloqué le cœur du protocole. C’est le bon réflexe.
+The batched exchange works on-chain. We used it dozens of times. But it is **out of reach of a wallet**. We read the source of the official developer wallet: **the word appears nowhere**. Neither batched exchange nor escrow. It can create and send tokens, accept a credential, and it does have a vault deposit screen — the one from point 3, which does not work in XRP. But it can sign **neither** of the two operations that enable an atomic swap.
+
+The connection protocol between a site and a wallet does declare a "sign on behalf of another account" method, which is exactly what would be needed. No wallet implements it for batched exchanges.
+
+The consequence is brutal for a product: **any peer-to-peer market has to sign server-side**, with its users' keys. In other words, become custodial — precisely what this protocol is trying to avoid. Our interface does it, locally, and we own that as a demo limitation. We would not put it online.
+
+**What we're asking for:** bring the batched exchange into the official wallet and into the connection standard, with a readable review screen ("you deliver X, you receive Y, all or nothing"). Until then, the most interesting part of the protocol stays reserved for people who write scripts.
 
 ---
 
-## Ce que nous demandons, en sept points
+## 11. A proposal: escrow without a named destination
 
-1. **Dire la vérité sur la garantie**, en une phrase, là où les gens lisent. La caisse n’est pas la protection.
-2. **Des messages d’erreur qui nomment le champ et la règle.** Moins de « mal formé », « expiré », « pas la permission » fourre-tout.
-3. **Pouvoir lire un prêt, un courtier, qui tient les parts — et la liste des coffres** — sans reconstruire le monde à la main.
-4. **Que « succès » veuille dire « l’échange a eu lieu » :** l’index de la jambe en échec et son code, et un avertissement sur le choix du mode d’envoi.
-5. **Documenter ce qui tourne déjà** (coffres à trois phases, règles de dates, vrais sens des taux, séquestre de parts) — et dire si le carnet natif cotera un jour ces parts.
-6. **Documenter qu’un échange groupé peut être porté par un numéro réservé.** C’est ce qui sépare un marché d’un rendez-vous de 72 secondes, et ce n’est écrit nulle part.
-7. **Mettre l’échange groupé dans les portefeuilles.** Tant qu’aucun ne sait le signer, tout marché pair-à-pair est forcé d’être dépositaire.
+The previous points converge on the same wall, and we would like to propose a way out.
 
-Et une proposition, plutôt qu’une demande : **un séquestre adressé à un domaine** plutôt qu’à une personne (point 12). Le portefeuille officiel devrait aussi savoir déposer du XRP dans un coffre (point 3).
+Today, **the seller must know their buyer before committing**. This is true on both rails:
 
-## Questions pour Ripple
+- the batched exchange: the buyer's address is **inside** what the seller signs;
+- escrow: it requires a **named destination** at creation.
 
-1. **Le carnet d’ordres natif** pourra-t-il un jour coter des parts de coffre — et respectera-t-il les coffres privés ? Si oui, notre marché pair-à-pair devient un pont temporaire. Si non, il reste le produit.
-2. **L’interdiction de sortir pendant l’investissement** est-elle définitive, y compris pour quelqu’un qui n’est plus membre ?
-3. **Revendre via une opération groupée**, c’est un usage supporté ou un effet de bord que vous pouvez casser plus tard ?
-4. **Un courtier « trop prudent »** (plus d’argent en caisse que le plafond) pourra-t-il un jour offrir vraiment plus de protection, sans bricoler les taux ?
-5. **Porter une opération groupée par un numéro réservé** — est-ce prévu, toléré, ou involontaire ? Le kit le fait déjà à moitié ; nous avons construit dessus et nous aimerions savoir si nous avons eu raison.
-6. **Un séquestre adressé à un domaine** plutôt qu’à une personne : est-ce que ça se heurte à quelque chose que nous ne voyons pas ? C’est notre seule vraie piste pour un carnet d’ordres on-chain sur des parts privées.
+So there is no way to say "I sell 1,000 shares at this price, to whoever takes them first". The native order book still refuses to quote these shares. A seller who wants out must **find their buyer elsewhere**, then come back and sign. That is why our order book is off-chain — not an architectural choice, an unavailability.
 
-## Où sont les preuves
+**Why we think a bearer escrow would be reasonable *here*.**
 
-Ce texte fusionne le travail des deux côtés de l’équipe. Les versions longues restent la référence pour un mentor ou une reproduction.
+The usual objection is obvious: an escrow anyone can claim is an open door. But in a private vault, **"anyone" does not exist**. Access is already bounded by a permissioned domain (XLS-0080) and the credentials it accepts (XLS-0070). Only domain members can hold these shares — the network checks it at deposit, at transfer, and **again when the escrow is finished**, which we tested.
 
-| Fichier | Qui | Quoi |
+In other words, the control a named destination provides is **already provided by the domain**. Naming it a second time adds no security: it only removes the possibility of a market.
+
+**What we're asking for:** the ability to create a share escrow pointing at **a domain** instead of a destination. The first member in good standing to finish takes the position, against the agreed price. The seller commits once, publicly, without knowing who will answer — and without any loss of trust, since every possible responder is already authenticated.
+
+That would give the protocol a real order book for private vaults, without waiting for the native book to accept these shares — and without anyone having to trust an off-chain intermediary like ours.
+
+---
+
+## What reassured us
+
+Not everything is broken. These held, and they deserve to be kept.
+
+- **The vault owner cannot push back the redemption date.** Once written, it is written. No "six more months" decided after the fact.
+- **Losing your credential does not prevent withdrawal** at the scheduled date. Only a token freeze (reversible) blocks an exit.
+- **Vault money does not leak** into ordinary payments. You also cannot nest a vault inside another vault.
+- **Not one drop lost to rounding** over hundreds of round trips, in XRP as in tokens.
+- **All-or-nothing really holds.** We could not break it. If the buyer signs and the seller then changes the price, the network refuses.
+- **The identity gate is watertight** and re-checked everywhere: deposit, transfer, escrow, including at escrow finish.
+
+---
+
+## What we're asking for, in seven points
+
+1. **Tell the truth about collateral**, in one sentence, where people read it. The pot is not the protection.
+2. **Error messages that name the field and the rule.** Fewer catch-all "malformed", "expired", "no permission".
+3. **Be able to read a loan, a broker, who holds the shares — and the list of vaults** — without rebuilding the world by hand.
+4. **Make "success" mean "the trade happened":** the index of the failing leg and its code, and a warning about the choice of send mode.
+5. **Document what already runs** (three-phase vaults, date rules, the real meaning of the rates, share escrow) — and say whether the native book will ever quote these shares.
+6. **Document that a batched exchange can be carried by a reserved transaction number.** That is what separates a market from a 72-second appointment, and it is written nowhere.
+7. **Put the batched exchange into wallets.** As long as none can sign it, every peer-to-peer market is forced to be custodial.
+
+And a proposal rather than a request: **an escrow addressed to a domain** rather than to a person (point 11). The official wallet should also be able to deposit XRP into a vault (point 3).
+
+---
+
+## Questions for Ripple
+
+1. **The native order book** — will it ever quote vault shares, and will it respect private vaults? If yes, our peer-to-peer market becomes a temporary bridge. If no, it stays the product.
+2. **The ban on exiting during investment** — is it final, including for someone who is no longer a member?
+3. **Reselling through a batched operation** — is that a supported use, or a side effect you may break later?
+4. **An over-prudent broker** (more money in the pot than the cap) — will they ever be able to offer genuinely more protection, without gaming the rates?
+5. **Carrying a batched operation on a reserved transaction number** — is that intended, tolerated, or accidental? The SDK already does half of it; we built on top and we would like to know whether we were right.
+6. **An escrow addressed to a domain** rather than to a person — does it collide with something we cannot see? It is our only real lead towards an on-chain order book for private shares.
+
+---
+
+## Where the proofs are
+
+This text merges the work of both sides of the team. The long versions remain the reference for a mentor or a reproduction.
+
+| File | Who | What |
 |---|---|---|
-| [FEEDBACK.md](./FEEDBACK.md) | surtout Hugo | Rapport technique (kit, opérations groupées, messages, lectures manquantes) |
-| [FEEDBACK_XLS65_XLS66.md](./FEEDBACK_XLS65_XLS66.md) | surtout Noé | Fiche first-loss + portefeuille, avec formules et preuves |
-| [probes/FRICTIONS.md](./probes/FRICTIONS.md) | Hugo | Repros coffres / prêts |
-| [probes-marche/FRICTIONS.md](./probes-marche/FRICTIONS.md) | Hugo | Repros revente / séquestre |
-| [FRICTIONS-annexe.md](./FRICTIONS-annexe.md) | Hugo | Version longue marché |
-| [probes-marche/13-tickets-et-batch.mjs](./probes-marche/13-tickets-et-batch.mjs) | Hugo | Offre durable : 7 cas, jambes vérifiées dans le ledger (point 9) |
-| [probes-marche/14-annulation-par-ticket.mjs](./probes-marche/14-annulation-par-ticket.mjs) | Hugo | Annulation opposable d’une offre déjà signée (point 9) |
-| [probes-marche/15-fenetre-maximale.mjs](./probes-marche/15-fenetre-maximale.mjs) | Hugo | Jusqu’où repousser l’échéance : 10 min → 8 ans (point 9) |
-| [probes-marche/16-deux-achats-en-parallele.mjs](./probes-marche/16-deux-achats-en-parallele.mjs) | Hugo | Deux achats simultanés, et un envoi sans provision qui répond « succès » (point 5) |
-| [probes-marche/12-vaults-publics.mjs](./probes-marche/12-vaults-publics.mjs) | Hugo | Balayage du réseau : 489 coffres, 22 en défaut non déclaré (point 10) |
-| **[probes-marche/PREUVES.md](./probes-marche/PREUVES.md)** | Hugo | **8 transactions Devnet ouvrables dans l’explorateur — points 5 et 9** |
+| [FEEDBACK.md](./FEEDBACK.md) | mostly Hugo | Technical report (SDK, batched operations, messages, missing reads) |
+| [FEEDBACK_XLS65_XLS66.md](./FEEDBACK_XLS65_XLS66.md) | mostly Noé | First-loss + wallet note, with formulas and proofs |
+| [probes/FRICTIONS.md](./probes/FRICTIONS.md) | Hugo | Vault / loan reproductions |
+| [probes-marche/FRICTIONS.md](./probes-marche/FRICTIONS.md) | Hugo | Resale / escrow reproductions |
+| [FRICTIONS-annexe.md](./FRICTIONS-annexe.md) | Hugo | Long version, market side |
+| [probes-marche/13-tickets-et-batch.mjs](./probes-marche/13-tickets-et-batch.mjs) | Hugo | Durable offer: 7 cases, legs verified in the ledger (point 8) |
+| [probes-marche/14-annulation-par-ticket.mjs](./probes-marche/14-annulation-par-ticket.mjs) | Hugo | Enforceable cancellation of an already-signed offer (point 8) |
+| [probes-marche/15-fenetre-maximale.mjs](./probes-marche/15-fenetre-maximale.mjs) | Hugo | How far the deadline can be pushed: 10 min → 8 years (point 8) |
+| [probes-marche/16-deux-achats-en-parallele.mjs](./probes-marche/16-deux-achats-en-parallele.mjs) | Hugo | Two simultaneous purchases, and a no-funds send that answers "success" (point 4) |
+| [probes-marche/12-vaults-publics.mjs](./probes-marche/12-vaults-publics.mjs) | Hugo | Network sweep: 489 vaults, 22 in undeclared default (point 9) |
+| **[probes-marche/PREUVES.md](./probes-marche/PREUVES.md)** | Hugo | **8 Devnet transactions openable in the explorer — points 4 and 8** |
 
-Environ 450 cas rejoués sur le Devnet, une trentaine de coffres créés et 489 balayés. Chaque point technique a un script dans le dépôt.
+About 450 cases replayed on Devnet, around thirty vaults created and 489 swept. Every technical point has a script in the repository.
 
-*Les pistes de sécurité se transmettent de vive voix, comme le règlement le demande. Elles ne sont pas dans ce document.*
+*Security leads are passed on verbally, as the rules require. They are not in this document.*

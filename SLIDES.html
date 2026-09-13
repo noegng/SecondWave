@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecondWave — deck</title>
+<!--
+  SLIDES.html — support de présentation, autonome.
+
+  Ouvrir dans un navigateur, puis F pour le plein écran.
+  Flèches / espace pour avancer, Échap pour la vue d'ensemble, P pour imprimer en PDF.
+
+  Aucune dépendance, aucune police distante : ça doit s'ouvrir sur scène sans
+  réseau. La palette est celle du front (styles.css) — même noir, même blanc.
+-->
+<style>
+  :root{
+    --bg:#0b0b0d; --ink:#f1f1f3; --muted:#9a9aa1; --dim:#6f6f77;
+    --steel:#c4c4ca; --line:#2b2b30;
+    --good:#35d07f; --warn:#f5c542; --bad:#ff5a52;
+    --font:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);
+    -webkit-font-smoothing:antialiased}
+
+  .deck{height:100%;overflow:hidden}
+  .slide{
+    position:absolute;inset:0;display:none;
+    padding:6vh 7vw 9vh;flex-direction:column;justify-content:center;
+    opacity:0;transition:opacity .28s ease;
+  }
+  .slide.is-on{display:flex;opacity:1}
+
+  /* ── le coffre en perspective, repris du front ────────────────────────── */
+  .vault{position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.5}
+  .vault line,.vault rect,.vault circle{stroke:var(--line);fill:none;vector-effect:non-scaling-stroke}
+  .halo{position:absolute;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(62% 56% at 50% 42%,rgba(196,196,202,.09),transparent 70%)}
+  .slide > *{position:relative;z-index:1}
+
+  h1{font-size:clamp(2.6rem,7vw,5.2rem);font-weight:800;letter-spacing:-.03em;line-height:.98}
+  h2{font-size:clamp(1.7rem,3.9vw,3.1rem);font-weight:700;letter-spacing:-.02em;line-height:1.08;
+     margin-bottom:.55em;max-width:20ch}
+  .kicker{font-family:var(--mono);font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--dim);margin-bottom:1.6em}
+  .lede{font-size:clamp(1.05rem,1.85vw,1.5rem);color:var(--steel);max-width:44ch;line-height:1.45}
+  .sub{font-size:clamp(.95rem,1.5vw,1.2rem);color:var(--muted);margin-top:1.4em;line-height:1.5;max-width:52ch}
+  strong{color:var(--ink);font-weight:650}
+  em{font-style:normal;color:var(--warn)}
+  .mono{font-family:var(--mono)}
+
+  ul{list-style:none;margin-top:1.1em;max-width:56ch}
+  li{font-size:clamp(1rem,1.65vw,1.35rem);color:var(--steel);line-height:1.4;
+     padding-left:1.5em;position:relative;margin-bottom:.75em}
+  li::before{content:'';position:absolute;left:0;top:.62em;width:.55em;height:1px;background:var(--dim)}
+  li.bad::before{background:var(--bad);height:2px;top:.58em}
+  li.good::before{background:var(--good);height:2px;top:.58em}
+
+  /* ── la grille des XLS ────────────────────────────────────────────────── */
+  .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(15.5rem,1fr));gap:.85rem;margin-top:1.2em}
+  .spec{border:1px solid var(--line);border-radius:6px;padding:.85rem 1rem;background:rgba(19,19,21,.55)}
+  .spec .n{font-family:var(--mono);font-size:.74rem;letter-spacing:.13em;color:var(--steel)}
+  .spec .t{font-size:.98rem;font-weight:600;margin:.15em 0 .45em}
+  .spec .f{font-family:var(--mono);font-size:.74rem;color:var(--muted);line-height:1.65;word-spacing:-.1em}
+
+  /* ── deux colonnes ────────────────────────────────────────────────────── */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:2.6rem;margin-top:.6em}
+  .cols h3{font-size:1.06rem;font-weight:650;margin-bottom:.5em;color:var(--ink)}
+  .cols .tag{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--bad);display:block;margin-bottom:.35em}
+  .cols .tag.ok{color:var(--good)}
+
+  .links{margin-top:1.4em;display:grid;gap:1rem;max-width:44ch}
+  .link{border:1px solid var(--line);border-radius:6px;padding:.9rem 1.1rem}
+  .link .k{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--dim)}
+  .link .v{font-family:var(--mono);font-size:1rem;color:var(--ink);margin-top:.25em;word-break:break-all}
+
+  .team{margin-top:2.2em;font-size:clamp(1rem,1.7vw,1.35rem);color:var(--steel)}
+  .team span{color:var(--dim)}
+  .meta{margin-top:.7em;font-family:var(--mono);font-size:.82rem;letter-spacing:.1em;color:var(--dim)}
+
+  /* ── chrome ───────────────────────────────────────────────────────────── */
+  .num{position:absolute;right:3.2vw;bottom:3.4vh;font-family:var(--mono);
+    font-size:.76rem;color:var(--dim);letter-spacing:.1em;z-index:2}
+  .bar{position:absolute;left:0;bottom:0;height:2px;background:var(--steel);
+    transition:width .28s ease;z-index:2;opacity:.55}
+  .hint{position:absolute;left:3.2vw;bottom:3.4vh;font-family:var(--mono);font-size:.72rem;
+    color:var(--dim);z-index:2;opacity:.45}
+
+  @media (max-width:760px){ .cols{grid-template-columns:1fr;gap:1.4rem} }
+
+  /* ── impression : une slide par page ──────────────────────────────────── */
+  @media print{
+    @page{size:A4 landscape;margin:0}
+    html,body{height:auto}
+    .deck{overflow:visible}
+    .slide{position:relative;display:flex!important;opacity:1!important;
+      height:100vh;page-break-after:always;break-after:page}
+    .hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- 1 ─────────────────────────────────────────────────────────────────────-->
+<section class="slide">
+  <div class="halo"></div>
+  <svg class="vault" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <rect x="6" y="6" width="88" height="88"/><rect x="14" y="13" width="72" height="74"/>
+    <line x1="6" y1="6" x2="14" y2="13"/><line x1="94" y1="6" x2="86" y2="13"/>
+    <line x1="6" y1="94" x2="14" y2="87"/><line x1="94" y1="94" x2="86" y2="87"/>
+  </svg>
+  <div class="kicker">XRPL · Track 2 — Lending</div>
+  <h1>SecondWave</h1>
+  <p class="lede" style="margin-top:.7em">An exit market for locked vault shares — and a risk rating that says whether the discount is an opportunity or a trap.</p>
+  <div class="team">Hugo <span>— vaults, loans, settlement</span><br>Noé <span>— risk analyst, wallet</span></div>
+  <div class="meta">XRPL PUBLIC DEVNET · SEPTEMBER 2026</div>
+  <div class="num">01</div>
+</section>
+
+<!-- 2 ─────────────────────────────────────────────────────────────────────-->
+<section class="slide">
+  <div class="halo"></div>
+  <div class="kicker">The observation</div>
+  <h2>A closed-ended vault locks your capital. That is the product, not a bug.</h2>
+  <p class="lede">During the whole Investment phase, <span class="mono">VaultWithdraw</span> answers <span class="mono">tecTOO_SOON</span>. The depositor cannot leave. Full stop.</p>
+  <ul>
+    <li class="bad">But the <strong>risk degrades while the price does not move</strong>. <span class="mono">AssetsTotal</span> only changes when the broker declares an impairment — and nothing forces them to.</li>
+    <li class="bad">A loan past its due date <em>and</em> its grace period leaves the share value perfectly intact. <strong>It is invisible from the price.</strong></li>
+    <li>We swept the network: <strong>22 of the 40 largest vaults</strong> carry an undeclared defaulted loan. Not ours. In the wild.</li>
+  </ul>
+  <div class="num">02</div>
+</section>
+
+<!-- 3 ─────────────────────────────────────────────────────────────────────-->
+<section class="slide">
+  <div class="halo"></div>
+  <div class="kicker">What we built</div>
+  <h2>Vault shares are an MPT. They transfer. The exit already exists — it just had no tooling.</h2>
+  <ul>
+    <li class="good"><strong>Sell a locked position</strong> before the redemption date, through an all-or-nothing atomic swap.</li>
+    <li class="good"><strong>An analyst next to every offer</strong> — not just "risky", but <em>distress discount</em> versus <em>liquidity discount</em>, with the reason.</li>
+    <li class="good"><strong>A durable order book.</strong> The seller signs once and keeps living; the buyer commits with a deadline; either side can withdraw in one click, on-chain.</li>
+  </ul>
+  <p class="sub">The buyer's only real question is not <em>what price</em> — it is <strong>why is the seller cutting it</strong>. That is what the rating answers.</p>
+  <div class="num">03</div>
+</section>
+
+<!-- 4 ─────────────────────────────────────────────────────────────────────-->
+<section class="slide">
+  <div class="halo"></div>
+  <div class="kicker">What we ran on</div>
+  <h2>Six specifications, one cycle</h2>
+  <div class="specs">
+    <div class="spec"><div class="n">XLS-65</div><div class="t">Single Asset Vault</div>
+      <div class="f">VaultCreate · VaultDeposit<br>VaultWithdraw · VaultClawback</div></div>
+    <div class="spec"><div class="n">XLS-66</div><div class="t">Lending Protocol</div>
+      <div class="f">LoanBrokerSet · LoanSet · LoanPay<br>LoanManage · LoanDelete</div></div>
+    <div class="spec"><div class="n">XLS-56</div><div class="t">Batch</div>
+      <div class="f">Batch tfAllOrNothing<br>BatchSigners · inner legs</div></div>
+    <div class="spec"><div class="n">XLS-70</div><div class="t">Credentials</div>
+      <div class="f">CredentialCreate<br>CredentialAccept · CredentialDelete</div></div>
+    <div class="spec"><div class="n">XLS-80</div><div class="t">Permissioned Domains</div>
+      <div class="f">PermissionedDomainSet<br>AcceptedCredentials</div></div>
+    <div class="spec"><div class="n">MPT · TICKETS</div><div class="t">Shares &amp; durability</div>
+      <div class="f">MPTokenAuthorize · Payment(mpt)<br>TicketCreate · TicketSequence</div></div>
+  </div>
+  <p class="sub">Around 450 cases replayed on Devnet, thirty vaults created, 489 swept.</p>
+  <div class="num">04</div>
+</section>
+
+<!-- 5 ─────────────────────────────────────────────────────────────────────-->
+<section class="slide">
+  <div class="halo"></div>
+  <div class="kicker">Major fixes we surfaced</div>
+  <h2>Two things a product cannot work around</h2>
+  <div class="cols">
+    <div>
+      <span class="tag">XLS-56 · Batch</span>
+      <h3>"Success" does not mean the trade happened</h3>
+      <ul>
+        <li class="bad">Delivery and no-op return the <strong>same <span class="mono">tesSUCCESS</span></strong>, the same metadata, the same fee. We froze two Devnet transactions side by side: <strong>rigorously identical</strong>.</li>
+        <li class="bad">The per-leg execution report specified by XLS-56 is <strong>absent</strong>. We rebuild the legs by hand and reconcile balances.</li>
+        <li class="bad"><strong>3 of 4 flags</strong> hand over the shares without collecting the price.</li>
+      </ul>
+    </div>
+    <div>
+      <span class="tag">Dev wallet</span>
+      <h3>The official wallet cannot get you in — or out</h3>
+      <ul>
+        <li class="bad">It sends an XRP deposit <strong>as a token object</strong>. The vault refuses. The user cannot edit the JSON. <em>Dead end</em> — we fixed it and opened a PR.</li>
+        <li class="bad">It knows <strong>neither Batch nor Escrow</strong>. No wallet can sign an atomic swap, so every peer-to-peer market is forced to be <strong>custodial</strong>.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="num">05</div>
+</section>
+
+<!-- 6 ─────────────────────────────────────────────────────────────────────-->
+<section class="slide">
+  <div class="halo"></div>
+  <div class="kicker">What would have been great to have</div>
+  <h2>An escrow that does not name its recipient</h2>
+  <p class="lede">Today the seller must know the buyer <strong>before committing</strong>: the buyer's address is inside what the seller signs, and an escrow demands a <span class="mono">Destination</span>. So there is no way to say <em>"1,000 shares at this price, to whoever takes them first"</em>.</p>
+  <ul>
+    <li>The usual objection — <em>anyone could claim it</em> — <strong>does not apply here</strong>.</li>
+    <li class="good">In a private vault, access is already bounded by a <strong>permissioned domain</strong> (XLS-80) and its <strong>credentials</strong> (XLS-70). Everyone who could answer is <strong>already trusted</strong>.</li>
+    <li class="good">The network re-checks membership at deposit, at transfer, and <strong>again at escrow finish</strong> — we tested it.</li>
+  </ul>
+  <p class="sub">Naming the destination a second time adds no security. It only removes the possibility of a market. <strong>Let an escrow point at a domain</strong> — and private vaults get a real on-chain order book.</p>
+  <div class="num">06</div>
+</section>
+
+<!-- 7 ─────────────────────────────────────────────────────────────────────-->
+<section class="slide">
+  <div class="halo"></div>
+  <div class="kicker">The one thing still off-chain</div>
+  <h2>There is no way to ask to join</h2>
+  <p class="lede">Everything else lives on the ledger. Onboarding does not.</p>
+  <ul>
+    <li>The only transactions that exist are <span class="mono">CredentialCreate</span>, <span class="mono">CredentialAccept</span>, <span class="mono">CredentialDelete</span>. <strong>None of them is a request.</strong></li>
+    <li class="bad">The <strong>issuer pushes</strong> the credential; the newcomer can only accept it. An outsider has <strong>no on-chain way to raise their hand</strong>.</li>
+    <li>So the first step of onboarding happens in a form, an email, a Discord — off-chain, by definition, for a protocol whose selling point is on-chain identity.</li>
+  </ul>
+  <p class="sub">Concretely: a buyer who finds an offer on our book and is not a domain member sees <em>"credential missing"</em> — and has no button to press next.</p>
+  <div class="num">07</div>
+</section>
+
+<!-- 8 ─────────────────────────────────────────────────────────────────────-->
+<section class="slide">
+  <div class="halo"></div>
+  <svg class="vault" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <rect x="6" y="6" width="88" height="88"/><rect x="14" y="13" width="72" height="74"/>
+    <line x1="6" y1="6" x2="14" y2="13"/><line x1="94" y1="6" x2="86" y2="13"/>
+    <line x1="6" y1="94" x2="14" y2="87"/><line x1="94" y1="94" x2="86" y2="87"/>
+  </svg>
+  <div class="kicker">Go look</div>
+  <h2>SecondWave</h2>
+  <div class="links">
+    <div class="link"><div class="k">Live</div><div class="v" id="url-live">second-wave-vault.vercel.app</div></div>
+    <div class="link"><div class="k">Code</div><div class="v">github.com/noegng/SecondWave</div></div>
+  </div>
+  <p class="sub">The report, the reproduction scripts and the on-chain proofs are all in the repository — every claim on these slides has a transaction you can open.</p>
+  <div class="num">08</div>
+</section>
+
+</div>
+
+<div class="bar" id="bar"></div>
+<div class="hint">← → navigate · F fullscreen · P print</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')]
+  const bar = document.getElementById('bar')
+  let i = 0
+
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n))
+    slides.forEach((s, k) => s.classList.toggle('is-on', k === i))
+    bar.style.width = `${((i + 1) / slides.length) * 100}%`
+    location.hash = i + 1
+  }
+
+  addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); show(i + 1) }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(i - 1) }
+    else if (e.key === 'Home') show(0)
+    else if (e.key === 'End') show(slides.length - 1)
+    else if (e.key === 'f' || e.key === 'F') {
+      document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()
+    } else if (e.key === 'p' || e.key === 'P') { e.preventDefault(); print() }
+  })
+
+  // Clic à droite = avancer, à gauche = reculer. Utile si on présente à la souris.
+  addEventListener('click', e => show(e.clientX > innerWidth / 2 ? i + 1 : i - 1))
+
+  show(Number(location.hash.slice(1) || 1) - 1)
+</script>
+</body>
+</html>
