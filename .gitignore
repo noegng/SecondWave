@@ -20,7 +20,9 @@ xrpl-devex-hook/
 .grok/skills/
 
 # build & divers
-dist/
+# Ne PAS ignorer `apps/web/dist` : le dashboard Vercel le force encore
+# comme Output Directory. `dist/` le faisait sauter → deploy vert, 0 fichier,
+# 404 DEPLOYMENT_NOT_FOUND.
 build/
 coverage/
 *.log
@@ -36,7 +38,7 @@ SECURITY-NOTES.md
 # sondes exploratoires
 probes*/*.log
 
-# Sortie locale / ancien chemin. Ne PAS ignorer `apps/web/out` :
-# c'est le outputDirectory Vercel — s'il est ignoré, le deploy est vide.
-apps/web/dist/
+# miroir local du build (la cible Vercel est apps/web/public + apps/web/dist)
+apps/web/out/
+/public/
 .vercel

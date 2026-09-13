@@ -11,6 +11,7 @@
   },
   "scripts": {
     "web": "node apps/web/server.mjs",
+    "build": "node apps/web/build.mjs",
     "world": "node fixtures/generate.mjs",
     "invite": "node fixtures/invite.mjs",
     "cli": "node apps/cli/src/index.mjs",

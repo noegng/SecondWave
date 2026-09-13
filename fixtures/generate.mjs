@@ -20,7 +20,7 @@
  *    snapshot.json fige un instant — mais pour une démo live, RÉGÉNÉRER le monde
  *    peu avant (npm run world), puis re-snapshoter.
  */
-import { writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import {
@@ -399,9 +399,14 @@ const seeds = {
 writeFileSync(join(HERE, '..', 'world.json'), jsonBig(world))
 writeFileSync(join(HERE, '..', 'state.json'), jsonBig(seeds))
 writeFileSync(join(HERE, '..', 'snapshot.json'), jsonBig(snapshot))
+const webData = join(HERE, '..', 'apps', 'web', 'public', 'data')
+mkdirSync(webData, { recursive: true })
+writeFileSync(join(webData, 'world.json'), jsonBig(world))
+writeFileSync(join(webData, 'snapshot.json'), jsonBig(snapshot))
 log('\n   world.json    — identifiants publics [committé]')
 log('   state.json    — ⚠️ seeds, gitignoré')
 log('   snapshot.json — dump hors ligne pour l\'analyste [committé]')
+log('   apps/web/public/data — copie pour le site statique / Vercel')
 log(`\n   ${world.vaults.length} vaults générés. clawbackArmed(iou)=${clawbackArmed}`)
 
 await c.disconnect()
