@@ -33,11 +33,21 @@ const state = {
   tab: 'book',
   ticket: { vault: '', shares: '', price: '' },   // le formulaire de vente, persistant
   chain: { account: null, holdings: null, status: 'idle', error: null },
+  pending: [],       // les offres qui attendent MA confirmation de vendeur
+  commitments: [],   // les offres où JE suis l'acheteur engagé
+  canSign: false,    // state.json présent côté serveur
+  apiLive: false,    // un backend répond (npm run web). Faux sur un déploiement statique.
+  ledgerIndex: null, // l'horloge qui fait foi pour l'échéance des engagements
 }
 
 const DATA = await loadWorld()
 state.vaults = DATA.vaults
 state.offers = DATA.offers
+
+// Le carnet vient du serveur, pas du snapshot : la CLI écrit le même fichier,
+// donc une offre posée en terminal apparaît ici, et réciproquement.
+// `repaint: false` — le premier rendu est celui du sas, pas celui-ci.
+try { await reloadOffers({ repaint: false }) } catch { /* serveur muet : on garde le snapshot */ }
 
 // le sas : le coffre s'ouvre avant le marché, et le logo le rappelle.
 // À chaque entrée, on relit la session posée dans le coffre.
@@ -99,7 +109,10 @@ function offerRow(o) {
   const v = vaultById(state.vaults, o.vaultId)
   if (!v) return null
   const mine = state.session && o.seller === state.session.account
-  const live = o.status === 'open' && o.expiry > rippleNow()
+  // ⚠️ `expiry` vaut null sur une offre durable : `null > now` est faux, et
+  //    l'offre s'affichait comme périmée. Et une offre engagée reste vivante —
+  //    elle n'est simplement plus à prendre.
+  const live = ['open', 'matched', 'armed'].includes(o.status) && !isExpired(o)
   const d = discountOf(o, v)
   const deep = d >= 0.15
   const reading = readingOf(v, d)
@@ -146,20 +159,51 @@ function offerRow(o) {
   if (buyBtn) buyBtn.addEventListener('click', () => buyFlow(o, v))
   const cancelBtn = tr.querySelector('[data-cancel]')
   if (cancelBtn) cancelBtn.addEventListener('click', () => cancelOffer(o))
+  const confirmBtn = tr.querySelector('[data-confirm]')
+  if (confirmBtn) confirmBtn.addEventListener('click', () => confirmFlow(o, v))
+  const withdrawBtn = tr.querySelector('[data-withdraw]')
+  if (withdrawBtn) withdrawBtn.addEventListener('click', () => withdrawFlow(o, v))
   return tr
 }
 
-const STATUS_FR = { filled: 'settled', cancelled: 'cancelled', expired: 'expired' }
+const STATUS_FR = {
+  filled: 'settled', cancelled: 'cancelled', expired: 'expired',
+  matched: 'committed', armed: 'settling',
+}
 
 function buyCell(o, v, mine, live) {
+  // Déploiement statique : le carnet se lit, il ne se règle pas. Un bouton qui
+  // ne peut qu'échouer vaut moins qu'une étiquette qui dit pourquoi.
+  if (live && !state.apiLive) return `<span class="pill pill-preview">preview</span>`
   if (!live) return o.txHash
     ? `<a class="seller" href="https://devnet.xrpl.org/transactions/${o.txHash}" target="_blank" rel="noopener" onclick="event.stopPropagation()">proof ↗</a>`
     : ''
+  // Une offre engagée n'est plus à prendre : l'acheteur a signé, seul le
+  // vendeur peut encore trancher. On montre l'état plutôt qu'un bouton mort.
+  if (o.status === 'matched') {
+    if (mine) return `<button class="btn btn-primary btn-sm" data-confirm>Confirm</button>`
+    // Mon propre engagement : je vois depuis quand j'attends, et je peux sortir.
+    if (o.buyer === state.session?.account)
+      return `<button class="btn btn-mine btn-sm" data-withdraw>Withdraw · ${resteAvant(o)?.label ?? '—'} left</button>`
+    return `<span class="pill pill-wait">awaiting seller</span>`
+  }
+  if (o.status === 'armed') return `<span class="pill pill-wait">settling…</span>`
   if (mine) return `<button class="btn btn-mine btn-sm" data-cancel aria-label="Withdraw offer ${o.id}">${icon('exit', { size: 13 })} Withdraw</button>`
   return `<button class="btn btn-ghost btn-sm" data-buy aria-label="Buy ${fmtNum(Number(o.shares), true)} shares of ${v.short}">${icon('buy', { size: 13 })} Buy</button>`
 }
 
 /** liquidité ou détresse — la question centrale de l'analyste. */
+/**
+ * L'annonce a-t-elle vieilli ? Ne vaut que tant que personne ne s'est engagé :
+ * une fois l'acheteur signé, c'est l'échéance de SON engagement qui gouverne,
+ * et elle est bornée par le ledger. Sinon une offre engagée s'afficherait
+ * comme périmée alors qu'elle est parfaitement réglable.
+ */
+function isExpired(o) {
+  if (o.status !== 'open') return false
+  return o.expiry != null && o.expiry <= rippleNow()
+}
+
 function readingOf(v, discount) {
   if (v.rating.tone === 'bad' || (v.rating.tone === 'warn' && discount >= 0.12))
     return { cls: 'distress', label: 'distress discount', icon: 'distress' }
@@ -197,7 +241,7 @@ function fmtUi(ui, v) {
 function bookMedianNative(vaultId, shares) {
   const now = rippleNow()
   const open = state.offers.filter(o =>
-    o.vaultId === vaultId && o.status === 'open' && o.expiry > now && Number(o.shares) > 0)
+    o.vaultId === vaultId && o.status === 'open' && !isExpired(o) && Number(o.shares) > 0)
   if (!open.length) return null
   const pers = open.map(o => Number(o.price) / Number(o.shares)).sort((a, b) => a - b)
   return pers[Math.floor(pers.length / 2)] * shares
@@ -243,19 +287,41 @@ function askAdvice(v, discount) {
   }
 }
 
+/**
+ * Le bandeau du mode consultation.
+ *
+ * Le déploiement Vercel est statique : `apps/web/build.mjs` copie `public/` et
+ * les trois JSON, rien d'autre. Les routes `/api/*` vivent dans
+ * `apps/web/server.mjs`, qui ne tourne pas là-bas — et c'est voulu, puisque le
+ * règlement signe avec les seeds de `state.json`, qui est gitignoré.
+ */
+function renderPreviewBanner(box) {
+  const deja = box.querySelector(':scope > .preview-banner')
+  // `renderBook()` tourne à chaque rendu : sans ça, les bandeaux s'empileraient.
+  if (state.apiLive) { deja?.remove(); return }
+  if (deja) return
+  const b = el('div', 'preview-banner')
+  b.innerHTML = `<strong>Read-only preview.</strong> The book, the ratings and the
+    on-chain proofs are live. Posting, buying, confirming and withdrawing need the
+    local server — <code>npm run web</code> — because settlement signs with seeds
+    that never leave the machine.`
+  box.prepend(b)
+}
+
 function renderBook() {
+  renderPreviewBanner($('#view-book') ?? document.body)
   const body = $('#book-body')
   body.innerHTML = ''
   const now = rippleNow()
   const visible = state.offers.filter(o => {
     if (state.filter === 'mine') return state.session && o.seller === state.session.account
-    if (state.filter === 'open') return o.status === 'open' && o.expiry > now
+    if (state.filter === 'open') return o.status === 'open' && !isExpired(o)
     return true
   })
   // les vivantes d'abord, par fraîcheur ; puis l'historique
   visible.sort((a, b) => {
-    const la = a.status === 'open' && a.expiry > now ? 0 : 1
-    const lb = b.status === 'open' && b.expiry > now ? 0 : 1
+    const la = a.status === 'open' && !isExpired(a) ? 0 : 1
+    const lb = b.status === 'open' && !isExpired(b) ? 0 : 1
     return la - lb || b.postedAt - a.postedAt
   })
   for (const o of visible) {
@@ -325,7 +391,10 @@ function renderShares() {
     return
   }
   const holdings = sessionHoldings()
-  const myOffers = state.offers.filter(o => o.seller === state.session.account && o.status === 'open' && o.expiry > rippleNow())
+  renderPending(box)
+  renderCommitments(box)
+  const myOffers = state.offers.filter(o =>
+    o.seller === state.session.account && o.status === 'open' && !isExpired(o))
   const locked = new Map()
   for (const o of myOffers) {
     const v = vaultById(state.vaults, o.vaultId)
@@ -432,7 +501,7 @@ function openDrawer(o, v) {
     </div>
 
     <div class="d-actions">
-      ${o.status === 'open' && o.expiry > rippleNow()
+      ${o.status === 'open' && !isExpired(o)
         ? mine
           ? '<button class="btn btn-mine" data-d-cancel>Withdraw offer</button>'
           : '<button class="btn btn-primary" data-d-buy>Buy back this position</button>'
@@ -661,16 +730,28 @@ function renderTicket() {
     const h = current()
     const v = h.vault
     const suggest = suggestedDiscount(v)
-    $('#s-shares-hint').textContent = `available: ${fmtShares(h.shares)} shares`
+    // ⭐ Le plafond n'est pas le solde : c'est le solde MOINS ce qui est déjà
+    //    promis sur d'autres offres en cours. Sans ça, 25 M de parts
+    //    autorisent deux annonces de 25 M, et la seconde meurt au règlement.
+    const promis = engagedOn(v.vaultId)
+    const libre = Math.max(0, h.shares - promis)
+    $sh.max = String(libre)
+    $('#s-shares-hint').textContent = promis > 0
+      ? `${fmtShares(libre)} free — ${fmtShares(promis)} already promised on other offers`
+      : `available: ${fmtShares(h.shares)} shares`
     $('#s-price-unit').textContent = v.isXrp ? 'XRP' : v.asset
     const shares = Number($sh.value)
     const nav = shares * v.navPerShare
-    const okShares = shares > 0 && shares <= h.shares
+    const okShares = shares > 0 && shares <= libre
     if (okShares && $pr.value === '') $pr.value = fmtUi(toUi(nav * (1 - suggest), v), v)
     const priceUi = Number($pr.value)
     const price = toNative(priceUi, v)
     const okPrice = price > 0 && nav > 0
     $('#s-shares-hint').classList.toggle('error', $sh.value !== '' && !okShares)
+    if (!state.apiLive) {
+      $post.disabled = true
+      $post.title = 'Read-only preview — run npm run web to post offers'
+    }
 
     $sl.setAttribute('aria-label', 'Ask price versus NAV')
     const navUi = toUi(nav, v)
@@ -752,29 +833,76 @@ function renderTicket() {
   })
   refresh()
 
-  $post.addEventListener('click', () => {
+  $post.addEventListener('click', async () => {
     const h = current()
     const v = h.vault
     const shares = Number($sh.value)
     const price = v.isXrp ? Math.round(Number($pr.value) * 1_000_000) : Number($pr.value)
-    const now = rippleNow()
-    state.offers.push({
-      id: `o${String(state.offers.length + 1).padStart(3, '0')}`,
-      vaultId: v.vaultId,
-      seller: state.session.account,
-      shares: String(shares),
-      price: String(price),
-      postedAt: now,
-      expiry: now + 3600,
-      status: 'open',
-      txHash: null,
-      demo: false,
-      local: true,
-    })
-    state.ticket = { vault: v.key, shares: '', price: '' }
-    render()
-    toast('Offer posted to the book — highlighted, it\'s yours', true)
+    if (!(shares > 0) || !(price > 0)) return
+
+    $post.disabled = true
+    const ancien = $post.textContent
+    $post.textContent = 'Reserving tickets…'
+    try {
+      // Publier ne signe RIEN. Le serveur réserve deux Tickets au vendeur :
+      // c'est ce qui rendra l'offre durable, et annulable, plus tard.
+      const r = await api('offers', {
+        seller: state.session.account, vaultId: v.vaultId,
+        shares: String(shares), price: String(price),
+      })
+      state.ticket = { vault: v.key, shares: '', price: '' }
+      await reloadOffers()
+      toast(r.ticketsCreated
+        ? `Offer ${r.offer.id} posted — ${r.ticketsCreated} ticket(s) reserved, no expiry`
+        : `Offer ${r.offer.id} posted — no expiry, nothing signed yet`, true)
+    } catch (e) {
+      toast(e.message)
+    } finally {
+      $post.disabled = false
+      $post.textContent = ancien
+    }
   })
+}
+
+/* ============ le rail durable, côté interface ============ */
+
+/**
+ * Un appel au serveur. Les refus métier (offre déjà prise, pas de seed locale)
+ * arrivent en 409 avec un message lisible : on le remonte tel quel plutôt que
+ * de le traduire en « something went wrong ».
+ */
+async function api(route, body = null) {
+  let r
+  try {
+    r = await fetch(`/api/${route}`, body
+      ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
+      : {})
+  } catch {
+    throw new Error(HORS_LIGNE)
+  }
+  // Un déploiement statique (Vercel) renvoie la page d'erreur, pas du JSON :
+  // le distinguer d'un refus métier évite d'afficher « erreur 404 » à l'écran.
+  const data = await r.json().catch(() => null)
+  if (data == null) throw new Error(HORS_LIGNE)
+  if (!r.ok) throw new Error(data.error ?? `erreur ${r.status}`)
+  return data
+}
+
+const HORS_LIGNE = 'Read-only preview — settlement runs against a local server (npm run web).'
+
+/** Relit le carnet depuis le serveur — la CLI écrit le même fichier. */
+async function reloadOffers({ repaint = true } = {}) {
+  const account = state.session?.account
+  const r = await api(`offers${account ? `?account=${account}` : ''}`)
+  state.offers = r.offers
+  state.pending = r.pending
+  state.commitments = r.commitments ?? []
+  state.canSign = r.canSign
+  state.ledgerIndex = r.ledgerIndex ?? null
+  state.secondsPerLedger = r.secondsPerLedger ?? 3
+  state.apiLive = true
+  if (repaint) render()
+  return r
 }
 
 /** Amène le ticket sous les yeux, éventuellement pré-rempli sur un vault. */
@@ -793,10 +921,44 @@ function focusTicket(preselect) {
   box.querySelector('#s-shares')?.focus()
 }
 
-function cancelOffer(o) {
-  o.status = 'cancelled'
-  render()
-  toast(`Offer ${o.id} withdrawn from the book`)
+/**
+ * ⭐ ANNULER — un clic, et l'offre devient insoumettable.
+ *
+ * Le serveur consomme le Ticket qui porte l'enveloppe. Tout Batch signé sur ce
+ * ticket meurt (`tefNO_TICKET`), y compris un Batch que l'acheteur a déjà signé
+ * et qui circule. C'est la seule annulation que le ledger fait respecter :
+ * retirer une ligne d'un fichier n'a jamais empêché personne de rejouer.
+ */
+async function cancelOffer(o) {
+  const box = openModal(`
+    <h2>Withdraw ${o.id}</h2>
+    <p class="m-sub">${fmtShares(o.shares)} shares · ${o.status === 'matched'
+      ? 'a buyer has already signed — withdrawing still works'
+      : 'no one has taken it yet'}</p>
+    <p class="m-note">This burns the Ticket carrying the offer. Any signed Batch
+      becomes unsubmittable — <code>tefNO_TICKET</code>. Cost: 1 drop.</p>
+    <div class="m-actions">
+      <button class="btn btn-ghost" data-c-cancel>Keep it</button>
+      <button class="btn btn-primary" data-c-go>Withdraw</button>
+    </div>
+  `)
+  box.querySelector('[data-c-cancel]').addEventListener('click', closeModal)
+  box.querySelector('[data-c-go]').addEventListener('click', async e => {
+    e.target.disabled = true
+    e.target.textContent = 'Burning ticket…'
+    try {
+      const r = await api(`offers/${o.id}/cancel`, { seller: o.seller })
+      closeModal()
+      await reloadOffers()
+      toast(r.onChain
+        ? `Offer ${o.id} withdrawn — ticket ${r.ticket} burned on-chain`
+        : `Offer ${o.id} withdrawn from the book`)
+    } catch (err) {
+      e.target.disabled = false
+      e.target.textContent = 'Withdraw'
+      toast(err.message)
+    }
+  })
 }
 
 /* ============ racheter ============ */
@@ -828,18 +990,234 @@ function buyFlow(o, v) {
     e.target.disabled = true
     box.querySelector('[data-b-cancel]').disabled = true
     const rows = box.querySelectorAll('.step')
-    for (let i = 0; i < rows.length; i++) {
-      rows[i].classList.add('is-active')
-      await new Promise(r => setTimeout(r, 650 + Math.random() * 450))
-      rows[i].classList.remove('is-active')
-      rows[i].classList.add('is-done')
+    const avance = i => {
+      rows[i].classList.remove('is-active'); rows[i].classList.add('is-done')
       rows[i].querySelector('.s-ico').textContent = '✓'
     }
-    o.status = 'filled'
-    o.filledAt = rippleNow()
-    closeModal()
-    render()
-    toast(`Settlement simulated — ${o.id} settled. The real Batch is signed in the CLI.`)
+    rows[0].classList.add('is-active')
+    try {
+      // L'acheteur pose ses BatchSigners. C'est un engagement réel : à partir
+      // d'ici, il ne peut plus se dédire — seul le vendeur garde la main.
+      const r = await api(`offers/${o.id}/take`, { buyer: state.session.account })
+      avance(0)
+      rows[1].classList.add('is-active'); avance(1)
+      rows[2].classList.add('is-active'); avance(2)
+      closeModal()
+      await reloadOffers()
+      toast(`Committed to ${o.id}${r.needsAuthorize ? ' (MPT authorisation included)' : ''}`
+        + ' — waiting for the seller. No deadline.', true)
+    } catch (err) {
+      closeModal()
+      toast(err.message)
+    }
+  })
+}
+
+/**
+ * Les parts que je promets déjà sur ce vault — offres engagées comprises.
+ *
+ * Une offre `matched` a disparu du carnet mais promet toujours ses parts : ne
+ * compter que les `open` rouvrirait exactement la survente qu'on ferme ici.
+ */
+function engagedOn(vaultId) {
+  const me = state.session?.account
+  if (!me) return 0
+  return state.offers
+    .filter(o => o.seller === me && o.vaultId === vaultId
+      && ['open', 'matched', 'armed'].includes(o.status))
+    .reduce((s, o) => s + Number(o.shares), 0)
+}
+
+/**
+ * Le temps qu'il reste au vendeur pour confirmer.
+ *
+ * L'échéance est un numéro de ledger, pas une heure : c'est le ledger qui fait
+ * foi (`tefMAX_LEDGER`). On convertit pour l'affichage avec l'intervalle de
+ * fermeture observé — d'où l'approximation assumée.
+ */
+function resteAvant(o) {
+  if (o.expiresAtLedger == null || state.ledgerIndex == null) return null
+  const ledgers = o.expiresAtLedger - state.ledgerIndex
+  if (ledgers <= 0) return { expired: true, label: 'lapsed', ledgers: 0 }
+  const s = Math.round(ledgers * (state.secondsPerLedger ?? 3))
+  const label = s < 90 ? `${s}s`
+    : s < 5400 ? `${Math.round(s / 60)} min`
+    : s < 172800 ? `${Math.round(s / 3600)} h`
+    : `${Math.round(s / 86400)} d`
+  return { expired: false, label, ledgers, seconds: s }
+}
+
+/** Depuis combien de temps, en clair. */
+function depuis(rippleTs) {
+  if (!rippleTs) return 'just now'
+  const s = Math.max(0, rippleNow() - rippleTs)
+  if (s < 90) return `${s}s`
+  if (s < 5400) return `${Math.round(s / 60)} min`
+  if (s < 172800) return `${Math.round(s / 3600)} h`
+  return `${Math.round(s / 86400)} d`
+}
+
+/**
+ * Mes engagements d'acheteur.
+ *
+ * Il n'y a PAS de compte à rebours à afficher : l'offre est portée par des
+ * Tickets, pas par des séquences, et l'enveloppe n'a pas de
+ * `LastLedgerSequence`. Le vendeur peut confirmer dans dix minutes ou jamais.
+ * Ce qu'on montre à l'acheteur, c'est donc son temps d'attente — et la seule
+ * chose qui le protège vraiment : le bouton pour se retirer.
+ */
+function renderCommitments(box) {
+  const list = state.commitments ?? []
+  if (!list.length) return
+  const panel = el('div', 'pending-panel commit-panel')
+  panel.innerHTML = `<div class="pending-head">
+      <span class="pending-dot"></span>
+      ${list.length} commitment${list.length > 1 ? 's' : ''} awaiting the seller
+      <span class="pending-note">the seller has a deadline — withdraw any time before it</span>
+    </div>`
+  for (const o of list) {
+    const v = vaultById(state.vaults, o.vaultId)
+    const row = el('div', 'pending-row')
+    row.innerHTML = `
+      <div class="grow">
+        <div class="pending-title">${o.id} · ${fmtShares(o.shares)} shares of
+          “${v?.short ?? o.vaultId.slice(0, 8)}”</div>
+        <div class="pending-sub">signed ${depuis(o.matchedAt)} ago ·
+          seller <span class="mono">${shortAddr(o.seller)}</span> has
+          ${resteAvant(o)?.label ?? 'no deadline'} left to confirm</div>
+      </div>
+      <button class="btn btn-mine btn-sm" data-w-go>Withdraw commitment</button>
+    `
+    row.querySelector('[data-w-go]').addEventListener('click', () => withdrawFlow(o, v))
+    panel.appendChild(row)
+  }
+  box.appendChild(panel)
+}
+
+/**
+ * L'acheteur se retire. Il brûle l'un de SES tickets : le Batch devient
+ * insoumettable, l'offre repasse au carnet, le vendeur n'a rien dépensé.
+ */
+function withdrawFlow(o, v) {
+  const box = openModal(`
+    <h2>Withdraw from ${o.id}</h2>
+    <p class="m-sub">${fmtShares(o.shares)} shares · ${resteAvant(o)?.label ?? '—'} left for the seller</p>
+    <p class="m-note">You do not have to wait it out: this burns your own Ticket immediately.
+      The signed Batch becomes
+      unsubmittable — the seller can no longer settle it, even if they confirm.
+      The offer goes back on the book. Cost: 1 drop.</p>
+    <div class="m-actions">
+      <button class="btn btn-ghost" data-w-cancel>Keep waiting</button>
+      <button class="btn btn-primary" data-w-ok>Withdraw</button>
+    </div>
+  `)
+  box.querySelector('[data-w-cancel]').addEventListener('click', closeModal)
+  box.querySelector('[data-w-ok]').addEventListener('click', async e => {
+    e.target.disabled = true
+    e.target.textContent = 'Burning ticket…'
+    try {
+      await api(`offers/${o.id}/unmatch`, { buyer: o.buyer })
+      closeModal()
+      await reloadOffers()
+      toast(`Withdrawn from ${o.id} — the offer is back on the book`)
+    } catch (err) {
+      e.target.disabled = false
+      e.target.textContent = 'Withdraw'
+      toast(err.message)
+    }
+  })
+}
+
+/**
+ * La file d'attente du vendeur — l'équivalent de la notification.
+ *
+ * Une offre `matched` ne périme pas : l'acheteur s'est engagé sur des Tickets,
+ * pas sur des séquences. Le vendeur peut répondre dans une heure, demain, ou
+ * retirer son offre. Le panneau le dit explicitement, parce que c'est
+ * exactement le contraire de ce qu'on attend d'un règlement on-chain.
+ */
+function renderPending(box) {
+  const list = state.pending ?? []
+  if (!list.length) return
+  const panel = el('div', 'pending-panel')
+  panel.innerHTML = `<div class="pending-head">
+      <span class="pending-dot"></span>
+      ${list.length} offer${list.length > 1 ? 's' : ''} waiting for your confirmation
+      <span class="pending-note">confirm before the buyer's commitment lapses</span>
+    </div>`
+  for (const o of list) {
+    const v = vaultById(state.vaults, o.vaultId)
+    const row = el('div', 'pending-row')
+    row.innerHTML = `
+      <div class="grow">
+        <div class="pending-title">${o.id} · ${fmtShares(o.shares)} shares of
+          “${v?.short ?? o.vaultId.slice(0, 8)}”</div>
+        <div class="pending-sub">buyer <span class="mono">${shortAddr(o.buyer)}</span> ·
+          ${resteAvant(o)?.label ?? '—'} left before this commitment lapses</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" data-p-withdraw>Withdraw</button>
+      <button class="btn btn-primary btn-sm" data-p-confirm>Confirm</button>
+    `
+    row.querySelector('[data-p-confirm]').addEventListener('click', () => confirmFlow(o, v))
+    row.querySelector('[data-p-withdraw]').addEventListener('click', () => cancelOffer(o))
+    panel.appendChild(row)
+  }
+  box.appendChild(panel)
+}
+
+/* ============ la confirmation du vendeur ============ */
+
+/**
+ * ⭐ LE GESTE QUI RÈGLE.
+ *
+ * Tout le reste était gratuit : publier ne signe rien, s'engager ne dépense
+ * rien. Ici le vendeur signe l'enveloppe et le Batch part. C'est aussi le
+ * dernier moment où il peut dire non — d'où les deux boutons côte à côte.
+ */
+function confirmFlow(o, v) {
+  const steps = [
+    ['①', 'Seller signature — the envelope'],
+    ['②', 'Batch tfAllOrNothing — shares against price'],
+    ['③', 'Legs rebuilt from the ledger (the missing BatchExecutions)'],
+    ['④', 'Balance reconciliation'],
+  ]
+  const box = openModal(`
+    <h2>Someone wants to buy ${o.id}</h2>
+    <p class="m-sub">${fmtShares(o.shares)} shares of “${v?.short ?? o.vaultId.slice(0, 8)}”
+      for ${v ? fmtAsset(Number(o.price), v) : `${Number(o.price) / 1e6} XRP`}</p>
+    <p class="m-note">Buyer <code>${shortAddr(o.buyer)}</code> has already signed.
+      Nothing has moved yet, and nothing will until you confirm.</p>
+    <div class="steps">
+      ${steps.map(([n, label], i) => `
+        <div class="step" data-step="${i}"><span class="s-ico">${n}</span><span>${label}</span></div>`).join('')}
+    </div>
+    <div class="m-actions">
+      <button class="btn btn-ghost" data-k-withdraw>Withdraw instead</button>
+      <button class="btn btn-primary" data-k-go>Confirm and settle</button>
+    </div>
+  `)
+  box.querySelector('[data-k-withdraw]').addEventListener('click', () => { closeModal(); cancelOffer(o) })
+  box.querySelector('[data-k-go]').addEventListener('click', async e => {
+    e.target.disabled = true
+    box.querySelector('[data-k-withdraw]').disabled = true
+    const rows = box.querySelectorAll('.step')
+    rows[0].classList.add('is-active')
+    try {
+      const r = await api(`offers/${o.id}/confirm`, { seller: o.seller })
+      rows.forEach(row => {
+        row.classList.remove('is-active'); row.classList.add('is-done')
+        row.querySelector('.s-ico').textContent = '✓'
+      })
+      closeModal()
+      await reloadOffers()
+      toast(r.settled
+        ? `${o.id} settled — ${r.legs.length} legs confirmed in the ledger`
+        : `Not settled: ${r.message ?? r.stage}`, r.settled)
+    } catch (err) {
+      closeModal()
+      await reloadOffers()
+      toast(err.message)
+    }
   })
 }
 

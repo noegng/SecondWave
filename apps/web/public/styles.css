@@ -1146,3 +1146,83 @@ body.inside #coins-fg { display: block; }
   padding: 2px; margin-top: 2px;
 }
 .wc-alt:hover { color: var(--ink); }
+
+/* ── Le rail durable : la file d'attente du vendeur ─────────────────────────
+   Une offre engagée n'expire pas. Le panneau doit donc dire deux choses à la
+   fois : quelqu'un attend, et rien ne presse. D'où le point qui respire
+   plutôt qu'un compte à rebours. */
+.pending-panel {
+  border: 1px solid var(--accent, #6366f1);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent, #6366f1) 7%, transparent);
+  margin: 0 0 18px;
+  overflow: hidden;
+}
+.pending-head {
+  display: flex; align-items: center; gap: 9px;
+  padding: 11px 14px;
+  font-weight: 600; font-size: 0.93rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent, #6366f1) 22%, transparent);
+}
+.pending-note { font-weight: 400; opacity: 0.62; font-size: 0.83rem; margin-left: auto; }
+.pending-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent, #6366f1);
+  animation: pending-breathe 2.4s ease-in-out infinite;
+}
+@keyframes pending-breathe { 0%, 100% { opacity: 1 } 50% { opacity: 0.35 } }
+@media (prefers-reduced-motion: reduce) { .pending-dot { animation: none } }
+
+.pending-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px;
+}
+.pending-row + .pending-row {
+  border-top: 1px solid color-mix(in srgb, var(--accent, #6366f1) 14%, transparent);
+}
+.pending-title { font-size: 0.92rem; }
+.pending-sub { font-size: 0.81rem; opacity: 0.66; margin-top: 2px; }
+
+.pill {
+  display: inline-block; padding: 2px 9px; border-radius: 999px;
+  font-size: 0.76rem; white-space: nowrap;
+}
+.pill-wait {
+  background: color-mix(in srgb, var(--accent, #6366f1) 16%, transparent);
+  color: var(--accent, #6366f1);
+}
+.m-note { font-size: 0.85rem; opacity: 0.72; line-height: 1.5; margin: 10px 0 0; }
+
+/* Les engagements d'acheteur : même forme que la file du vendeur, ton neutre —
+   ce n'est pas une demande d'action, c'est une attente qu'on peut interrompre. */
+.commit-panel {
+  border-color: color-mix(in srgb, currentColor 22%, transparent);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+.commit-panel .pending-head {
+  border-bottom-color: color-mix(in srgb, currentColor 14%, transparent);
+}
+.commit-panel .pending-dot { background: currentColor; opacity: 0.45; }
+.commit-panel .pending-row + .pending-row {
+  border-top-color: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+/* Consultation seule : le déploiement statique n'a pas de backend de règlement.
+   Le dire une fois, en haut, plutôt que de laisser des boutons échouer. */
+.preview-banner {
+  border: 1px dashed color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 10px;
+  padding: 11px 14px;
+  margin: 0 0 16px;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  opacity: 0.78;
+}
+.preview-banner code {
+  padding: 1px 5px; border-radius: 4px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.pill-preview {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  opacity: 0.6;
+}

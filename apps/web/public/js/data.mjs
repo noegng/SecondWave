@@ -172,6 +172,9 @@ export function discountOf(offer, vault) {
 }
 
 export function timeLeft(offer) {
+  // Une offre durable est portée par des Tickets : elle n'a pas d'échéance.
+  // Afficher un compte à rebours serait un mensonge, et « expired » un bug.
+  if (offer.expiry == null) return { label: 'no expiry', expired: false, durable: true }
   const s = offer.expiry - rippleNow()
   if (s <= 0) return { label: 'expired', expired: true }
   if (s < 90) return { label: `${s} s`, expired: false }
