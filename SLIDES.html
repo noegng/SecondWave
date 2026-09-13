@@ -41,6 +41,10 @@
   .slide > *{position:relative;z-index:1}
 
   h1{font-size:clamp(2.6rem,7vw,5.2rem);font-weight:800;letter-spacing:-.03em;line-height:.98}
+  /* Le cadran du coffre, repris tel quel de index.html — même tracé, même
+     viewBox. `currentColor` le fait suivre la couleur du titre. */
+  .brand{display:flex;align-items:center;gap:clamp(.7rem,1.6vw,1.3rem)}
+  .logo{width:clamp(2.3rem,5.4vw,4rem);height:auto;color:var(--ink);flex:none}
   h2{font-size:clamp(1.7rem,3.9vw,3.1rem);font-weight:700;letter-spacing:-.02em;line-height:1.08;
      margin-bottom:.55em;max-width:20ch}
   .kicker{font-family:var(--mono);font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;
@@ -116,7 +120,12 @@
     <line x1="6" y1="94" x2="14" y2="87"/><line x1="94" y1="94" x2="86" y2="87"/>
   </svg>
   <div class="kicker">XRPL · Track 2 — Lending</div>
-  <h1>SecondWave</h1>
+  <div class="brand"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true">
+    <circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".85"/>
+    <circle cx="20" cy="20" r="12.5" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="2 4.54"/>
+    <circle cx="20" cy="20" r="4.5" fill="currentColor"/>
+    <rect x="19.4" y="3.5" width="1.2" height="6" fill="currentColor"/>
+  </svg><h1>SecondWave</h1></div>
   <p class="lede" style="margin-top:.7em">An exit market for locked vault shares — and a risk rating that says whether the discount is an opportunity or a trap.</p>
   <div class="team">Hugo <span>— vaults, loans, settlement</span><br>Noé <span>— risk analyst, wallet</span></div>
   <div class="meta">XRPL PUBLIC DEVNET · SEPTEMBER 2026</div>
@@ -240,7 +249,12 @@
     <line x1="6" y1="94" x2="14" y2="87"/><line x1="94" y1="94" x2="86" y2="87"/>
   </svg>
   <div class="kicker">Go look</div>
-  <h2>SecondWave</h2>
+  <div class="brand"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true">
+    <circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".85"/>
+    <circle cx="20" cy="20" r="12.5" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="2 4.54"/>
+    <circle cx="20" cy="20" r="4.5" fill="currentColor"/>
+    <rect x="19.4" y="3.5" width="1.2" height="6" fill="currentColor"/>
+  </svg><h2 style="margin-bottom:0">SecondWave</h2></div>
   <div class="links">
     <div class="link"><div class="k">Live</div><div class="v" id="url-live">second-wave-vault.vercel.app</div></div>
     <div class="link"><div class="k">Code</div><div class="v">github.com/noegng/SecondWave</div></div>

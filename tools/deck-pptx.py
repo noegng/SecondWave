@@ -18,6 +18,7 @@ from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.dml import MSO_LINE_DASH_STYLE
 
 # ── palette ───────────────────────────────────────────────────────────────
 BG     = RGBColor(0x0B, 0x0B, 0x0D)
@@ -167,6 +168,39 @@ def card(s, x, y, w, h, number, name, funcs):
         c.font.size = Pt(9.5); c.font.name = MONO; c.font.color.rgb = MUTED
 
 
+def logo(s, x, y, size, color=INK):
+    """Le cadran du coffre — le même tracé que `.ink-logo` du front.
+
+    Le viewBox d'origine fait 40×40 : on convertit chaque coordonnée en
+    pouces plutôt que de retracer le dessin à la main, pour que les deux
+    supports restent identiques si le logo bouge.
+    """
+    u = size / 40.0                                   # un point de viewBox, en pouces
+    pt = lambda v: Pt(v * u * 72)                     # une épaisseur de trait
+
+    def cercle(r, width, dashed=False, filled=False):
+        d = 2 * r * u
+        o = s.shapes.add_shape(MSO_SHAPE.OVAL, Inches(x + (20 - r) * u), Inches(y + (20 - r) * u),
+                               Inches(d), Inches(d))
+        o.shadow.inherit = False
+        if filled:
+            o.fill.solid(); o.fill.fore_color.rgb = color; o.line.fill.background()
+        else:
+            o.fill.background(); o.line.color.rgb = color; o.line.width = pt(width)
+            if dashed:
+                o.line.dash_style = MSO_LINE_DASH_STYLE.ROUND_DOT
+        return o
+
+    cercle(17, 1.6)
+    cercle(12.5, 1.1, dashed=True)
+    cercle(4.5, 0, filled=True)
+    # l'index du cadran, à midi
+    m = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x + 19.4 * u), Inches(y + 3.5 * u),
+                           Inches(1.2 * u), Inches(6 * u))
+    m.fill.solid(); m.fill.fore_color.rgb = color
+    m.line.fill.background(); m.shadow.inherit = False
+
+
 def num(s, n):
     tf = box(s, W - Inches(1.6), H - Inches(0.75), Inches(0.9), Inches(0.35))
     p = tf.paragraphs[0]; p.alignment = PP_ALIGN.RIGHT
@@ -177,7 +211,8 @@ def num(s, n):
 # ══ 1 · titre ═════════════════════════════════════════════════════════════
 s = slide(); vault_motif(s)
 kicker(s, 'XRPL · Track 2 — Lending', 1.5)
-tf = box(s, L, Inches(2.0), Inches(11), Inches(1.5))
+logo(s, 0.95, 2.05, 0.86)
+tf = box(s, Inches(2.05), Inches(2.0), Inches(10), Inches(1.5))
 p = tf.paragraphs[0]
 r = p.add_run(); r.text = 'SecondWave'
 r.font.size = Pt(66); r.font.bold = True; r.font.color.rgb = INK; r.font.name = FONT
@@ -327,7 +362,8 @@ num(s, 7)
 # ══ 8 · les liens ═════════════════════════════════════════════════════════
 s = slide(); vault_motif(s)
 kicker(s, 'Go look', 1.5)
-tf = box(s, L, Inches(2.0), Inches(11), Inches(1.2))
+logo(s, 0.95, 2.08, 0.7)
+tf = box(s, Inches(1.83), Inches(2.0), Inches(10), Inches(1.2))
 r = tf.paragraphs[0].add_run(); r.text = 'SecondWave'
 r.font.size = Pt(52); r.font.bold = True; r.font.color.rgb = INK; r.font.name = FONT
 for i, (k, v) in enumerate([('LIVE', 'second-wave-vault.vercel.app'),
