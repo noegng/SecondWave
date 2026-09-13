@@ -142,23 +142,14 @@ export function initLock(world, onEnter) {
     entering = true
     idPanel.hidden = true
     led.classList.add('ok')
-    const who = loadSession()?.account
-    await show(0, `XLS-70 · credential <span class="ok">accepted ✓</span>`)
-    await show(1, `XLS-80 · domain ${domain} — <span class="ok">member ✓</span>`)
-    if (who) await show(2, `${short(who)} — <span class="ok">session open ✓</span>`)
-    await recenterAndFill()                          // le coffre remplit l'écran, de face
-    lock.classList.add('open')                       // la porte s'ouvre vers nous
-    setTimeout(() => {
-      document.body.classList.add('inside')          // les parois du coffre
-      lock.classList.add('plunge')                   // la caméra plonge dans le fond
-    }, 900)
-    setTimeout(() => {
-      lock.classList.add('done')
-      lock.hidden = true
-      stopTick()
-      window.removeEventListener('keydown', onKey)
-      onEnter?.()
-    }, 1750)
+    // Pas de transition : la porte s'ouvre et on est directement sur le marché.
+    document.body.classList.add('inside')            // parois + jetons du coffre
+    lock.classList.add('open')                       // la porte pivote
+    onEnter?.()                                      // le marché est prêt en dessous
+    stopTick()
+    window.removeEventListener('keydown', onKey)
+    setTimeout(() => lock.classList.add('done'), 350)   // fondu du sas pendant l'ouverture
+    setTimeout(() => { lock.hidden = true }, 950)       // retiré une fois le fondu terminé
   }
 
   function validateCode() {
