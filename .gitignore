@@ -42,3 +42,9 @@ probes*/*.log
 apps/web/out/
 /public/
 .vercel
+
+# supports de scène, pas des livrables — restent en local
+DECK.pdf
+DECK.tex
+DEMO.md
+~$*
