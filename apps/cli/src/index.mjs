@@ -9,15 +9,25 @@
  *   npm run cli buy  <offre> <acheteur>
  *   npm run cli demo           le chemin complet, de l'offre au règlement
  *
+ *   — le rail DURABLE, en quatre gestes (l'offre n'expire pas) —
+ *   npm run cli offer <vault> <parts> <prixXRP>   le vendeur publie
+ *   npm run cli take <offre> <acheteur>           l'acheteur s'engage
+ *   npm run cli pending <vendeur>                 ce qui attend sa réponse
+ *   npm run cli confirm <offre>                   le vendeur confirme, ça règle
+ *   npm run cli annuler <offre>                   le vendeur brûle le ticket
+ *
  * Les acteurs se nomment `<vault>.<rôle><n>` : `sain.d0` est le premier
  * déposant du vault sain, `predateur.b0` son emprunteur unique.
  */
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { connect, Wallet, readVaultGraph, holderMap } from '@secondwave/core'
-import { SettlementEngine } from '@secondwave/settlement'
-import { OrderBook, priceHistory } from '@secondwave/orderbook'
+import { connect, Wallet, readVaultGraph, holderMap, shareBalance } from '@secondwave/core'
+import {
+  SettlementEngine, ensureTickets, TICKETS_SELLER, ticketsBuyer,
+  buildOffer, signAsBuyer, signAsSeller, submitOffer, cancelOffer, offerAlive,
+} from '@secondwave/settlement'
+import { OrderBook, priceHistory, STATUS, EN_COURS } from '@secondwave/orderbook'
 import { analyse, classifyDiscount, toAnalystInput } from '@secondwave/analyst'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
@@ -48,10 +58,29 @@ if (seeds) {
   }
 }
 const wallet = name => acteurs.get(name) ?? fatal(`acteur inconnu : ${name}\nconnus : ${[...acteurs.keys()].join(', ')}`)
+/** Les adresses dont on détient la seed : les seules qui peuvent signer un Batch. */
+const signables = new Set([...acteurs.values()].map(w => w.classicAddress))
+const invites = new Set(world.guests ?? (world.guest ? [world.guest] : []))
 const vaultOf = key => world.vaults.find(v => v.key === key || v.vaultId === key)
   ?? fatal(`vault inconnu : ${key}\nconnus : ${world.vaults.map(v => v.key).join(', ')}`)
 
 function fatal(msg) { console.error(`\n⛔ ${msg}\n`); process.exit(1) }
+
+/**
+ * Le plus gros détenteur DONT on a la seed. Un wallet invité (extension) peut
+ * détenir des parts, mais pas les vendre ici : le Batch exige sa clé privée.
+ */
+function vendeurDe(v) {
+  if (!v.holders?.length) fatal(`${v.key} n'a aucun détenteur`)
+  const candidats = v.holders.filter(h => signables.has(h.account))
+  if (!candidats.length)
+    fatal(`aucun détenteur de ${v.key} n'est dans state.json — personne ne peut signer le Batch.`)
+  const seller = candidats.reduce((a, b) => (BigInt(b.shares) > BigInt(a.shares) ? b : a)).account
+  if (v.holders[0].account !== seller)
+    console.log(`\n  ℹ️  ${v.holders[0].account} détient plus, mais c'est un wallet invité`
+      + ` — pas de seed ici. Vendeur retenu : le plus gros signable.`)
+  return seller
+}
 
 const book = new OrderBook(join(ROOT, 'orderbook.json'))
 const c = await connect(world.network)
@@ -70,6 +99,11 @@ try {
     case 'buy': await cmdBuy(args[0], args[1]); break
     case 'history': await cmdHistory(args[0]); break
     case 'demo': await cmdDemo(); break
+    case 'offer': await cmdOffer(args[0], args[1], args[2]); break
+    case 'take': await cmdTake(args[0], args[1]); break
+    case 'pending': await cmdPending(args[0]); break
+    case 'confirm': await cmdConfirm(args[0]); break
+    case 'annuler': case 'cancel': await cmdAnnuler(args[0]); break
     default:
       console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8')
         .split('\n').slice(2, 15).map(l => l.replace(/^ \* ?/, '')).join('\n'))
@@ -117,6 +151,9 @@ async function cmdVaults() {
       + ` · NAV ${parPart(note.nav)}/part (pair 1.0000)`)
     console.log(`    ${holders.count} détenteurs · concentration ${(holders.concentration * 100).toFixed(0)}%`
       + ` · ${graph.brokers.length} broker(s) · ${graph.brokers.reduce((s, b) => s + b.loans.length, 0)} prêt(s)`)
+    // Les wallets réels présents au capital : c'est ce qui prouve que le monde est ouvert.
+    for (const h of (holders.holders ?? []).filter(h => invites.has(h.account)))
+      console.log(`    👤 wallet invité ${h.account} — ${h.shares} parts`)
     for (const s of note.signaux) console.log(`    ${PUCE[s.niveau]} ${s.titre} — ${s.detail}`)
   }
   console.log()
@@ -152,8 +189,9 @@ async function cmdSell(vaultKey, parts, prixXrp) {
   if (!vaultKey || !parts || !prixXrp) fatal('usage : cli sell <vault> <parts> <prixXRP>')
   const v = vaultOf(vaultKey)
   // Le vendeur par défaut est le plus gros détenteur : celui qui a le plus à perdre
-  // à rester enfermé jusqu'à la Redemption.
-  const seller = v.holders[0]?.account ?? fatal('ce vault n\'a aucun détenteur')
+  // à rester enfermé jusqu'à la Redemption. Mais le Batch exige sa clé privée
+  // (settlement/batch.mjs) : un wallet invité détient des parts sans pouvoir vendre.
+  const seller = vendeurDe(v)
   const o = book.post({ vaultId: v.vaultId, seller, shares: parts, price: String(Math.round(prixXrp * 1e6)) })
   console.log(`\nOffre ${o.id} : ${o.shares} parts de ${v.key} pour ${XRP(o.price)} XRP`)
   console.log(`  vendeur ${seller}\n`)
@@ -200,6 +238,157 @@ async function cmdBuy(orderId, acheteur) {
   console.log(`  offre ${o.id} marquée exécutée.\n`)
 }
 
+// ═════════════════════════════════════════════════════════════
+// LE RAIL DURABLE — l'offre survit à l'attente
+//
+// Le rail classique (sell/buy) construit et signe tout d'un coup : l'enveloppe
+// meurt en ~72 s et dès que l'un des deux comptes transige ailleurs. Ici les
+// jambes sont portées par des Tickets et l'enveloppe n'a pas d'expiration : le
+// vendeur peut confirmer dans une heure, et garde la main jusqu'au bout.
+// ═════════════════════════════════════════════════════════════
+
+/** Le wallet d'une adresse, ou null si sa seed n'est pas dans state.json. */
+const walletDe = addr => [...acteurs.values()].find(w => w.classicAddress === addr) ?? null
+
+/** Les tickets déjà promis à des offres en cours — ils ne sont pas libres. */
+function ticketsEngages(account) {
+  return book.orders
+    .filter(o => EN_COURS.includes(o.status))
+    .flatMap(o => (o.seller === account ? (o.sellerTickets ?? []) : [])
+      .concat(o.buyer === account ? (o.buyerTickets ?? []) : []))
+}
+
+async function cmdOffer(vaultKey, parts, prixXrp) {
+  if (!vaultKey || !parts || !prixXrp) fatal('usage : cli offer <vault> <parts> <prixXRP>')
+  const v = vaultOf(vaultKey)
+  const seller = vendeurDe(v)
+  const sellerWallet = walletDe(seller) ?? fatal('seed du vendeur absente de state.json')
+
+  console.log(`\n─── TICKETS ───`)
+  const t = await ensureTickets(c, sellerWallet, TICKETS_SELLER, { reserved: ticketsEngages(seller) })
+  if (t.ok === false) fatal(`TicketCreate : ${t.result} ${t.message ?? ''}`)
+  const tickets = t.free.slice(0, TICKETS_SELLER)
+  console.log(`  ${t.created ? `${t.created} ticket(s) créé(s)` : 'tickets déjà disponibles'}`
+    + ` — retenus : ${tickets.join(', ')}`)
+
+  const o = book.post({
+    vaultId: v.vaultId, seller, shares: parts,
+    price: String(Math.round(prixXrp * 1e6)),
+    ttl: null,                 // pas d'expiration : c'est tout l'intérêt
+    sellerTickets: tickets,
+  })
+  console.log(`\nOffre ${o.id} publiée : ${o.shares} parts de ${v.key} pour ${XRP(o.price)} XRP`)
+  console.log(`  vendeur ${seller}`)
+  console.log(`  durable — aucune expiration. Rien n'est signé, rien n'est engagé.`)
+  console.log(`  l'acheteur : npm run cli take ${o.id} <acheteur>\n`)
+}
+
+async function cmdTake(orderId, acheteur) {
+  if (!orderId || !acheteur) fatal('usage : cli take <offre> <acheteur>')
+  const o = book.get(orderId) ?? fatal(`offre inconnue : ${orderId}`)
+  if (o.status !== STATUS.OPEN) fatal(`offre ${o.id} est « ${o.status} » — elle n'est plus à prendre`)
+  if (!o.durable) fatal(`offre ${o.id} n'est pas durable — utiliser « cli buy ${o.id} ${acheteur} »`)
+  const v = world.vaults.find(x => x.vaultId === o.vaultId) ?? fatal('vault inconnu')
+  const buyerWallet = wallet(acheteur)
+  const buyer = buyerWallet.classicAddress
+
+  console.log(`\n─── ANALYSE ───`)
+  const { graph, note } = await lire(v, { shares: o.shares })
+  const { nav, pps, decote } = decoteDe(note, o)
+  const n = classement(graph, decote)
+  console.log(`  ${VERDICT[note.verdict]} ${v.key} : ${note.verdict} (${note.score}/100)`)
+  console.log(`  NAV ${nav.toFixed(4)}/part · payé ${pps.toFixed(4)} · décote ${(decote * 100).toFixed(1)} %`)
+  console.log(`  ${PASTILLE[n.kind]} — ${n.headline}`)
+  for (const s of note.signaux) console.log(`  ${PUCE[s.niveau]} ${s.titre} — ${s.detail}`)
+
+  // L'autorisation MPT n'est une jambe que si l'acheteur ne détient pas encore l'objet.
+  const bal = await shareBalance(c, buyer, v.shareMptId)
+  const needsAuthorize = !bal.holds
+  const need = ticketsBuyer(needsAuthorize)
+
+  console.log(`\n─── TICKETS ───`)
+  const t = await ensureTickets(c, buyerWallet, need, { reserved: ticketsEngages(buyer) })
+  if (t.ok === false) fatal(`TicketCreate : ${t.result} ${t.message ?? ''}`)
+  const buyerTickets = t.free.slice(0, need)
+  console.log(`  ${needsAuthorize ? 'autorisation MPT nécessaire' : 'acheteur déjà autorisé'}`
+    + ` — ${need} ticket(s) : ${buyerTickets.join(', ')}`)
+
+  const batch = buildOffer({
+    sellerAddress: o.seller, buyerAddress: buyer, mptId: v.shareMptId,
+    shares: o.shares, price: o.price,
+    sellerTickets: o.sellerTickets, buyerTickets, needsAuthorize,
+  })
+  signAsBuyer(batch, buyerWallet)
+
+  o.buyerTickets = buyerTickets
+  const m = book.match(o.id, { buyer, batch })
+  if (!m.ok) fatal(m.reason)
+  book.save()
+
+  console.log(`\n─── ENGAGEMENT ───`)
+  console.log(`  ✅ ${acheteur} a signé ses BatchSigners.`)
+  console.log(`  L'offre attend la confirmation du vendeur — sans limite de temps.`)
+  console.log(`  le vendeur : npm run cli confirm ${o.id}\n`)
+}
+
+async function cmdPending(vendeur) {
+  const addr = vendeur && acteurs.has(vendeur) ? wallet(vendeur).classicAddress : vendeur
+  const list = addr ? book.pending(addr) : book.orders.filter(o => o.status === STATUS.MATCHED)
+  if (!list.length) return console.log('\nAucune offre en attente de confirmation.\n')
+  console.log(`\nEn attente de votre confirmation :\n`)
+  for (const o of list) {
+    const v = world.vaults.find(x => x.vaultId === o.vaultId)
+    console.log(`  ${o.id}  ${(v?.key ?? '?').padEnd(12)} ${o.shares} parts pour ${XRP(o.price)} XRP`)
+    console.log(`       acheteur ${o.buyer}`)
+    console.log(`       confirmer : npm run cli confirm ${o.id}   ·   annuler : npm run cli annuler ${o.id}`)
+  }
+  console.log()
+}
+
+async function cmdConfirm(orderId) {
+  if (!orderId) fatal('usage : cli confirm <offre>')
+  const o = book.get(orderId) ?? fatal(`offre inconnue : ${orderId}`)
+  if (o.status !== STATUS.MATCHED) fatal(`offre ${o.id} est « ${o.status} » — rien à confirmer`)
+  const sellerWallet = walletDe(o.seller) ?? fatal('seed du vendeur absente de state.json')
+
+  // Le vendeur a pu annuler entre-temps depuis ailleurs : le ledger tranche.
+  if (!await offerAlive(c, o.batch))
+    fatal(`le ticket d'enveloppe a été consommé — cette offre est déjà annulée.`)
+
+  signAsSeller(o.batch, sellerWallet)
+  book.confirm(o.id, o.batch)
+  console.log(`\n  ✅ vendeur confirmé. L'offre est soumettable.`)
+
+  console.log(`\n─── RÈGLEMENT ───`)
+  const r = await submitOffer(c, o.batch)
+  if (!r.ok) {
+    console.log(`\n⛔ ${r.stage} : ${r.message ?? r.engineResult ?? r.batchResult}\n`)
+    return
+  }
+  console.log(`  Batch ${r.batchResult} — ${r.url}`)
+  console.log(`  jambes reconstruites (le BatchExecutions manquant) :`)
+  for (const l of r.evidence.legs) console.log(`    ${l.result}  ${l.type.padEnd(18)} ${l.hash.slice(0, 16)}…`)
+  book.fill(o.id, r.hash)
+  console.log(`\n  offre ${o.id} marquée exécutée.\n`)
+}
+
+async function cmdAnnuler(orderId) {
+  if (!orderId) fatal('usage : cli annuler <offre>')
+  const o = book.get(orderId) ?? fatal(`offre inconnue : ${orderId}`)
+  const sellerWallet = walletDe(o.seller) ?? fatal('seed du vendeur absente de state.json')
+
+  const r = await book.cancelDurable(c, sellerWallet, o.id, { cancelOffer })
+  if (!r.ok) fatal(r.reason)
+  if (!r.onChain) {
+    console.log(`\n  offre ${o.id} retirée du carnet (offre non durable, rien à brûler).\n`)
+    return
+  }
+  console.log(`\n  ✅ offre ${o.id} annulée${r.alreadyCancelled ? ' (elle l\'était déjà)' : ''}.`)
+  console.log(`  ticket ${r.ticket} consommé — le Batch signé est devenu insoumettable (tefNO_TICKET).`)
+  if (r.url) console.log(`  ${r.url}`)
+  console.log()
+}
+
 async function cmdHistory(vaultKey) {
   const v = vaultOf(vaultKey ?? world.vaults[0].key)
   const trades = await priceHistory(c, v.vaultId)
@@ -219,10 +408,12 @@ async function cmdDemo() {
 
   // Deux offres au même prix sur deux vaults opposés : c'est le moment du pitch.
   const sain = vaultOf('sain'), risque = vaultOf('predateur')
-  const partsSain = BigInt(sain.holders[0].shares) / 2n
-  const partsRisque = BigInt(risque.holders[0].shares) / 2n
-  book.post({ vaultId: sain.vaultId, seller: sain.holders[0].account, shares: partsSain, price: String(partsSain * 90n / 100n) })
-  book.post({ vaultId: risque.vaultId, seller: risque.holders[0].account, shares: partsRisque, price: String(partsRisque * 90n / 100n) })
+  const vendeurSain = vendeurDe(sain), vendeurRisque = vendeurDe(risque)
+  const partsDe = (v, addr) => BigInt(v.holders.find(h => h.account === addr).shares) / 2n
+  const partsSain = partsDe(sain, vendeurSain)
+  const partsRisque = partsDe(risque, vendeurRisque)
+  book.post({ vaultId: sain.vaultId, seller: vendeurSain, shares: partsSain, price: String(partsSain * 90n / 100n) })
+  book.post({ vaultId: risque.vaultId, seller: vendeurRisque, shares: partsRisque, price: String(partsRisque * 90n / 100n) })
   console.log('Deux offres à la MÊME décote. L\'analyste sépare la liquidité de la détresse :\n')
   await cmdBook('sain.d1')
 }

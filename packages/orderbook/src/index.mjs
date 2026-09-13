@@ -11,15 +11,34 @@
  *   · il refuse d'afficher comme vivante une offre que le vendeur ne peut plus
  *     honorer — y compris quand ce sont SES AUTRES offres qui l'en empêchent.
  *
- * ⚠️ Ce carnet ne peut pas annuler une offre déjà signée. Un `cancel()` ne
- *    touche que ce fichier ; un `Batch` signé continue de circuler et s'exécute
- *    (mesuré). La seule annulation opposable est un bump de séquence du vendeur
- *    (`AccountSet` à vide, 10 drops) : voir `settlement/RAILS.md`.
+ * ⚠️ `cancel()` ne touche QUE ce fichier. Un `Batch` signé continue de circuler
+ *    et s'exécute (mesuré). L'annulation opposable est ailleurs : sur une offre
+ *    durable, c'est la consommation du ticket d'enveloppe
+ *    (`settlement.cancelOffer`, 1 drop, → `tefNO_TICKET`). `cancelDurable()`
+ *    ci-dessous fait les deux dans le bon ordre.
+ *
+ * OFFRE DURABLE — le cycle en quatre temps (voir settlement/durable.mjs) :
+ *
+ *   post(…, { sellerTickets })   open      personne n'est engagé
+ *   match(id, buyer, batch)      matched   l'acheteur a signé, il attend
+ *   confirm(id, batch)           armed     le vendeur a signé : soumettable
+ *   fill(id, hash)               filled    réglé, preuve on-chain
+ *                                cancelled le vendeur a brûlé le ticket
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { readVault, isDomainMember, shareBalance, rippleNow, payAmount, SHARE_FLAGS, txUrl } from '@secondwave/core'
 
-export const STATUS = { OPEN: 'open', FILLED: 'filled', CANCELLED: 'cancelled', EXPIRED: 'expired' }
+export const STATUS = {
+  OPEN: 'open',
+  MATCHED: 'matched',     // l'acheteur a signé ses BatchSigners, il attend le vendeur
+  ARMED: 'armed',         // le vendeur a confirmé : l'offre est soumettable par quiconque
+  FILLED: 'filled',
+  CANCELLED: 'cancelled',
+  EXPIRED: 'expired',
+}
+
+/** Les états où l'offre est encore en cours de vie — ni réglée ni morte. */
+export const EN_COURS = [STATUS.OPEN, STATUS.MATCHED, STATUS.ARMED]
 
 export class OrderBook {
   constructor(path = 'orderbook.json') {
@@ -29,17 +48,29 @@ export class OrderBook {
 
   save() { writeFileSync(this.path, JSON.stringify(this.orders, null, 2)); return this }
 
-  /** `shares` et `price` sont en unités entières : parts et drops. */
-  post({ vaultId, seller, shares, price, ttl = 3600 }) {
+  /**
+   * `shares` et `price` sont en unités entières : parts et drops.
+   *
+   * `sellerTickets` rend l'offre DURABLE : [ticket d'enveloppe, ticket de la
+   * jambe des parts]. Sans eux, l'offre reste éphémère (rail batch classique).
+   * `ttl: null` = pas d'expiration côté carnet — cohérent avec une enveloppe
+   * sans `LastLedgerSequence`.
+   */
+  post({ vaultId, seller, shares, price, ttl = 3600, sellerTickets = null }) {
+    const now = rippleNow()
     const order = {
       id: `o${String(this.orders.length + 1).padStart(3, '0')}`,
       vaultId, seller,
       shares: String(shares),
       price: String(price),
-      postedAt: rippleNow(),
-      expiry: rippleNow() + ttl,
+      postedAt: now,
+      expiry: ttl == null ? null : now + ttl,
       status: STATUS.OPEN,
       txHash: null,
+      durable: Boolean(sellerTickets),
+      sellerTickets: sellerTickets ? sellerTickets.map(Number) : null,
+      buyer: null,
+      batch: null,
     }
     this.orders.push(order)
     this.save()
@@ -48,10 +79,78 @@ export class OrderBook {
 
   get(id) { return this.orders.find(o => o.id === id) ?? null }
 
+  /** Une offre sans `expiry` ne périme jamais — c'est tout l'intérêt du rail durable. */
+  expired(o, now = rippleNow()) { return o.expiry != null && o.expiry <= now }
+
+  /**
+   * L'acheteur s'engage : il a signé ses `BatchSigners`. L'offre attend
+   * maintenant la confirmation du vendeur, aussi longtemps qu'il faudra.
+   */
+  match(id, { buyer, batch }) {
+    const o = this.get(id)
+    if (!o) return { ok: false, reason: 'offre inconnue', order: null }
+    if (o.status !== STATUS.OPEN)
+      return { ok: false, reason: `offre déjà ${o.status}`, order: o }
+    if (this.expired(o)) return { ok: false, reason: 'offre expirée', order: o }
+    o.status = STATUS.MATCHED
+    o.buyer = buyer
+    o.batch = batch
+    o.matchedAt = rippleNow()
+    this.save()
+    return { ok: true, reason: null, order: o }
+  }
+
+  /** Le vendeur confirme : il a signé l'enveloppe. L'offre devient soumettable. */
+  confirm(id, batch) {
+    const o = this.get(id)
+    if (!o) return { ok: false, reason: 'offre inconnue', order: null }
+    if (o.status !== STATUS.MATCHED)
+      return { ok: false, reason: `offre ${o.status} — il n'y a rien à confirmer`, order: o }
+    o.status = STATUS.ARMED
+    o.batch = batch
+    o.confirmedAt = rippleNow()
+    this.save()
+    return { ok: true, reason: null, order: o }
+  }
+
+  /** Marque seulement le fichier. Sur une offre durable, passer par `cancelDurable`. */
   cancel(id) {
     const o = this.get(id)
-    if (o && o.status === STATUS.OPEN) { o.status = STATUS.CANCELLED; this.save() }
+    if (o && EN_COURS.includes(o.status)) { o.status = STATUS.CANCELLED; o.cancelledAt = rippleNow(); this.save() }
     return o
+  }
+
+  /**
+   * ⭐ ANNULER POUR DE VRAI.
+   *
+   * Le vendeur clique « annuler » : on brûle le ticket d'enveloppe, ce qui rend
+   * le Batch insoumettable (`tefNO_TICKET`), PUIS on marque le carnet. L'ordre
+   * compte — marquer d'abord laisserait une fenêtre où le carnet ment.
+   *
+   * Un ticket déjà consommé n'est pas une erreur : l'offre était déjà morte.
+   */
+  async cancelDurable(client, sellerWallet, id, { cancelOffer }) {
+    const o = this.get(id)
+    if (!o) return { ok: false, reason: 'offre inconnue', order: null }
+    if (!EN_COURS.includes(o.status))
+      return { ok: false, reason: `offre déjà ${o.status}`, order: o }
+    if (sellerWallet.classicAddress !== o.seller)
+      return { ok: false, reason: 'seul le vendeur peut annuler son offre', order: o }
+
+    const ticket = o.batch?.TicketSequence ?? o.sellerTickets?.[0]
+    if (ticket == null) {   // offre éphémère : rien à brûler, le carnet suffit
+      this.cancel(id)
+      return { ok: true, onChain: false, reason: 'offre non durable — annulation locale seulement', order: o }
+    }
+
+    const r = await cancelOffer(client, sellerWallet, { Account: o.seller, TicketSequence: ticket })
+    if (!r.ok) return { ok: false, reason: `annulation refusée : ${r.result}`, order: o, onChain: false }
+
+    this.cancel(id)
+    return {
+      ok: true, onChain: true, alreadyCancelled: Boolean(r.alreadyCancelled),
+      hash: r.hash, url: r.url, ticket, order: this.get(id),
+    }
   }
 
   /**
@@ -65,20 +164,35 @@ export class OrderBook {
   fill(id, txHash) {
     const o = this.get(id)
     if (!o) return { ok: false, reason: 'offre inconnue', order: null }
-    if (o.status !== STATUS.OPEN)
+    // `armed` est l'état normal d'une offre durable au moment du règlement ;
+    // `open` reste accepté pour le rail éphémère, qui signe et soumet d'un trait.
+    if (o.status !== STATUS.OPEN && o.status !== STATUS.ARMED)
       return { ok: false, reason: `offre déjà ${o.status} (hash conservé : ${o.txHash ?? '—'})`, order: o }
-    if (o.expiry <= rippleNow())
+    if (this.expired(o))
       return { ok: false, reason: 'offre expirée', order: o }
     o.status = STATUS.FILLED; o.txHash = txHash; o.filledAt = rippleNow()
     this.save()
     return { ok: true, reason: null, order: o }
   }
 
-  /** Les offres encore vivantes. L'expiration est calculée, jamais stockée à l'avance. */
+  /** Les offres encore achetables. L'expiration est calculée, jamais stockée à l'avance. */
   list(vaultId = null) {
-    const now = rippleNow()
     return this.orders.filter(o =>
-      o.status === STATUS.OPEN && o.expiry > now && (!vaultId || o.vaultId === vaultId))
+      o.status === STATUS.OPEN && !this.expired(o) && (!vaultId || o.vaultId === vaultId))
+  }
+
+  /**
+   * La file d'attente d'un vendeur : ce sur quoi on lui demande de se prononcer.
+   * C'est ce que l'interface affiche derrière la notification « quelqu'un veut
+   * acheter votre offre ».
+   */
+  pending(seller) {
+    return this.orders.filter(o => o.seller === seller && o.status === STATUS.MATCHED)
+  }
+
+  /** Les offres confirmées par le vendeur et pas encore soumises. */
+  armed(seller = null) {
+    return this.orders.filter(o => o.status === STATUS.ARMED && (!seller || o.seller === seller))
   }
 
   /**

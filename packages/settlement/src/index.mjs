@@ -42,6 +42,8 @@ export * from './timing.mjs'
 export { preflight as preflightSwap, checkPaymentMeans, RAIL_FEES } from './preflight.mjs'
 export { snapshot, reconcile, assetBalance } from './reconcile.mjs'
 export { buildSwap, innerResults, submitBatch } from './batch.mjs'
+export * from './tickets.mjs'
+export * from './durable.mjs'
 export { htlc }
 
 export const RAILS = ['batch', 'htlc']
