@@ -53,8 +53,7 @@ try { await reloadOffers({ repaint: false }) } catch { /* serveur muet : on gard
 // À chaque entrée, on relit la session posée dans le coffre.
 initLock(DATA.world, () => {
   state.session = loadSession()
-  render()
-  refreshHoldings()
+  afterSessionChange()
 })
 $('#brand-home').addEventListener('click', reopenLock)
 
@@ -312,7 +311,12 @@ function renderBook() {
   const now = rippleNow()
   const visible = state.offers.filter(o => {
     if (state.filter === 'mine') return state.session && o.seller === state.session.account
-    if (state.filter === 'open') return o.status === 'open' && !isExpired(o)
+    // Une offre `matched` a quitté le marché mais attend encore le vendeur :
+    // la masquer ici, c'est lui laisser uniquement Withdraw sur une autre ligne.
+    if (state.filter === 'open') {
+      if (o.status === 'matched' || o.status === 'armed') return true
+      return o.status === 'open' && !isExpired(o)
+    }
     return true
   })
   // les vivantes d'abord, par fraîcheur ; puis l'historique
@@ -498,7 +502,13 @@ function openDrawer(o, v) {
     </div>
 
     <div class="d-actions">
-      ${o.status === 'open' && !isExpired(o)
+      ${o.status === 'matched'
+        ? mine
+          ? '<button class="btn btn-primary" data-d-confirm>Confirm sale</button><button class="btn btn-mine" data-d-cancel>Withdraw offer</button>'
+          : o.buyer === state.session?.account
+            ? '<button class="btn btn-mine" data-d-withdraw>Withdraw commitment</button>'
+            : '<span class="pill pill-wait">awaiting seller</span>'
+        : o.status === 'open' && !isExpired(o)
         ? mine
           ? '<button class="btn btn-mine" data-d-cancel>Withdraw offer</button>'
           : '<button class="btn btn-primary" data-d-buy>Buy back this position</button>'
@@ -509,6 +519,8 @@ function openDrawer(o, v) {
   `
   $('#drawer-content').querySelector('[data-d-buy]')?.addEventListener('click', () => { closeDrawer(); buyFlow(o, v) })
   $('#drawer-content').querySelector('[data-d-cancel]')?.addEventListener('click', () => { closeDrawer(); cancelOffer(o) })
+  $('#drawer-content').querySelector('[data-d-confirm]')?.addEventListener('click', () => { closeDrawer(); confirmFlow(o, v) })
+  $('#drawer-content').querySelector('[data-d-withdraw]')?.addEventListener('click', () => { closeDrawer(); withdrawFlow(o, v) })
   $('#drawer').classList.add('is-open')
   $('#drawer').setAttribute('aria-hidden', 'false')
   lastFocus = document.activeElement
@@ -575,7 +587,8 @@ function connectFlow() {
       state.session = null
       state.chain = { account: null, holdings: null, status: 'idle', error: null }
       saveSession(null)
-      closeModal(); render()
+      closeModal()
+      afterSessionChange()
       toast('Wallet disconnected')
     })
     return
@@ -600,8 +613,8 @@ function connectFlow() {
       const { account, via } = await connectExternal()
       state.session = { account, via }
       saveSession(state.session)
-      closeModal(); render()
-      refreshHoldings()
+      closeModal()
+      afterSessionChange()
       toast(`Connected via ${via} — ${shortAddr(account)}`)
     } catch (err) {
       toast(err.message)
@@ -621,8 +634,8 @@ function connectFlow() {
     b.addEventListener('click', () => {
       state.session = { account: c.account }
       saveSession(state.session)
-      closeModal(); render()
-      refreshHoldings()
+      closeModal()
+      afterSessionChange()
       toast(`Connected — ${shortAddr(c.account)}`)
     })
     list.appendChild(b)
@@ -886,6 +899,12 @@ async function api(route, body = null) {
 }
 
 const HORS_LIGNE = 'Read-only preview — settlement runs against a local server (npm run web).'
+
+/** Après un changement d'identité : le carnet et les files (pending / confirm). */
+function afterSessionChange() {
+  refreshHoldings()
+  reloadOffers().catch(() => render())
+}
 
 /** Relit le carnet depuis le serveur — la CLI écrit le même fichier. */
 async function reloadOffers({ repaint = true } = {}) {
