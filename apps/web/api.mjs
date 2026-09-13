@@ -24,7 +24,8 @@ import { join } from 'node:path'
 import { connect, Wallet, shareBalance } from '@secondwave/core'
 import {
   ensureTickets, TICKETS_SELLER, ticketsBuyer,
-  buildOffer, signAsBuyer, signAsSeller, submitOffer, cancelOffer, offerAlive,
+  buildOffer, signAsBuyer, signAsSeller, submitOffer,
+  cancelOffer, withdrawCommitment, offerAlive,
 } from '@secondwave/settlement'
 import { OrderBook, STATUS, EN_COURS } from '@secondwave/orderbook'
 
@@ -103,12 +104,19 @@ export function createApi(repo) {
   })
 
   return {
-    /** Tout le carnet, plus la file d'attente du compte qui regarde. */
+    /**
+     * Tout le carnet, plus les deux files d'attente du compte qui regarde :
+     * ce qu'on lui demande de confirmer (vendeur) et ce sur quoi il s'est
+     * engagé (acheteur).
+     */
     async list({ account = null } = {}) {
       const b = book()
       return {
         offers: b.orders.map(publique),
         pending: account ? b.pending(account).map(publique) : [],
+        commitments: account
+          ? b.orders.filter(o => o.buyer === account && o.status === STATUS.MATCHED).map(publique)
+          : [],
         canSign: existsSync(join(repo, 'state.json')),
       }
     },
@@ -120,9 +128,12 @@ export function createApi(repo) {
       const w = await walletDe(seller)
       const c = await xrpl()
 
+      // ⭐ Survente : on compte les parts DÉJÀ promises par ce vendeur sur ce
+      //    vault, offres engagées comprises. Sans ça, 25 M de parts autorisent
+      //    deux annonces de 25 M, et la seconde meurt au règlement.
       const bal = await shareBalance(c, seller, v.shareMptId)
-      if (bal.amount < BigInt(shares))
-        throw new ApiError('insufficient', `le vendeur ne détient que ${bal.amount} parts`)
+      const garde = b.canOffer({ seller, vaultId: v.vaultId, shares, balance: bal.amount })
+      if (!garde.ok) throw new ApiError('insufficient', garde.reason)
 
       const t = await ensureTickets(c, w, TICKETS_SELLER, { reserved: engages(b, seller) })
       if (t.ok === false) throw new ApiError('ticket', `TicketCreate : ${t.result} ${t.message ?? ''}`)
@@ -131,7 +142,28 @@ export function createApi(repo) {
         vaultId: v.vaultId, seller, shares: String(shares), price: String(price),
         ttl: null, sellerTickets: t.free.slice(0, TICKETS_SELLER),
       })
-      return { offer: publique(o), ticketsCreated: t.created }
+      return {
+        offer: publique(o), ticketsCreated: t.created,
+        free: (garde.free - BigInt(shares)).toString(), balance: garde.balance.toString(),
+      }
+    },
+
+    /**
+     * Ce qu'un vendeur peut encore proposer sur un vault — l'interface s'en sert
+     * pour plafonner le curseur AVANT que le bouton ne soit cliquable.
+     */
+    async capacity({ seller, vaultId }) {
+      const b = book()
+      const v = await vaultDe(vaultId)
+      const c = await xrpl()
+      const bal = await shareBalance(c, seller, v.shareMptId)
+      const engaged = b.engagedShares(seller, v.vaultId)
+      return {
+        balance: bal.amount.toString(),
+        engaged: engaged.toString(),
+        free: (bal.amount - engaged > 0n ? bal.amount - engaged : 0n).toString(),
+        offers: b.live(v.vaultId).filter(o => o.seller === seller).map(publique),
+      }
     },
 
     /** ② L'acheteur s'engage : ses BatchSigners, puis l'offre attend le vendeur. */
@@ -198,6 +230,25 @@ export function createApi(repo) {
         hash: r.hash, url: r.url, batchResult: r.batchResult,
         legs: r.evidence.legs.map(l => ({ type: l.type, result: l.result, hash: l.hash, url: l.url })),
       }
+    },
+
+    /**
+     * ③ bis — l'acheteur se retire. Symétrique du bouton du vendeur : il brûle
+     * l'un de SES tickets, l'offre repasse `open` et le vendeur récupère la
+     * main sans avoir rien dépensé.
+     */
+    async unmatch({ id, buyer }) {
+      const b = book()
+      const o = b.get(id)
+      if (!o) throw new ApiError('no-offer', `offre inconnue : ${id}`)
+      if (!o.buyer) throw new ApiError('state', `offre « ${o.status} » — aucun acheteur engagé à retirer`)
+      if (buyer && buyer !== o.buyer) throw new ApiError('forbidden', 'seul l\'acheteur engagé peut se retirer')
+
+      const w = await walletDe(o.buyer)
+      const c = await xrpl()
+      const r = await b.withdrawCommitment(c, w, id, { withdrawCommitment })
+      if (!r.ok) throw new ApiError('withdraw', r.reason)
+      return { offer: publique(b.get(id)), hash: r.hash ?? null, url: r.url ?? null }
     },
 
     /** ④ Annuler — un clic côté vendeur, un ticket brûlé côté ledger. */

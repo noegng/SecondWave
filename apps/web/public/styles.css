@@ -1120,3 +1120,17 @@ body.inside #coins-fg { display: block; }
   color: var(--accent, #6366f1);
 }
 .m-note { font-size: 0.85rem; opacity: 0.72; line-height: 1.5; margin: 10px 0 0; }
+
+/* Les engagements d'acheteur : même forme que la file du vendeur, ton neutre —
+   ce n'est pas une demande d'action, c'est une attente qu'on peut interrompre. */
+.commit-panel {
+  border-color: color-mix(in srgb, currentColor 22%, transparent);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+.commit-panel .pending-head {
+  border-bottom-color: color-mix(in srgb, currentColor 14%, transparent);
+}
+.commit-panel .pending-dot { background: currentColor; opacity: 0.45; }
+.commit-panel .pending-row + .pending-row {
+  border-top-color: color-mix(in srgb, currentColor 10%, transparent);
+}

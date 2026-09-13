@@ -121,6 +121,32 @@ export function cancelOffer(client, sellerWallet, batch) {
   return consumeTicket(client, sellerWallet, envelopeTicket(batch))
 }
 
+/** Les tickets d'un compte engagés dans ce Batch, dans l'ordre des jambes. */
+export function ticketsOf(batch, account) {
+  return (batch?.RawTransactions ?? [])
+    .map(r => r.RawTransaction)
+    .filter(t => t.Account === account)
+    .map(t => Number(t.TicketSequence))
+    .filter(Boolean)
+}
+
+/**
+ * ⭐ L'ACHETEUR SE DÉSENGAGE.
+ *
+ * Une fois ses `BatchSigners` posés, l'acheteur n'avait aucune sortie : le
+ * vendeur pouvait confirmer quand bon lui semblait, et rien n'expirait. Le
+ * symétrique du bouton du vendeur consiste à brûler l'un de SES tickets —
+ * une jambe manquante suffit à rendre le Batch insoumettable.
+ *
+ * On brûle celui de la jambe du prix (la dernière), pas celui de
+ * `MPTokenAuthorize` : l'autorisation, elle, reste utile à l'acheteur.
+ */
+export function withdrawCommitment(client, buyerWallet, batch) {
+  const mine = ticketsOf(batch, buyerWallet.classicAddress)
+  if (!mine.length) throw new RangeError('cet acheteur ne porte aucune jambe de ce Batch')
+  return consumeTicket(client, buyerWallet, mine[mine.length - 1])
+}
+
 /**
  * Soumet et rassemble la preuve. Même discipline que le rail batch : le
  * `tesSUCCESS` d'un `Batch` ne prouve rien, on va rechercher les jambes.

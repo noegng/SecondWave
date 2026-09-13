@@ -15,6 +15,7 @@
  *   npm run cli pending <vendeur>                 ce qui attend sa réponse
  *   npm run cli confirm <offre>                   le vendeur confirme, ça règle
  *   npm run cli annuler <offre>                   le vendeur brûle le ticket
+ *   npm run cli retirer <offre>                   l'acheteur retire son engagement
  *
  * Les acteurs se nomment `<vault>.<rôle><n>` : `sain.d0` est le premier
  * déposant du vault sain, `predateur.b0` son emprunteur unique.
@@ -25,13 +26,16 @@ import { dirname, join } from 'node:path'
 import { connect, Wallet, readVaultGraph, holderMap, shareBalance } from '@secondwave/core'
 import {
   SettlementEngine, ensureTickets, TICKETS_SELLER, ticketsBuyer,
-  buildOffer, signAsBuyer, signAsSeller, submitOffer, cancelOffer, offerAlive,
+  buildOffer, signAsBuyer, signAsSeller, submitOffer,
+  cancelOffer, withdrawCommitment, offerAlive,
 } from '@secondwave/settlement'
 import { OrderBook, priceHistory, STATUS, EN_COURS } from '@secondwave/orderbook'
 import { analyse, classifyDiscount, toAnalystInput } from '@secondwave/analyst'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
 const XRP = d => (Number(d) / 1e6).toFixed(2)
+/** Ripple-time courant — pour mesurer depuis quand un acheteur attend. */
+const rippleNowLocal = () => Math.floor(Date.now() / 1000) - 946684800
 /** Un montant IOU est déjà dans son unité : le diviser par 1e6 afficherait 0.00. */
 const montant = (graph, raw) => graph.metrics.isIou
   ? `${Number(raw)} ${graph.vault.Asset.currency}`
@@ -104,6 +108,7 @@ try {
     case 'pending': await cmdPending(args[0]); break
     case 'confirm': await cmdConfirm(args[0]); break
     case 'annuler': case 'cancel': await cmdAnnuler(args[0]); break
+    case 'retirer': await cmdRetirer(args[0]); break
     default:
       console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8')
         .split('\n').slice(2, 15).map(l => l.replace(/^ \* ?/, '')).join('\n'))
@@ -264,6 +269,13 @@ async function cmdOffer(vaultKey, parts, prixXrp) {
   const seller = vendeurDe(v)
   const sellerWallet = walletDe(seller) ?? fatal('seed du vendeur absente de state.json')
 
+  // ⭐ Survente : ce que le vendeur a déjà promis compte, offres engagées
+  //    comprises. Mieux vaut refuser ici qu'échouer au règlement.
+  const bal = await shareBalance(c, seller, v.shareMptId)
+  const garde = book.canOffer({ seller, vaultId: v.vaultId, shares: parts, balance: bal.amount })
+  if (!garde.ok) fatal(garde.reason)
+  console.log(`\n  solde ${garde.balance} parts · déjà promises ${garde.engaged} · libres ${garde.free}`)
+
   console.log(`\n─── TICKETS ───`)
   const t = await ensureTickets(c, sellerWallet, TICKETS_SELLER, { reserved: ticketsEngages(seller) })
   if (t.ok === false) fatal(`TicketCreate : ${t.result} ${t.message ?? ''}`)
@@ -385,6 +397,22 @@ async function cmdAnnuler(orderId) {
   }
   console.log(`\n  ✅ offre ${o.id} annulée${r.alreadyCancelled ? ' (elle l\'était déjà)' : ''}.`)
   console.log(`  ticket ${r.ticket} consommé — le Batch signé est devenu insoumettable (tefNO_TICKET).`)
+  if (r.url) console.log(`  ${r.url}`)
+  console.log()
+}
+
+async function cmdRetirer(orderId) {
+  if (!orderId) fatal('usage : cli retirer <offre>')
+  const o = book.get(orderId) ?? fatal(`offre inconnue : ${orderId}`)
+  if (!o.buyer) fatal(`offre ${o.id} n'a pas d'acheteur engagé`)
+  const buyerWallet = walletDe(o.buyer) ?? fatal('seed de l\'acheteur absente de state.json')
+
+  const attente = rippleNowLocal() - (o.matchedAt ?? 0)
+  const r = await book.withdrawCommitment(c, buyerWallet, o.id, { withdrawCommitment })
+  if (!r.ok) fatal(r.reason)
+  console.log(`\n  ✅ engagement retiré après ${Math.round(attente / 60)} min d'attente.`)
+  console.log(`  ticket de l'acheteur consommé — le Batch est insoumettable.`)
+  console.log(`  l'offre ${o.id} est de nouveau ouverte : le vendeur n'a rien dépensé.`)
   if (r.url) console.log(`  ${r.url}`)
   console.log()
 }

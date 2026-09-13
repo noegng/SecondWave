@@ -104,6 +104,12 @@ createServer(async (req, res) => {
         if (req.method === 'GET' && rest === '')
           return json(res, 200, await api.list({ account: url.searchParams.get('account') }))
 
+        // Combien ce vendeur peut-il encore proposer sur ce vault ?
+        if (req.method === 'GET' && rest === 'capacity')
+          return json(res, 200, await api.capacity({
+            seller: url.searchParams.get('seller'), vaultId: url.searchParams.get('vaultId'),
+          }))
+
         if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' })
         const body = await readBody(req)
 
@@ -112,6 +118,7 @@ createServer(async (req, res) => {
         if (action === 'take') return json(res, 200, await api.take({ id, ...body }))
         if (action === 'confirm') return json(res, 200, await api.confirm({ id, ...body }))
         if (action === 'cancel') return json(res, 200, await api.cancel({ id, ...body }))
+        if (action === 'unmatch') return json(res, 200, await api.unmatch({ id, ...body }))
         return json(res, 404, { error: 'unknown action' })
       } catch (e) {
         // Un refus métier (offre déjà prise, pas de seed…) n'est pas une panne :

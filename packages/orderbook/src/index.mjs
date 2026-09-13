@@ -129,6 +129,32 @@ export class OrderBook {
    *
    * Un ticket déjà consommé n'est pas une erreur : l'offre était déjà morte.
    */
+  /**
+   * L'acheteur retire son engagement. Il brûle l'un de ses propres tickets ;
+   * l'offre repasse `open`, le vendeur n'a rien perdu — et les tickets du
+   * vendeur sont intacts, donc son offre reste publiable telle quelle.
+   */
+  async withdrawCommitment(client, buyerWallet, id, { withdrawCommitment }) {
+    const o = this.get(id)
+    if (!o) return { ok: false, reason: 'offre inconnue', order: null }
+    if (o.status !== STATUS.MATCHED)
+      return { ok: false, reason: `offre « ${o.status} » — aucun engagement à retirer`, order: o }
+    if (buyerWallet.classicAddress !== o.buyer)
+      return { ok: false, reason: 'seul l\'acheteur engagé peut se retirer', order: o }
+
+    const r = await withdrawCommitment(client, buyerWallet, o.batch)
+    if (!r.ok) return { ok: false, reason: `retrait refusé : ${r.result}`, order: o }
+
+    o.status = STATUS.OPEN
+    o.buyer = null
+    o.batch = null
+    o.buyerTickets = null
+    o.matchedAt = null
+    o.withdrawnAt = rippleNow()
+    this.save()
+    return { ok: true, hash: r.hash, url: r.url, order: o }
+  }
+
   async cancelDurable(client, sellerWallet, id, { cancelOffer }) {
     const o = this.get(id)
     if (!o) return { ok: false, reason: 'offre inconnue', order: null }
@@ -182,6 +208,51 @@ export class OrderBook {
   }
 
   /**
+   * Toutes les offres qui immobilisent encore des parts : `open`, mais aussi
+   * `matched` et `armed`. Une offre engagée n'est plus affichée au carnet et
+   * pourtant elle promet des parts — l'oublier, c'est autoriser la survente.
+   */
+  live(vaultId = null) {
+    return this.orders.filter(o =>
+      EN_COURS.includes(o.status) && !this.expired(o) && (!vaultId || o.vaultId === vaultId))
+  }
+
+  /** Les parts déjà promises par ce vendeur sur ce vault, offre `except` exclue. */
+  engagedShares(seller, vaultId, { except = null } = {}) {
+    return this.live(vaultId)
+      .filter(o => o.seller === seller && o.id !== except)
+      .reduce((s, o) => s + BigInt(o.shares), 0n)
+  }
+
+  /**
+   * ⭐ LE GARDE-FOU DE LA SURVENTE.
+   *
+   * Un vendeur qui détient 25 M de parts pouvait publier deux offres de 25 M :
+   * le carnet les affichait toutes les deux comme vivantes, et la seconde à
+   * trouver preneur échouait au règlement. Un échec au règlement est le pire
+   * endroit pour découvrir ça — l'acheteur a déjà signé, le vendeur a déjà
+   * confirmé, et le Batch part pour rien.
+   *
+   * `balance` est un BigInt de parts, lu sur la chaîne par l'appelant.
+   */
+  canOffer({ seller, vaultId, shares, balance, except = null }) {
+    const want = BigInt(shares)
+    if (want <= 0n) return { ok: false, reason: 'une offre porte sur au moins une part' }
+    const engaged = this.engagedShares(seller, vaultId, { except })
+    const libre = BigInt(balance) - engaged
+    if (want > libre) {
+      return {
+        ok: false, engaged, free: libre, balance: BigInt(balance),
+        reason: engaged === 0n
+          ? `le vendeur ne détient que ${balance} parts`
+          : `${engaged} parts déjà promises sur ${this.live(vaultId).filter(o => o.seller === seller && o.id !== except).length} `
+            + `offre(s) en cours — il en reste ${libre} de libres sur ${balance}`,
+      }
+    }
+    return { ok: true, engaged, free: libre, balance: BigInt(balance), reason: null }
+  }
+
+  /**
    * La file d'attente d'un vendeur : ce sur quoi on lui demande de se prononcer.
    * C'est ce que l'interface affiche derrière la notification « quelqu'un veut
    * acheter votre offre ».
@@ -204,13 +275,16 @@ export class OrderBook {
    */
   async viewFor(client, buyer, vaultId = null) {
     const open = this.list(vaultId)
+    // ⚠️ La couverture se calcule sur TOUTES les offres vivantes, pas seulement
+    //    celles encore affichées : une offre `matched` promet déjà ses parts.
+    const vivantes = this.live(vaultId)
     const vaults = new Map()
-    for (const o of open)
+    for (const o of vivantes)
       if (!vaults.has(o.vaultId)) vaults.set(o.vaultId, await readVault(client, o.vaultId))
 
     // Soldes réels des vendeurs, une lecture par couple (vendeur, vault).
     const balances = new Map()
-    for (const o of open) {
+    for (const o of vivantes) {
       const key = `${o.seller}|${o.vaultId}`
       if (!balances.has(key))
         balances.set(key, (await shareBalance(client, o.seller, vaults.get(o.vaultId).ShareMPTID)).amount)
@@ -219,7 +293,7 @@ export class OrderBook {
     // ⭐ Couverture CUMULÉE (bug F48) : le solde d'un vendeur est alloué à ses
     //    offres dans l'ordre de publication. Au-delà, l'offre est découverte —
     //    l'ancienne version les affichait toutes comme honorables.
-    const coverage = allocateCoverage(open, balances)
+    const coverage = allocateCoverage(vivantes, balances)
 
     const out = []
     for (const o of open) {

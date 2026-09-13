@@ -33,6 +33,7 @@ const state = {
   ticket: { vault: '', shares: '', price: '' },   // le formulaire de vente, persistant
   chain: { account: null, holdings: null, status: 'idle', error: null },
   pending: [],       // les offres qui attendent MA confirmation de vendeur
+  commitments: [],   // les offres où JE suis l'acheteur engagé
   canSign: false,    // state.json présent côté serveur
 }
 
@@ -82,7 +83,10 @@ function offerRow(o) {
   const v = vaultById(state.vaults, o.vaultId)
   if (!v) return null
   const mine = state.session && o.seller === state.session.account
-  const live = o.status === 'open' && o.expiry > rippleNow()
+  // ⚠️ `expiry` vaut null sur une offre durable : `null > now` est faux, et
+  //    l'offre s'affichait comme périmée. Et une offre engagée reste vivante —
+  //    elle n'est simplement plus à prendre.
+  const live = ['open', 'matched', 'armed'].includes(o.status) && !isExpired(o)
   const d = discountOf(o, v)
   const deep = d >= 0.15
   const reading = readingOf(v, d)
@@ -128,6 +132,8 @@ function offerRow(o) {
   if (cancelBtn) cancelBtn.addEventListener('click', () => cancelOffer(o))
   const confirmBtn = tr.querySelector('[data-confirm]')
   if (confirmBtn) confirmBtn.addEventListener('click', () => confirmFlow(o, v))
+  const withdrawBtn = tr.querySelector('[data-withdraw]')
+  if (withdrawBtn) withdrawBtn.addEventListener('click', () => withdrawFlow(o, v))
   return tr
 }
 
@@ -142,16 +148,22 @@ function buyCell(o, v, mine, live) {
     : ''
   // Une offre engagée n'est plus à prendre : l'acheteur a signé, seul le
   // vendeur peut encore trancher. On montre l'état plutôt qu'un bouton mort.
-  if (o.status === 'matched')
-    return mine
-      ? `<button class="btn btn-primary btn-sm" data-confirm>Confirm</button>`
-      : `<span class="pill pill-wait">awaiting seller</span>`
+  if (o.status === 'matched') {
+    if (mine) return `<button class="btn btn-primary btn-sm" data-confirm>Confirm</button>`
+    // Mon propre engagement : je vois depuis quand j'attends, et je peux sortir.
+    if (o.buyer === state.session?.account)
+      return `<button class="btn btn-mine btn-sm" data-withdraw>Withdraw · ${depuis(o.matchedAt)}</button>`
+    return `<span class="pill pill-wait">awaiting seller</span>`
+  }
   if (o.status === 'armed') return `<span class="pill pill-wait">settling…</span>`
   if (mine) return `<button class="btn btn-mine btn-sm" data-cancel>Withdraw</button>`
   return `<button class="btn btn-ghost btn-sm" data-buy>Buy back</button>`
 }
 
 /** liquidité ou détresse — la question centrale de l'analyste. */
+/** Une offre sans `expiry` ne périme jamais — c'est le principe du rail durable. */
+function isExpired(o) { return o.expiry != null && o.expiry <= rippleNow() }
+
 function readingOf(v, discount) {
   if (v.rating.tone === 'bad' || (v.rating.tone === 'warn' && discount >= 0.12))
     return { cls: 'distress', label: 'distress discount' }
@@ -178,7 +190,7 @@ function fmtUi(ui, v) {
 function bookMedianNative(vaultId, shares) {
   const now = rippleNow()
   const open = state.offers.filter(o =>
-    o.vaultId === vaultId && o.status === 'open' && o.expiry > now && Number(o.shares) > 0)
+    o.vaultId === vaultId && o.status === 'open' && !isExpired(o) && Number(o.shares) > 0)
   if (!open.length) return null
   const pers = open.map(o => Number(o.price) / Number(o.shares)).sort((a, b) => a - b)
   return pers[Math.floor(pers.length / 2)] * shares
@@ -230,13 +242,13 @@ function renderBook() {
   const now = rippleNow()
   const visible = state.offers.filter(o => {
     if (state.filter === 'mine') return state.session && o.seller === state.session.account
-    if (state.filter === 'open') return o.status === 'open' && o.expiry > now
+    if (state.filter === 'open') return o.status === 'open' && !isExpired(o)
     return true
   })
   // les vivantes d'abord, par fraîcheur ; puis l'historique
   visible.sort((a, b) => {
-    const la = a.status === 'open' && a.expiry > now ? 0 : 1
-    const lb = b.status === 'open' && b.expiry > now ? 0 : 1
+    const la = a.status === 'open' && !isExpired(a) ? 0 : 1
+    const lb = b.status === 'open' && !isExpired(b) ? 0 : 1
     return la - lb || b.postedAt - a.postedAt
   })
   for (const o of visible) {
@@ -301,9 +313,9 @@ function renderShares() {
   }
   const holdings = sessionHoldings()
   renderPending(box)
+  renderCommitments(box)
   const myOffers = state.offers.filter(o =>
-    o.seller === state.session.account && o.status === 'open'
-    && (o.expiry == null || o.expiry > rippleNow()))
+    o.seller === state.session.account && o.status === 'open' && !isExpired(o))
   const locked = new Map()
   for (const o of myOffers) {
     const v = vaultById(state.vaults, o.vaultId)
@@ -408,7 +420,7 @@ function openDrawer(o, v) {
     </div>
 
     <div class="d-actions">
-      ${o.status === 'open' && o.expiry > rippleNow()
+      ${o.status === 'open' && !isExpired(o)
         ? mine
           ? '<button class="btn btn-mine" data-d-cancel>Withdraw offer</button>'
           : '<button class="btn btn-primary" data-d-buy>Buy back this position</button>'
@@ -610,11 +622,19 @@ function renderTicket() {
     const h = current()
     const v = h.vault
     const suggest = suggestedDiscount(v)
-    $('#s-shares-hint').textContent = `available: ${fmtShares(h.shares)} shares`
+    // ⭐ Le plafond n'est pas le solde : c'est le solde MOINS ce qui est déjà
+    //    promis sur d'autres offres en cours. Sans ça, 25 M de parts
+    //    autorisent deux annonces de 25 M, et la seconde meurt au règlement.
+    const promis = engagedOn(v.vaultId)
+    const libre = Math.max(0, h.shares - promis)
+    $sh.max = String(libre)
+    $('#s-shares-hint').textContent = promis > 0
+      ? `${fmtShares(libre)} free — ${fmtShares(promis)} already promised on other offers`
+      : `available: ${fmtShares(h.shares)} shares`
     $('#s-price-unit').textContent = v.isXrp ? 'XRP' : v.asset
     const shares = Number($sh.value)
     const nav = shares * v.navPerShare
-    const okShares = shares > 0 && shares <= h.shares
+    const okShares = shares > 0 && shares <= libre
     if (okShares && $pr.value === '') $pr.value = fmtUi(toUi(nav * (1 - suggest), v), v)
     const priceUi = Number($pr.value)
     const price = toNative(priceUi, v)
@@ -752,6 +772,7 @@ async function reloadOffers({ repaint = true } = {}) {
   const r = await api(`offers${account ? `?account=${account}` : ''}`)
   state.offers = r.offers
   state.pending = r.pending
+  state.commitments = r.commitments ?? []
   state.canSign = r.canSign
   if (repaint) render()
   return r
@@ -860,6 +881,100 @@ function buyFlow(o, v) {
         + ' — waiting for the seller. No deadline.', true)
     } catch (err) {
       closeModal()
+      toast(err.message)
+    }
+  })
+}
+
+/**
+ * Les parts que je promets déjà sur ce vault — offres engagées comprises.
+ *
+ * Une offre `matched` a disparu du carnet mais promet toujours ses parts : ne
+ * compter que les `open` rouvrirait exactement la survente qu'on ferme ici.
+ */
+function engagedOn(vaultId) {
+  const me = state.session?.account
+  if (!me) return 0
+  return state.offers
+    .filter(o => o.seller === me && o.vaultId === vaultId
+      && ['open', 'matched', 'armed'].includes(o.status))
+    .reduce((s, o) => s + Number(o.shares), 0)
+}
+
+/** Depuis combien de temps, en clair. Aucune échéance : on mesure l'attente. */
+function depuis(rippleTs) {
+  if (!rippleTs) return 'just now'
+  const s = Math.max(0, rippleNow() - rippleTs)
+  if (s < 90) return `${s}s`
+  if (s < 5400) return `${Math.round(s / 60)} min`
+  if (s < 172800) return `${Math.round(s / 3600)} h`
+  return `${Math.round(s / 86400)} d`
+}
+
+/**
+ * Mes engagements d'acheteur.
+ *
+ * Il n'y a PAS de compte à rebours à afficher : l'offre est portée par des
+ * Tickets, pas par des séquences, et l'enveloppe n'a pas de
+ * `LastLedgerSequence`. Le vendeur peut confirmer dans dix minutes ou jamais.
+ * Ce qu'on montre à l'acheteur, c'est donc son temps d'attente — et la seule
+ * chose qui le protège vraiment : le bouton pour se retirer.
+ */
+function renderCommitments(box) {
+  const list = state.commitments ?? []
+  if (!list.length) return
+  const panel = el('div', 'pending-panel commit-panel')
+  panel.innerHTML = `<div class="pending-head">
+      <span class="pending-dot"></span>
+      ${list.length} commitment${list.length > 1 ? 's' : ''} awaiting the seller
+      <span class="pending-note">no deadline — you can withdraw at any time</span>
+    </div>`
+  for (const o of list) {
+    const v = vaultById(state.vaults, o.vaultId)
+    const row = el('div', 'pending-row')
+    row.innerHTML = `
+      <div class="grow">
+        <div class="pending-title">${o.id} · ${fmtShares(o.shares)} shares of
+          “${v?.short ?? o.vaultId.slice(0, 8)}”</div>
+        <div class="pending-sub">signed ${depuis(o.matchedAt)} ago ·
+          seller <span class="mono">${shortAddr(o.seller)}</span> has not confirmed</div>
+      </div>
+      <button class="btn btn-mine btn-sm" data-w-go>Withdraw commitment</button>
+    `
+    row.querySelector('[data-w-go]').addEventListener('click', () => withdrawFlow(o, v))
+    panel.appendChild(row)
+  }
+  box.appendChild(panel)
+}
+
+/**
+ * L'acheteur se retire. Il brûle l'un de SES tickets : le Batch devient
+ * insoumettable, l'offre repasse au carnet, le vendeur n'a rien dépensé.
+ */
+function withdrawFlow(o, v) {
+  const box = openModal(`
+    <h2>Withdraw from ${o.id}</h2>
+    <p class="m-sub">${fmtShares(o.shares)} shares · waiting ${depuis(o.matchedAt)}</p>
+    <p class="m-note">This burns your own Ticket. The signed Batch becomes
+      unsubmittable — the seller can no longer settle it, even if they confirm.
+      The offer goes back on the book. Cost: 1 drop.</p>
+    <div class="m-actions">
+      <button class="btn btn-ghost" data-w-cancel>Keep waiting</button>
+      <button class="btn btn-primary" data-w-ok>Withdraw</button>
+    </div>
+  `)
+  box.querySelector('[data-w-cancel]').addEventListener('click', closeModal)
+  box.querySelector('[data-w-ok]').addEventListener('click', async e => {
+    e.target.disabled = true
+    e.target.textContent = 'Burning ticket…'
+    try {
+      await api(`offers/${o.id}/unmatch`, { buyer: o.buyer })
+      closeModal()
+      await reloadOffers()
+      toast(`Withdrawn from ${o.id} — the offer is back on the book`)
+    } catch (err) {
+      e.target.disabled = false
+      e.target.textContent = 'Withdraw'
       toast(err.message)
     }
   })
