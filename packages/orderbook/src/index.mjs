@@ -305,7 +305,13 @@ export class OrderBook {
   canCommit({ buyer, price, balance, ownerCount = 0, fees = 0n, except = null, solvency }) {
     const engage = this.committedPrice(buyer, { except })
     const total = engage + BigInt(price)
-    const s = solvency({ balance, ownerCount, priceDrops: total, fees })
+    // Chaque achat en attente créera son propre MPToken de parts, et chacun
+    // ajoute à la réserve. Ne compter que celui-ci sous-estimerait de 0,2 XRP
+    // par achat déjà engagé — assez pour qu'un dernier achat « juste » passe
+    // ici et meure au règlement.
+    const enAttente = this.orders.filter(o => o.buyer === buyer && o.id !== except
+      && (o.status === STATUS.MATCHED || o.status === STATUS.ARMED)).length
+    const s = solvency({ balance, ownerCount, priceDrops: total, fees, newObjects: enAttente + 1 })
     if (s.ok) return { ok: true, engaged: engage, total, reason: null }
     return {
       ok: false, engaged: engage, total, missing: s.missing,
