@@ -33,6 +33,44 @@ import { TICKETS_SELLER, ticketsBuyer, ticketAlive, consumeTicket } from './tick
 
 const TF_INNER_BATCH = 0x40000000
 
+/** Intervalle de fermeture observé sur le Devnet — pour convertir en durée lisible. */
+export const SECONDS_PER_LEDGER = 2.88
+
+/**
+ * ⭐ L'ÉCHÉANCE DE L'ENGAGEMENT — et pourquoi elle n'est pas sur l'annonce.
+ *
+ * Une enveloppe sans `LastLedgerSequence` ne meurt jamais. C'est ce qui rend le
+ * carnet possible : le vendeur peut confirmer quand il veut. Mais tant que
+ * l'acheteur a signé et que le vendeur ne l'a pas fait, le vendeur détient une
+ * OPTION GRATUITE — il exécute si ça l'arrange, dans une heure ou dans un an,
+ * y compris quand le vault s'est effondré entre-temps. L'acheteur, lui, paie le
+ * prix d'hier pour un actif d'aujourd'hui.
+ *
+ * L'asymétrie est là et nulle part ailleurs :
+ *   · l'ANNONCE n'est pas signée, elle n'engage personne → aucune échéance ;
+ *   · l'ENGAGEMENT est signé, il donne l'option → il en faut une.
+ *
+ * Aucun plafond protocolaire (mesuré jusqu'à ~8 ans, sonde 15) : la durée est
+ * un choix de produit. 24 h laisse au vendeur le temps de se réveiller sans
+ * laisser l'acheteur exposé à un marché qui a bougé.
+ */
+export const COMMITMENT_LEDGERS = 30_000                       // ≈ 24 h
+export const commitmentSeconds = (ledgers = COMMITMENT_LEDGERS) =>
+  Math.round(ledgers * SECONDS_PER_LEDGER)
+
+/** L'échéance absolue à inscrire dans l'enveloppe, lue depuis le ledger courant. */
+export async function commitmentDeadline(client, ledgers = COMMITMENT_LEDGERS) {
+  const r = await client.request({ command: 'ledger', ledger_index: 'validated' })
+  const current = r.result.ledger_index
+  return { current, lastLedgerSequence: current + ledgers, ledgers }
+}
+
+/** L'engagement est-il périmé ? Le ledger tranche, pas l'horloge. */
+export function commitmentExpired(batch, currentLedger) {
+  const lls = batch?.LastLedgerSequence
+  return lls != null && currentLedger != null && currentLedger > lls
+}
+
 /** Une jambe interne portée par un ticket : `Sequence` à 0, `TicketSequence` renseigné. */
 const leg = (tx, ticket) => ({
   RawTransaction: {
@@ -48,9 +86,9 @@ const leg = (tx, ticket) => ({
  * `buyerTickets`  : [autorisation?, jambe du prix] — l'autorisation d'abord,
  *                   sinon la jambe des parts échoue et tout est annulé.
  *
- * `lls` reste à `null` par défaut : aucune expiration. Le Devnet accepte une
- * enveloppe sans `LastLedgerSequence` (mesuré, sonde 13/T6). Passer un entier
- * pour se donner une échéance malgré tout.
+ * `lls` : l'échéance de l'engagement. `null` = aucune (le Devnet l'accepte,
+ * sonde 13/T6) — à ne retenir que si l'acheteur accepte de laisser au vendeur
+ * une option gratuite sans fin. Voir `COMMITMENT_LEDGERS`.
  */
 export function buildOffer({
   sellerAddress, buyerAddress, mptId, shares, price,

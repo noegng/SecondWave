@@ -36,6 +36,7 @@ const state = {
   commitments: [],   // les offres où JE suis l'acheteur engagé
   canSign: false,    // state.json présent côté serveur
   apiLive: false,    // un backend répond (npm run web). Faux sur un déploiement statique.
+  ledgerIndex: null, // l'horloge qui fait foi pour l'échéance des engagements
 }
 
 const DATA = await loadWorld()
@@ -156,7 +157,7 @@ function buyCell(o, v, mine, live) {
     if (mine) return `<button class="btn btn-primary btn-sm" data-confirm>Confirm</button>`
     // Mon propre engagement : je vois depuis quand j'attends, et je peux sortir.
     if (o.buyer === state.session?.account)
-      return `<button class="btn btn-mine btn-sm" data-withdraw>Withdraw · ${depuis(o.matchedAt)}</button>`
+      return `<button class="btn btn-mine btn-sm" data-withdraw>Withdraw · ${resteAvant(o)?.label ?? '—'} left</button>`
     return `<span class="pill pill-wait">awaiting seller</span>`
   }
   if (o.status === 'armed') return `<span class="pill pill-wait">settling…</span>`
@@ -814,6 +815,8 @@ async function reloadOffers({ repaint = true } = {}) {
   state.pending = r.pending
   state.commitments = r.commitments ?? []
   state.canSign = r.canSign
+  state.ledgerIndex = r.ledgerIndex ?? null
+  state.secondsPerLedger = r.secondsPerLedger ?? 3
   state.apiLive = true
   if (repaint) render()
   return r
@@ -942,7 +945,26 @@ function engagedOn(vaultId) {
     .reduce((s, o) => s + Number(o.shares), 0)
 }
 
-/** Depuis combien de temps, en clair. Aucune échéance : on mesure l'attente. */
+/**
+ * Le temps qu'il reste au vendeur pour confirmer.
+ *
+ * L'échéance est un numéro de ledger, pas une heure : c'est le ledger qui fait
+ * foi (`tefMAX_LEDGER`). On convertit pour l'affichage avec l'intervalle de
+ * fermeture observé — d'où l'approximation assumée.
+ */
+function resteAvant(o) {
+  if (o.expiresAtLedger == null || state.ledgerIndex == null) return null
+  const ledgers = o.expiresAtLedger - state.ledgerIndex
+  if (ledgers <= 0) return { expired: true, label: 'lapsed', ledgers: 0 }
+  const s = Math.round(ledgers * (state.secondsPerLedger ?? 3))
+  const label = s < 90 ? `${s}s`
+    : s < 5400 ? `${Math.round(s / 60)} min`
+    : s < 172800 ? `${Math.round(s / 3600)} h`
+    : `${Math.round(s / 86400)} d`
+  return { expired: false, label, ledgers, seconds: s }
+}
+
+/** Depuis combien de temps, en clair. */
 function depuis(rippleTs) {
   if (!rippleTs) return 'just now'
   const s = Math.max(0, rippleNow() - rippleTs)
@@ -968,7 +990,7 @@ function renderCommitments(box) {
   panel.innerHTML = `<div class="pending-head">
       <span class="pending-dot"></span>
       ${list.length} commitment${list.length > 1 ? 's' : ''} awaiting the seller
-      <span class="pending-note">no deadline — you can withdraw at any time</span>
+      <span class="pending-note">the seller has a deadline — withdraw any time before it</span>
     </div>`
   for (const o of list) {
     const v = vaultById(state.vaults, o.vaultId)
@@ -978,7 +1000,8 @@ function renderCommitments(box) {
         <div class="pending-title">${o.id} · ${fmtShares(o.shares)} shares of
           “${v?.short ?? o.vaultId.slice(0, 8)}”</div>
         <div class="pending-sub">signed ${depuis(o.matchedAt)} ago ·
-          seller <span class="mono">${shortAddr(o.seller)}</span> has not confirmed</div>
+          seller <span class="mono">${shortAddr(o.seller)}</span> has
+          ${resteAvant(o)?.label ?? 'no deadline'} left to confirm</div>
       </div>
       <button class="btn btn-mine btn-sm" data-w-go>Withdraw commitment</button>
     `
@@ -995,8 +1018,9 @@ function renderCommitments(box) {
 function withdrawFlow(o, v) {
   const box = openModal(`
     <h2>Withdraw from ${o.id}</h2>
-    <p class="m-sub">${fmtShares(o.shares)} shares · waiting ${depuis(o.matchedAt)}</p>
-    <p class="m-note">This burns your own Ticket. The signed Batch becomes
+    <p class="m-sub">${fmtShares(o.shares)} shares · ${resteAvant(o)?.label ?? '—'} left for the seller</p>
+    <p class="m-note">You do not have to wait it out: this burns your own Ticket immediately.
+      The signed Batch becomes
       unsubmittable — the seller can no longer settle it, even if they confirm.
       The offer goes back on the book. Cost: 1 drop.</p>
     <div class="m-actions">
@@ -1036,7 +1060,7 @@ function renderPending(box) {
   panel.innerHTML = `<div class="pending-head">
       <span class="pending-dot"></span>
       ${list.length} offer${list.length > 1 ? 's' : ''} waiting for your confirmation
-      <span class="pending-note">no deadline — the offer is carried by Tickets</span>
+      <span class="pending-note">confirm before the buyer's commitment lapses</span>
     </div>`
   for (const o of list) {
     const v = vaultById(state.vaults, o.vaultId)
@@ -1045,7 +1069,8 @@ function renderPending(box) {
       <div class="grow">
         <div class="pending-title">${o.id} · ${fmtShares(o.shares)} shares of
           “${v?.short ?? o.vaultId.slice(0, 8)}”</div>
-        <div class="pending-sub">buyer <span class="mono">${shortAddr(o.buyer)}</span> · signed, waiting</div>
+        <div class="pending-sub">buyer <span class="mono">${shortAddr(o.buyer)}</span> ·
+          ${resteAvant(o)?.label ?? '—'} left before this commitment lapses</div>
       </div>
       <button class="btn btn-ghost btn-sm" data-p-withdraw>Withdraw</button>
       <button class="btn btn-primary btn-sm" data-p-confirm>Confirm</button>

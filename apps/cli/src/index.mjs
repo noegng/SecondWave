@@ -28,6 +28,7 @@ import {
   SettlementEngine, ensureTickets, TICKETS_SELLER, ticketsBuyer,
   buildOffer, signAsBuyer, signAsSeller, submitOffer,
   cancelOffer, withdrawCommitment, offerAlive,
+  commitmentDeadline, commitmentSeconds, COMMITMENT_LEDGERS, SECONDS_PER_LEDGER,
 } from '@secondwave/settlement'
 import { OrderBook, priceHistory, STATUS, EN_COURS } from '@secondwave/orderbook'
 import { analyse, classifyDiscount, toAnalystInput } from '@secondwave/analyst'
@@ -325,26 +326,40 @@ async function cmdTake(orderId, acheteur) {
   console.log(`  ${needsAuthorize ? 'autorisation MPT nécessaire' : 'acheteur déjà autorisé'}`
     + ` — ${need} ticket(s) : ${buyerTickets.join(', ')}`)
 
+  // ⭐ L'échéance de l'ENGAGEMENT (pas de l'annonce) : sans elle, le vendeur
+  //    détient une option gratuite sans fin — il exécuterait le jour qui
+  //    l'arrange, au prix d'aujourd'hui.
+  const d = await commitmentDeadline(c, COMMITMENT_LEDGERS)
   const batch = buildOffer({
     sellerAddress: o.seller, buyerAddress: buyer, mptId: v.shareMptId,
     shares: o.shares, price: o.price,
     sellerTickets: o.sellerTickets, buyerTickets, needsAuthorize,
+    lls: d.lastLedgerSequence,
   })
   signAsBuyer(batch, buyerWallet)
 
   o.buyerTickets = buyerTickets
-  const m = book.match(o.id, { buyer, batch })
+  const m = book.match(o.id, {
+    buyer, batch,
+    expiresAtLedger: d.lastLedgerSequence,
+    expiresAt: rippleNowLocal() + commitmentSeconds(),
+  })
   if (!m.ok) fatal(m.reason)
   book.save()
 
+  const heures = (commitmentSeconds() / 3600).toFixed(0)
   console.log(`\n─── ENGAGEMENT ───`)
   console.log(`  ✅ ${acheteur} a signé ses BatchSigners.`)
-  console.log(`  L'offre attend la confirmation du vendeur — sans limite de temps.`)
+  console.log(`  Le vendeur a ~${heures} h pour confirmer (ledger ${d.lastLedgerSequence}).`)
+  console.log(`  Passé ce point : tefMAX_LEDGER, l'offre repart au carnet, tu ne dois rien.`)
+  console.log(`  Tu peux aussi sortir avant : npm run cli retirer ${o.id}`)
   console.log(`  le vendeur : npm run cli confirm ${o.id}\n`)
 }
 
 async function cmdPending(vendeur) {
   const addr = vendeur && acteurs.has(vendeur) ? wallet(vendeur).classicAddress : vendeur
+  const liCourant = (await c.request({ command: 'ledger', ledger_index: 'validated' })).result.ledger_index
+  book.sweepCommitments(liCourant)
   const list = addr ? book.pending(addr) : book.orders.filter(o => o.status === STATUS.MATCHED)
   if (!list.length) return console.log('\nAucune offre en attente de confirmation.\n')
   console.log(`\nEn attente de votre confirmation :\n`)
@@ -352,6 +367,9 @@ async function cmdPending(vendeur) {
     const v = world.vaults.find(x => x.vaultId === o.vaultId)
     console.log(`  ${o.id}  ${(v?.key ?? '?').padEnd(12)} ${o.shares} parts pour ${XRP(o.price)} XRP`)
     console.log(`       acheteur ${o.buyer}`)
+    if (o.expiresAtLedger)
+      console.log(`       échéance ledger ${o.expiresAtLedger}`
+        + ` (~${Math.round((o.expiresAtLedger - liCourant) * SECONDS_PER_LEDGER / 3600)} h restantes)`)
     console.log(`       confirmer : npm run cli confirm ${o.id}   ·   annuler : npm run cli annuler ${o.id}`)
   }
   console.log()
@@ -362,6 +380,13 @@ async function cmdConfirm(orderId) {
   const o = book.get(orderId) ?? fatal(`offre inconnue : ${orderId}`)
   if (o.status !== STATUS.MATCHED) fatal(`offre ${o.id} est « ${o.status} » — rien à confirmer`)
   const sellerWallet = walletDe(o.seller) ?? fatal('seed du vendeur absente de state.json')
+
+  const li = (await c.request({ command: 'ledger', ledger_index: 'validated' })).result.ledger_index
+  if (book.commitmentExpired(o, li)) {
+    book.sweepCommitments(li)
+    fatal(`l'engagement de l'acheteur a expiré (ledger ${o.expiresAtLedger} < ${li}).\n`
+      + `L'offre ${o.id} est repartie au carnet — l'acheteur ne doit rien.`)
+  }
 
   // Le vendeur a pu annuler entre-temps depuis ailleurs : le ledger tranche.
   if (!await offerAlive(c, o.batch))

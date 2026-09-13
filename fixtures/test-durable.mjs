@@ -23,6 +23,7 @@ import { issueCredential, createDomain, createVault, deposit, waitForInvestment 
 import {
   ensureTickets, TICKETS_SELLER, ticketsBuyer,
   buildOffer, signAsBuyer, signAsSeller, submitOffer, cancelOffer, offerAlive,
+  commitmentDeadline, COMMITMENT_LEDGERS, commitmentSeconds,
 } from '@secondwave/settlement'
 import { OrderBook, STATUS } from '@secondwave/orderbook'
 import { join } from 'node:path'
@@ -86,15 +87,21 @@ const tB = await ensureTickets(c, buyer, ticketsBuyer(needsAuthorize))
 const buyerTickets = tB.free.slice(0, ticketsBuyer(needsAuthorize))
 check('tickets de l\'acheteur', buyerTickets.length === ticketsBuyer(needsAuthorize), buyerTickets.join(', '))
 
+const deadline = await commitmentDeadline(c, COMMITMENT_LEDGERS)
 let batch = buildOffer({
   sellerAddress: seller.classicAddress, buyerAddress: buyer.classicAddress,
   mptId: v.mptId, shares: PARTS, price: PRIX,
   sellerTickets, buyerTickets, needsAuthorize,
+  lls: deadline.lastLedgerSequence,
 })
-check('enveloppe sans LastLedgerSequence', batch.LastLedgerSequence === undefined)
+// L'échéance porte sur l'ENGAGEMENT, pas sur l'annonce : sans elle le vendeur
+// détiendrait une option gratuite sans fin.
+check(`échéance posée (~${Math.round(commitmentSeconds() / 3600)} h)`,
+  batch.LastLedgerSequence === deadline.lastLedgerSequence,
+  `ledger ${deadline.current} → ${batch.LastLedgerSequence}`)
 signAsBuyer(batch, buyer)
 check('BatchSigners posés', Array.isArray(batch.BatchSigners) && batch.BatchSigners.length === 1)
-book.match(o1.id, { buyer: buyer.classicAddress, batch })
+book.match(o1.id, { buyer: buyer.classicAddress, batch, expiresAtLedger: deadline.lastLedgerSequence })
 
 // Le carnet passe par un fichier JSON : on vérifie que l'aller-retour ne casse rien.
 batch = JSON.parse(JSON.stringify(batch))

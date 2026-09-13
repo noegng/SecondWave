@@ -83,10 +83,41 @@ export class OrderBook {
   expired(o, now = rippleNow()) { return o.expiry != null && o.expiry <= now }
 
   /**
+   * ⭐ L'engagement de l'acheteur, lui, a une échéance — et c'est le ledger qui
+   * la fait respecter, pas ce fichier. Passé `expiresAtLedger`, le Batch est
+   * mort (`tefMAX_LEDGER`) : l'offre doit redevenir achetable, sinon le carnet
+   * immobilise des parts au nom d'un engagement qui n'existe plus.
+   *
+   * Les tickets de l'acheteur, eux, n'ont pas été consommés : il les récupère.
+   */
+  commitmentExpired(o, currentLedger) {
+    return o.status === STATUS.MATCHED && o.expiresAtLedger != null
+      && currentLedger != null && currentLedger > o.expiresAtLedger
+  }
+
+  /** Rend au marché les offres dont l'engagement a expiré. Renvoie les ids touchés. */
+  sweepCommitments(currentLedger) {
+    const rendues = []
+    for (const o of this.orders) {
+      if (!this.commitmentExpired(o, currentLedger)) continue
+      o.status = STATUS.OPEN
+      o.buyer = null
+      o.batch = null
+      o.buyerTickets = null
+      o.matchedAt = null
+      o.expiresAtLedger = null
+      o.lapsedAt = rippleNow()
+      rendues.push(o.id)
+    }
+    if (rendues.length) this.save()
+    return rendues
+  }
+
+  /**
    * L'acheteur s'engage : il a signé ses `BatchSigners`. L'offre attend
    * maintenant la confirmation du vendeur, aussi longtemps qu'il faudra.
    */
-  match(id, { buyer, batch }) {
+  match(id, { buyer, batch, expiresAtLedger = null, expiresAt = null }) {
     const o = this.get(id)
     if (!o) return { ok: false, reason: 'offre inconnue', order: null }
     if (o.status !== STATUS.OPEN)
@@ -96,6 +127,10 @@ export class OrderBook {
     o.buyer = buyer
     o.batch = batch
     o.matchedAt = rippleNow()
+    // L'échéance du ledger fait foi ; `expiresAt` n'est qu'une estimation en
+    // secondes pour l'affichage, l'intervalle de fermeture n'étant pas garanti.
+    o.expiresAtLedger = expiresAtLedger ?? batch?.LastLedgerSequence ?? null
+    o.expiresAt = expiresAt
     this.save()
     return { ok: true, reason: null, order: o }
   }

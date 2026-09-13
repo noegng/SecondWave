@@ -26,6 +26,7 @@ import {
   ensureTickets, TICKETS_SELLER, ticketsBuyer,
   buildOffer, signAsBuyer, signAsSeller, submitOffer,
   cancelOffer, withdrawCommitment, offerAlive,
+  commitmentDeadline, commitmentSeconds, COMMITMENT_LEDGERS, SECONDS_PER_LEDGER,
 } from '@secondwave/settlement'
 import { OrderBook, STATUS, EN_COURS } from '@secondwave/orderbook'
 
@@ -40,6 +41,13 @@ export function createApi(repo) {
   let acteurs = null   // adresse → Wallet, chargé paresseusement depuis state.json
 
   const book = () => new OrderBook(bookPath)
+
+  /** L'index du dernier ledger validé — l'horloge qui fait foi pour les échéances. */
+  async function ledgerIndex() {
+    const c = await xrpl()
+    const r = await c.request({ command: 'ledger', ledger_index: 'validated' })
+    return r.result.ledger_index
+  }
 
   async function xrpl() {
     if (!client?.isConnected()) {
@@ -97,6 +105,7 @@ export function createApi(repo) {
     id: o.id, vaultId: o.vaultId, seller: o.seller, buyer: o.buyer ?? null,
     shares: o.shares, price: o.price, status: o.status,
     postedAt: o.postedAt, expiry: o.expiry, matchedAt: o.matchedAt ?? null,
+    expiresAtLedger: o.expiresAtLedger ?? null, expiresAt: o.expiresAt ?? null,
     confirmedAt: o.confirmedAt ?? null, filledAt: o.filledAt ?? null,
     txHash: o.txHash ?? null, durable: Boolean(o.durable),
     signedByBuyer: Boolean(o.batch?.BatchSigners?.length),
@@ -111,7 +120,13 @@ export function createApi(repo) {
      */
     async list({ account = null } = {}) {
       const b = book()
+      // ⚠️ Balayer AVANT de répondre : un engagement périmé n'immobilise plus
+      //    rien côté ledger, le carnet ne doit pas prétendre le contraire.
+      let current = null
+      try { current = await ledgerIndex(); b.sweepCommitments(current) } catch { /* hors ligne */ }
       return {
+        ledgerIndex: current,
+        secondsPerLedger: SECONDS_PER_LEDGER,
         offers: b.orders.map(publique),
         pending: account ? b.pending(account).map(publique) : [],
         commitments: account
@@ -187,18 +202,27 @@ export function createApi(repo) {
       if (t.ok === false) throw new ApiError('ticket', `TicketCreate : ${t.result} ${t.message ?? ''}`)
       const buyerTickets = t.free.slice(0, need)
 
+      // ⭐ L'échéance de l'engagement. Sans elle, le vendeur détient une option
+      //    gratuite sans fin : il exécuterait le jour qui l'arrange, au prix
+      //    d'aujourd'hui, sur un vault qui aura peut-être changé de nature.
+      const d = await commitmentDeadline(c, COMMITMENT_LEDGERS)
       const batch = buildOffer({
         sellerAddress: o.seller, buyerAddress: buyer, mptId: v.shareMptId,
         shares: o.shares, price: o.price,
         sellerTickets: o.sellerTickets, buyerTickets, needsAuthorize,
+        lls: d.lastLedgerSequence,
       })
       signAsBuyer(batch, w)
 
       o.buyerTickets = buyerTickets
-      const m = b.match(id, { buyer, batch })
+      const m = b.match(id, {
+        buyer, batch,
+        expiresAtLedger: d.lastLedgerSequence,
+        expiresAt: Math.floor(Date.now() / 1000) - 946684800 + commitmentSeconds(),
+      })
       if (!m.ok) throw new ApiError('state', m.reason)
       b.save()
-      return { offer: publique(b.get(id)), needsAuthorize }
+      return { offer: publique(b.get(id)), needsAuthorize, expiresInSeconds: commitmentSeconds() }
     },
 
     /** ③ Le vendeur confirme, et ça règle. C'est le seul geste qui dépense. */
@@ -211,6 +235,15 @@ export function createApi(repo) {
 
       const w = await walletDe(o.seller)
       const c = await xrpl()
+
+      // L'engagement a-t-il tenu ? Passé l'échéance, le Batch est mort de
+      // lui-même (tefMAX_LEDGER) et l'offre est retournée au marché.
+      const current = await ledgerIndex()
+      if (b.commitmentExpired(o, current)) {
+        b.sweepCommitments(current)
+        throw new ApiError('lapsed',
+          'l\'engagement de l\'acheteur a expiré — l\'offre est repartie au carnet')
+      }
 
       // Le vendeur a pu annuler depuis la CLI entre-temps : le ledger tranche.
       if (!await offerAlive(c, o.batch)) {

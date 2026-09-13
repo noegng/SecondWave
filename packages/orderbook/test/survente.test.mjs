@@ -133,3 +133,51 @@ test("un tiers ne peut pas retirer l'engagement d'un autre", async () => {
   assert.equal(book.get(o.id).status, STATUS.MATCHED)
   clean()
 })
+
+/* ── L'échéance de l'engagement ─────────────────────────────────────────────
+   Sans elle, le vendeur détient une option gratuite sans fin : il exécute le
+   jour qui l'arrange, au prix d'hier. C'est le seul endroit du rail où une
+   échéance protège quelqu'un — l'annonce, elle, n'engage personne. */
+
+test("un engagement périmé rend l'offre au carnet", () => {
+  const { book, clean } = neuf()
+  const o = book.post({ vaultId: V, seller: S, shares: '100', price: '1', ttl: null, sellerTickets: [1, 2] })
+  book.match(o.id, { buyer: B, batch: { LastLedgerSequence: 5_000_000 }, expiresAtLedger: 5_000_000 })
+  assert.equal(book.get(o.id).status, STATUS.MATCHED)
+
+  assert.equal(book.commitmentExpired(book.get(o.id), 4_999_999), false, 'pas encore')
+  assert.deepEqual(book.sweepCommitments(4_999_999), [], 'rien à balayer avant l\'échéance')
+
+  assert.equal(book.commitmentExpired(book.get(o.id), 5_000_001), true)
+  assert.deepEqual(book.sweepCommitments(5_000_001), [o.id])
+  const apres = book.get(o.id)
+  assert.equal(apres.status, STATUS.OPEN)
+  assert.equal(apres.buyer, null)
+  assert.equal(apres.batch, null)
+  assert.equal(apres.expiresAtLedger, null)
+  assert.equal(book.list(V).length, 1, 'de nouveau achetable')
+  clean()
+})
+
+test('les parts sont rendues quand un engagement expire', () => {
+  const { book, clean } = neuf()
+  const o = book.post({ vaultId: V, seller: S, shares: String(M25), price: '1', ttl: null, sellerTickets: [1, 2] })
+  book.match(o.id, { buyer: B, batch: {}, expiresAtLedger: 100 })
+  assert.equal(book.canOffer({ seller: S, vaultId: V, shares: 1n, balance: M25 }).ok, false)
+  book.sweepCommitments(101)
+  // L'offre est rendue au carnet : elle promet toujours ses parts, donc
+  // toujours pas de place pour une seconde — mais elle est de nouveau à prendre.
+  assert.equal(book.get(o.id).status, STATUS.OPEN)
+  assert.equal(book.engagedShares(S, V), M25)
+  clean()
+})
+
+test("une offre sans échéance ne périme jamais, même très loin dans le futur", () => {
+  const { book, clean } = neuf()
+  const o = book.post({ vaultId: V, seller: S, shares: '100', price: '1', ttl: null, sellerTickets: [1, 2] })
+  book.match(o.id, { buyer: B, batch: {} })       // aucun LastLedgerSequence
+  assert.equal(book.get(o.id).expiresAtLedger, null)
+  assert.equal(book.commitmentExpired(book.get(o.id), 999_999_999), false)
+  assert.deepEqual(book.sweepCommitments(999_999_999), [])
+  clean()
+})
