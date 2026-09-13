@@ -122,9 +122,19 @@ Le réseau répond **succès**. Le problème est que ce mot ne distingue pas deu
 | Appliquée | `true` | `true` |
 | Code | `tesSUCCESS` | `tesSUCCESS` |
 | Texte | « The transaction was applied » | « The transaction was applied » |
-| Métadonnée | **un seul nœud : les frais** | **un seul nœud : les frais** |
+| Métadonnée | **aucun mouvement de valeur** | **aucun mouvement de valeur** |
 
 Huit envois rejoués : cinq ont livré, trois n’ont rien fait. **Une seule combinaison observée.** Rien dans la réponse ne permet de les séparer.
+
+Nous avons figé la démonstration sur la chaîne, pour qu’elle soit vérifiable sans nous. Deux transactions du Devnet, ouvrables dans l’explorateur : l’une a livré 3 XRP, l’autre n’a rien fait. Voici tout ce que le ledger enregistre de chacune :
+
+| | A — a livré | E — n’a rien fait |
+|---|---|---|
+| Code | `tesSUCCESS` | `tesSUCCESS` |
+| Nœuds de métadonnée | Deleted Ticket, Modified AccountRoot, Modified DirectoryNode | Deleted Ticket, Modified AccountRoot, Modified DirectoryNode |
+| Variation de solde | −150 drops (les frais) | −150 drops (les frais) |
+
+**Rigoureusement identiques.** Aucune des deux ne laisse dans sa propre métadonnée la moindre trace de ce qui a bougé — ou pas. Les liens sont dans [probes-marche/PREUVES.md](./probes-marche/PREUVES.md).
 
 Nous en avons trouvé une illustration de plus en testant tout autre chose : un échange de 900 XRP tenté par un acheteur qui ne les a pas. Aucun centime ne bouge — le tout-ou-rien tient parfaitement — et le serveur répond quand même **succès**. Un marché naïf enregistrerait la vente.
 
@@ -340,6 +350,7 @@ Ce texte fusionne le travail des deux côtés de l’équipe. Les versions longu
 | [probes-marche/15-fenetre-maximale.mjs](./probes-marche/15-fenetre-maximale.mjs) | Hugo | Jusqu’où repousser l’échéance : 10 min → 8 ans (point 9) |
 | [probes-marche/16-deux-achats-en-parallele.mjs](./probes-marche/16-deux-achats-en-parallele.mjs) | Hugo | Deux achats simultanés, et un envoi sans provision qui répond « succès » (point 5) |
 | [probes-marche/12-vaults-publics.mjs](./probes-marche/12-vaults-publics.mjs) | Hugo | Balayage du réseau : 489 coffres, 22 en défaut non déclaré (point 10) |
+| **[probes-marche/PREUVES.md](./probes-marche/PREUVES.md)** | Hugo | **8 transactions Devnet ouvrables dans l’explorateur — points 5 et 9** |
 
 Environ 450 cas rejoués sur le Devnet, une trentaine de coffres créés et 489 balayés. Chaque point technique a un script dans le dépôt.
 
