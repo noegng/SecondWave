@@ -420,6 +420,11 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .vault-cell .v-name { font-weight: 600; font-size: 12.5px; white-space: nowrap; }
 .vault-cell .v-asset { color: var(--dim); font-size: 11px; font-family: var(--mono); white-space: nowrap; }
 
+.grade-wrap {
+  display: inline-flex; align-items: center; gap: 5px; flex: none;
+}
+.grade-wrap .ico { color: var(--steel); }
+
 .grade {
   display: inline-flex; align-items: center; justify-content: center;
   width: 24px; height: 24px; border-radius: 4px;

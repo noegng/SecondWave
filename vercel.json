@@ -1,9 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "echo 'no build dependencies'",
+  "installCommand": "echo skip",
   "buildCommand": "node apps/web/build.mjs",
-  "outputDirectory": "apps/web/out",
+  "outputDirectory": "apps/web/public",
   "headers": [
     {
       "source": "/data/(.*)",

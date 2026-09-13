@@ -13,7 +13,7 @@ import {
   fmtAsset, fmtDuration, fmtNav, fmtNum, fmtShares, shortAddr,
 } from './data.mjs'
 import { loadSession, saveSession, candidates, holdingsOf, fetchLiveHoldings, connectExternal } from './wallet.mjs'
-import { icon } from './icons.mjs'
+import { icon, scenarioIcon } from './icons.mjs'
 
 startCoinsForeground(document.getElementById('coins-fg'))
 
@@ -213,11 +213,14 @@ function readingOf(v, discount) {
 }
 
 function readingPill(reading) {
-  return `<span class="reading ${reading.cls}">${reading.label}</span>`
+  return `<span class="reading ${reading.cls}">${icon(reading.icon || 'par', { size: 13 })}<span>${reading.label}</span></span>`
 }
 
 function gradeMark(v) {
-  return `<span class="grade tone-${v.rating.tone}">${v.rating.grade}</span>`
+  return `<span class="grade-wrap">
+    <span class="grade tone-${v.rating.tone}">${v.rating.grade}</span>
+    ${scenarioIcon(v.key, { label: v.short, size: 15 })}
+  </span>`
 }
 
 /** Décote que la note du vault peut justifier — l'ancre « Suggested ». */
