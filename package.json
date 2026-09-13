@@ -24,6 +24,7 @@
     "test:durable": "node fixtures/test-durable.mjs",
     "rendu:pdf": "node tools/rendu-pdf.mjs",
     "deck": "python3 tools/deck-pptx.py",
+    "onchain": "node tools/verify-onchain.mjs",
     "preuves": "node probes-marche/17-preuves.mjs",
     "test:analyst": "npm run test --workspace=@secondwave/analyst",
     "test:rails": "node packages/settlement/scripts/batch.mjs && node packages/settlement/scripts/htlc.mjs && node packages/settlement/scripts/iou.mjs",

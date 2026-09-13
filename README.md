@@ -12,7 +12,7 @@
 | **Explorer** | https://devnet.xrpl.org |
 | **Live** | https://second-wave-vault.vercel.app |
 
-**Deliverables:** [`FEEDBACK_RENDU.pdf`](FEEDBACK_RENDU.pdf) (developer-feedback report, 3 pages) · [`SecondWave.pptx`](SecondWave.pptx) / [`SLIDES.html`](SLIDES.html) (8 slides) · [`probes-marche/PREUVES.md`](probes-marche/PREUVES.md) (8 verified on-chain transactions).
+**Deliverables:** [`FEEDBACK_RENDU.pdf`](FEEDBACK_RENDU.pdf) (developer-feedback report, 3 pages) · [`SecondWave.pptx`](SecondWave.pptx) / [`SLIDES.html`](SLIDES.html) (8 slides) · [`ONCHAIN.md`](ONCHAIN.md) (26 verified on-chain transactions, one per type) · [`probes-marche/PREUVES.md`](probes-marche/PREUVES.md) (the 8 proving the report's section 4).
 
 ---
 
@@ -107,7 +107,7 @@ probes-marche/        ~90 probe cases on the secondary market, plus PREUVES.md
 
 ## Every transaction used, with on-chain proof
 
-Each link points at a real transaction on the public Devnet.
+Each link points at a real transaction on the public Devnet. **[`ONCHAIN.md`](ONCHAIN.md)** re-queries every hash cited in this repository and reports its type, result code and ledger — run `npm run onchain` to re-verify them all.
 
 ### XLS-65 — Vault
 
