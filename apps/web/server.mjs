@@ -10,6 +10,7 @@ import { createServer } from 'node:http'
 import { readFile } from 'node:fs/promises'
 import { join, extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createApi, ApiError } from './api.mjs'
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url))
 const REPO = join(ROOT, '..', '..')
@@ -30,6 +31,7 @@ const MIME = {
 const DATA = new Set(['snapshot.json', 'world.json', 'orderbook.json'])
 
 let xrpl = null
+const api = createApi(REPO)
 
 function json(res, code, body) {
   res.writeHead(code, {
@@ -37,6 +39,22 @@ function json(res, code, body) {
     'cache-control': 'no-store',
   })
   res.end(JSON.stringify(body))
+}
+
+/** Corps JSON d'une requête, plafonné — c'est un serveur de démo, pas une passoire. */
+function readBody(req, max = 1 << 20) {
+  return new Promise((resolve, reject) => {
+    let raw = ''
+    req.on('data', chunk => {
+      raw += chunk
+      if (raw.length > max) { reject(new Error('corps trop volumineux')); req.destroy() }
+    })
+    req.on('end', () => {
+      if (!raw) return resolve({})
+      try { resolve(JSON.parse(raw)) } catch { reject(new Error('JSON invalide')) }
+    })
+    req.on('error', reject)
+  })
 }
 
 async function holdingsFor(account) {
@@ -76,6 +94,39 @@ createServer(async (req, res) => {
     // and the API / data routes never match.
     let path = url.pathname.replace(/\\/g, '/').replace(/^\/+/, '')
     if (path.includes('..')) { res.writeHead(403); return res.end() }
+
+    // ── Le rail durable : publier, prendre, confirmer, annuler ──
+    // 🔴 Ces routes SIGNENT avec les seeds de state.json (voir api.mjs).
+    //    Serveur de démonstration : localhost seulement.
+    if (path.startsWith('api/offers')) {
+      const rest = path.slice('api/offers'.length).replace(/^\//, '')
+      try {
+        if (req.method === 'GET' && rest === '')
+          return json(res, 200, await api.list({ account: url.searchParams.get('account') }))
+
+        // Combien ce vendeur peut-il encore proposer sur ce vault ?
+        if (req.method === 'GET' && rest === 'capacity')
+          return json(res, 200, await api.capacity({
+            seller: url.searchParams.get('seller'), vaultId: url.searchParams.get('vaultId'),
+          }))
+
+        if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' })
+        const body = await readBody(req)
+
+        if (rest === '') return json(res, 200, await api.post(body))
+        const [id, action] = rest.split('/')
+        if (action === 'take') return json(res, 200, await api.take({ id, ...body }))
+        if (action === 'confirm') return json(res, 200, await api.confirm({ id, ...body }))
+        if (action === 'cancel') return json(res, 200, await api.cancel({ id, ...body }))
+        if (action === 'unmatch') return json(res, 200, await api.unmatch({ id, ...body }))
+        return json(res, 404, { error: 'unknown action' })
+      } catch (e) {
+        // Un refus métier (offre déjà prise, pas de seed…) n'est pas une panne :
+        // 409 pour que l'interface l'affiche tel quel au lieu d'un « erreur serveur ».
+        const code = e instanceof ApiError ? 409 : 500
+        return json(res, code, { error: e.message, code: e.code ?? 'internal' })
+      }
+    }
 
     if (path === 'api/holdings') {
       const account = url.searchParams.get('account') ?? ''

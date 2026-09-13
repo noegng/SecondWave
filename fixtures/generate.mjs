@@ -40,18 +40,32 @@ const LSF_ALLOW_CLAWBACK = 0x80000000
 
 /** Fenêtres par défaut, compressées à l'échelle d'un hackathon. */
 const ADDR_RE = /^r[1-9A-HJ-NP-Za-km-z]{24,34}$/
-function parseInvite() {
+/**
+ * Invités : des wallets réels (extension) qu'on crédentialise pour qu'ils
+ * déposent pendant la Subscription et apparaissent comme détenteurs.
+ *   npm run world -- --invite rHugo --invite rNoe
+ *   npm run world -- --invite rHugo,rNoe
+ *   INVITE=rHugo,rNoe npm run world
+ * ⚠️ Ils ne pourront pas ÊTRE PARTIE au swap : le Batch exige les deux clés
+ *    privées (settlement/batch.mjs:56), et l'extension ne signe pas de Batch.
+ */
+function parseInvites() {
   const argv = process.argv.slice(2)
-  const i = argv.indexOf('--invite')
-  if (i >= 0) return argv[i + 1] ?? null
-  return argv.find((a) => ADDR_RE.test(a)) ?? process.env.INVITE ?? null
+  const out = []
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--invite') out.push(...(argv[++i] ?? '').split(','))
+    else if (argv[i].startsWith('--invite=')) out.push(...argv[i].slice('--invite='.length).split(','))
+    else if (ADDR_RE.test(argv[i])) out.push(argv[i])
+  }
+  if (!out.length && process.env.INVITE) out.push(...process.env.INVITE.split(','))
+  return [...new Set(out.map((a) => a.trim()).filter(Boolean))]
 }
-const INVITE = parseInvite()
-if (INVITE && !ADDR_RE.test(INVITE)) {
-  throw new Error(`adresse invite invalide : ${INVITE}`)
+const INVITES = parseInvites()
+for (const a of INVITES) {
+  if (!ADDR_RE.test(a)) throw new Error(`adresse invite invalide : ${a}`)
 }
 
-const SUBSCRIPTION_IN = INVITE ? 480 : 130
+const SUBSCRIPTION_IN = INVITES.length ? 480 : 130
 const INVESTMENT_FOR = 900
 
 // ─────────────────────────────────────────────────────────────
@@ -204,24 +218,27 @@ await Promise.all(mondes.flatMap(m =>
 const refus = await deposit(c, nonMembre, mondes[0].vaultId, XRP(10))
 log(`   dépôts posés · non-membre → ${refus.result} ${refus.result === 'tecNO_AUTH' ? '✓ gate actif' : '⚠️ inattendu'}\n`)
 
-// 5b. Wallet externe : on émet le KYC, lui l'accepte dans l'extension, puis dépose.
-if (INVITE) {
-  log(`5b. Invitation ${INVITE}…`)
-  try {
-    await c.request({ command: 'account_info', account: INVITE, ledger_index: 'validated' })
-  } catch {
-    throw new Error(`${INVITE} n'existe pas encore sur le Devnet — faucet d'abord : https://faucet.devnet.rippletest.net/accounts`)
+// 5b. Wallets externes : on émet le KYC, chacun l'accepte dans son extension, puis dépose.
+if (INVITES.length) {
+  log(`5b. Invitations (${INVITES.length})…`)
+  for (const invite of INVITES) {
+    try {
+      await c.request({ command: 'account_info', account: invite, ledger_index: 'validated' })
+    } catch {
+      throw new Error(`${invite} n'existe pas encore sur le Devnet — faucet d'abord : https://faucet.devnet.rippletest.net/accounts`)
+    }
+    const cred = await createCredential(c, { issuer, subject: invite })
+    if (!cred.ok) throw new Error(`CredentialCreate ${invite}: ${cred.result} ${cred.message ?? ''}`)
+    log(`   credential KYC → ${invite}  ✓`)
   }
-  const cred = await createCredential(c, { issuer, subject: INVITE })
-  if (!cred.ok) throw new Error(`CredentialCreate: ${cred.result} ${cred.message ?? ''}`)
   const sain = mondes.find(m => m.profil.key === 'sain')
   const reste = Math.max(0, (sain?.subscriptionDate ?? 0) - rippleNow())
-  log(`   credential KYC émis par ${issuer.classicAddress}  ${cred.ok ? '✓' : cred.result}`)
-  log(`   1. dans l'extension (Devnet) : accepte le credential KYC de ${issuer.classicAddress}`)
-  log(`   2. dépose du XRP dans le vault sain :`)
+  log(`\n   À faire MAINTENANT, chacun dans son extension (réseau Devnet) :`)
+  log(`   1. accepter le credential KYC émis par ${issuer.classicAddress}`)
+  log(`   2. déposer du XRP dans le vault sain :`)
   log(`      ${sain.vaultId}`)
   log(`      https://devnet.xrpl.org/vaults/${sain.vaultId}`)
-  log(`   il te reste ~${reste}s avant la clôture de Subscription.\n`)
+  log(`   ⏳ ~${reste}s avant la clôture de Subscription — après, VaultDeposit = tecTOO_SOON.\n`)
 }
 
 // 6. Brokers + first-loss capital.
@@ -326,7 +343,8 @@ const world = {
   issuer: issuer.classicAddress,
   domainId: dom.domainId,
   nonMember: nonMembre.classicAddress,
-  guest: INVITE ?? null,
+  guest: INVITES[0] ?? null,
+  guests: INVITES,
   vaults: [],
 }
 const snapshot = {
