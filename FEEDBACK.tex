@@ -1,0 +1,333 @@
+% SecondWave --- rapport de feedback développeur
+% Compilation :  tectonic FEEDBACK.tex
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\usepackage[french]{babel}
+\usepackage[a4paper,top=1.25cm,bottom=1.1cm,left=1.6cm,right=1.6cm,footskip=0.6cm]{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyvrb}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{accent}{HTML}{0D5C5C}
+\definecolor{rule}{HTML}{C3CDD3}
+\definecolor{shade}{HTML}{F0F3F4}
+\definecolor{ink2}{HTML}{3A4854}
+
+% --- titres serrés ---
+\titlespacing*{\section}{0pt}{6pt plus 1pt minus 1pt}{2pt}
+\titlespacing*{\subsection}{0pt}{4pt plus 1pt minus 1pt}{1pt}
+\titleformat{\section}{\large\bfseries\color{accent}}{\thesection\ \textperiodcentered\ }{0pt}{}
+\titleformat{\subsection}{\normalsize\bfseries\color{ink2}}{}{0pt}{}
+
+\setlist[itemize]{leftmargin=1.1em,itemsep=1pt,topsep=2pt,parsep=0pt}
+\setlist[enumerate]{leftmargin=1.4em,itemsep=1pt,topsep=2pt,parsep=0pt}
+\setlength{\parskip}{2pt}
+\linespread{0.97}\selectfont
+\setlength{\emergencystretch}{2em}
+\setlength{\parindent}{0pt}
+\renewcommand{\arraystretch}{1.02}
+
+\newcommand{\cat}[2]{{\small\textsf{catégorie} \texttt{#1} \textperiodcentered\ \textsf{lib} #2}\par\vspace{2pt}}
+\newcommand{\tc}[1]{\texttt{#1}}
+
+\DefineVerbatimEnvironment{code}{Verbatim}%
+  {fontsize=\footnotesize,xleftmargin=6pt,frame=leftline,framerule=1pt,
+   rulecolor=\color{accent},framesep=6pt,baselinestretch=0.98}
+
+\sloppy
+\begin{document}
+
+% ------------------------------------------------------------------------------------------------------------------------------------------------
+\begin{center}
+{\LARGE\bfseries Rapport de feedback développeur}\\[2pt]
+{\large SecondWave \textperiodcentered\ équipe BFT-PARIS-26}
+\end{center}
+\vspace{2pt}
+{\color{rule}\hrule height 0.6pt}
+\vspace{5pt}
+
+{\small
+\textbf{Track} 2 --- Lending Protocol \quad \textbf{Flavour} Loaded (Permissioned Domains + Credentials)\\
+\textbf{Environnement} Devnet public, \tc{wss://s.devnet.rippletest.net:51233} \textperiodcentered\ rippled 3.4.0-rc5
+(\tc{LendingProtocolV1\_1}, \tc{BatchV1\_1}, \tc{fixCleanup3\_4\_0} actifs)\\
+\textbf{Libs} \tc{xrpl.js@5.2.0-beta.1} \textperiodcentered\ \tc{ripple-binary-codec@2.11.0} \textperiodcentered\ Node $\geq$ 20
+\par}
+\vspace{4pt}
+
+\textbf{Le projet} --- un marché secondaire de parts de vault verrouillées. Pendant la phase
+Investment d'un vault \emph{closed-ended}, \tc{VaultWithdraw} est bloqué : un déposant qui doit
+sortir n'a aucune issue. Les parts étant un MPT, on les lui fait vendre à un autre membre du
+fonds, avec un règlement atomique et une analyse du risque à l'achat. Environ 420 cas exécutés
+sur la chaîne ; chaque point est rejouable par un script du dépôt. Versions longues :
+\tc{probes/FRICTIONS.md} et \tc{probes-marche/FRICTIONS.md}.
+
+% ------------------------------------------------------------------------------------------------------------------------------------------------
+\section{Un \texttt{Batch} ne dit pas s'il a produit un effet}
+\cat{UX}{rippled 3.4.0-rc5}
+
+\subsection{Le problème}
+Précisons d'abord ce qui \textbf{n'est pas} le problème : \tc{tesSUCCESS} sur un
+\tc{tfAllOrNothing} dont rien n'a appliqué est défendable --- le drapeau promet \og tout ou
+rien\fg{}, et le protocole a fait respecter l'invariant.
+
+Le problème est que \textbf{les deux issues sont indiscernables}. Réponse complète du serveur
+sur un \tc{Batch} qui n'a rien fait :
+
+\begin{code}
+accepted: true | applied: true | engine_result: tesSUCCESS
+engine_result_message: "The transaction was applied."
+meta.AffectedNodes: [ 1 noeud ]   <- Balance -150 drops, Sequence +1
+\end{code}
+
+Quatre champs qui disent \og ça a marché\fg{}, dont un \tc{applied: true} alors que rien n'a été
+appliqué. Le seul n\oe{}ud de métadonnée est la ponction de frais. Et \tc{tx\_json} restitue les
+\tc{RawTransactions} --- c'est-à-dire \textbf{ce qu'on a demandé, pas ce qui s'est passé}.
+
+Sur huit \tc{Batch} rejoués depuis le ledger, cinq ayant déplacé des parts et trois n'ayant
+rien fait, \textbf{une seule combinaison apparaît} : \tc{tesSUCCESS} / 1 n\oe{}ud. XLS-56 spécifie
+pourtant un \tc{BatchExecutions} dans la métadonnée, exactement pour distinguer les deux cas.
+Il est absent.
+
+\subsection{Ce qu'on a vécu}
+On a passé une demi-journée à croire notre code cassé. L'échange renvoyait \tc{tesSUCCESS},
+puis les soldes ne bougeaient pas --- mais pas toujours. Ce n'est pas aléatoire : chaque jambe
+est évaluée sur ses propres préconditions, et une seule qui échoue annule tout. Quatre causes
+distinctes chez nous, toutes invisibles depuis la réponse :
+
+\vspace{2pt}
+{\small\begin{tabularx}{\linewidth}{@{}Xl@{}}
+\toprule
+\textbf{Cause réelle de l'échec} & \textbf{Code que la jambe aurait rendu seule}\\
+\midrule
+l'acheteur ne peut pas financer le prix & \tc{tecUNFUNDED\_PAYMENT}\\
+l'acheteur n'est pas membre du domaine & \tc{tecNO\_AUTH}\\
+l'acheteur n'a pas fait \tc{MPTokenAuthorize} & \tc{tecNO\_AUTH}\\
+séquence interne décalée & \tc{terPRE\_SEQ}\\
+\bottomrule
+\end{tabularx}\par}
+\vspace{3pt}
+
+Aggravant : \textbf{\tc{simulate} répond \tc{notImpl} sur un \tc{Batch}} --- ni pré-jouer, ni
+constater. Il a fallu deux couches maison : retrouver les jambes par \tc{account\_tx} sur la
+plage \tc{[ledgerIndex, ledgerIndex]}, puis comparer les soldes. Environ 150 lignes pour
+répondre à \og est-ce que mon échange a eu lieu~?\fg{}.
+
+\subsection{Ce qu'on propose}
+\begin{enumerate}
+\item \textbf{Livrer le \tc{BatchExecutions} que la spec annonce} --- au minimum, par jambe :
+      son index, son hash et son code de résultat.
+\item À défaut, \textbf{le strict minimum utile} : l'index de la première jambe en échec et son
+      code. Un entier et un code changeraient tout.
+\item \textbf{Ne pas écrire \tc{applied: true}} quand aucune jambe n'a appliqué.
+\item \textbf{Faire fonctionner \tc{simulate} sur un \tc{Batch}} : c'est la transaction la plus
+      difficile à construire et la seule qu'on ne peut pas pré-vérifier.
+\end{enumerate}
+
+Le moment est favorable : l'amendement est encore en \tc{BatchV1\_1} sur une \emph{release
+candidate}. Changer la métadonnée après activation coûtera bien plus cher.
+
+% ------------------------------------------------------------------------------------------------------------------------------------------------
+\section{Trois drapeaux de \texttt{Batch} sur quatre livrent l'actif sans encaisser le prix}
+\cat{UX}{rippled 3.4.0-rc5}
+
+\subsection{Le problème}
+Le même échange --- parts contre XRP, jambe du prix volontairement impayable --- rejoué sous
+chaque drapeau :
+
+\vspace{2pt}
+{\small\begin{tabularx}{\linewidth}{@{}Xlll@{}}
+\toprule
+\textbf{Drapeau} & \textbf{Annoncé} & \textbf{Parts déplacées} & \textbf{Prix payé}\\
+\midrule
+\tc{tfAllOrNothing} & \tc{tesSUCCESS} & \textbf{0} & 0\\
+\tc{tfOnlyOne} \textperiodcentered\ \tc{tfUntilFailure} \textperiodcentered\ \tc{tfIndependent}
+  & \tc{tesSUCCESS} & \textbf{300 000} & \textbf{0}\\
+\bottomrule
+\end{tabularx}\par}
+\vspace{3pt}
+
+C'est cohérent avec la sémantique de chaque mode. Mais appliqué à un échange de valeur, trois
+modes sur quatre font \textbf{livrer sans encaisser} --- et les quatre annoncent le succès.
+
+\subsection{Ce qu'on a vécu}
+On a découvert ça en tabulant les quatre drapeaux par curiosité, pas en cherchant un bug.
+L'oubli est impossible --- \tc{Flags: 0} est refusé par \tc{temINVALID\_FLAG}, et le SDK refuse
+même de co-signer un \tc{Batch} sans le champ. Le risque est donc \textbf{le mauvais choix},
+fait en connaissance de cause. Combiné au point 1, il est \textbf{indétectable} : même code de
+retour, même métadonnée, et l'actif est parti.
+
+\subsection{Ce qu'on propose}
+Une mise en garde explicite dans XLS-56 pour les échanges de valeur, et un helper de swap dans
+les SDK qui impose \tc{tfAllOrNothing}. Le drapeau qui protège devrait être celui qu'on obtient
+sans y penser.
+
+% ------------------------------------------------------------------------------------------------------------------------------------------------
+\section{Aucune primitive de lecture côté XLS-66}
+\cat{missing primitive}{rippled 3.4.0-rc5}
+
+\subsection{Le problème}
+\tc{vault\_info} existe. \textbf{Ni \tc{loan\_info}, ni \tc{loan\_broker\_info}, ni la liste des
+détenteurs de parts.} Reconstituer l'état d'un vault impose une traversée à trois niveaux,
+chacun sur un pseudo-compte différent :
+
+\begin{code}
+vault_info(vaultId)
+  -> account_objects(pseudo-compte du vault,      type: 'loan_broker')
+    -> account_objects(pseudo-compte du courtier, type: 'loan')
+\end{code}
+
+Et pour savoir qui détient les parts, aucune commande : il faut \textbf{rejouer tout
+l'historique} du pseudo-compte via \tc{account\_tx} et reconstruire les soldes depuis la
+métadonnée de chaque transaction.
+
+\subsection{Ce qu'on a vécu}
+Notre produit est une aide à la décision : il doit afficher l'état d'un vault avant qu'on
+achète une position. \textbf{Six appels RPC} pour un vault à 3 courtiers et 3 prêts, plus un
+parcours paginé complet pour les détenteurs. C'est la partie du code qui nous a demandé le plus
+de travail, et elle ne produit aucune valeur métier --- elle reconstitue ce que le serveur sait
+déjà.
+
+Un point positif : le rejeu est \textbf{auto-vérifiant} --- la somme reconstruite retombe
+exactement sur \tc{shares.OutstandingAmount}.
+
+\subsection{Ce qu'on propose}
+\tc{loan\_broker\_info} et \tc{loan\_info} sur le modèle de \tc{vault\_info}, et surtout une
+commande qui liste les détenteurs d'une émission MPT. Le rejeu d'historique devrait être un cas
+limite, pas le chemin normal.
+
+% ------------------------------------------------------------------------------------------------------------------------------------------------
+\section{\texttt{LendingProtocolV1\_1} est actif et n'est documenté nulle part}
+\cat{documentation/tutorials}{rippled 3.4.0-rc5}
+
+\subsection{Le problème}
+\tc{VaultKind}, \tc{SubscriptionDate}, \tc{RedemptionDate} et \tc{LEVersion} existent sur le
+ledger et sont connus du codec. \textbf{Aucune spécification publiée ne les décrit.} Le modèle
+en trois phases, l'obligation d'un vault closed-ended pour créer un courtier, les bornes des
+dates : tout découvert par essai-erreur.
+
+Aggravant : \textbf{côté serveur, toute violation de \tc{VaultCreate} sort en \tc{temMALFORMED}
+nu}, sans jamais nommer le champ. Les messages utiles --- \og RedemptionDate $-$ SubscriptionDate
+must be within [180, 946708560) seconds\fg{} --- n'existent \textbf{que dans la validation client de
+\tc{xrpl.js}}. Un intégrateur en Python, en Java, ou qui signe à la main, n'a rien.
+
+\subsection{Ce qu'on a vécu}
+Le cas qui nous a le plus coûté : tout \tc{LoanSet} avec \tc{GracePeriod < 60} ou
+\tc{> PaymentInterval} échoue en \tc{temINVALID} \og The transaction is ill-formed\fg{}, sans
+indication de champ. \textbf{Une session de debug entière}, trois hypothèses fausses, puis un
+balayage systématique pour isoler la règle --- qui n'est écrite nulle part.
+
+\vspace{2pt}
+{\small\begin{tabularx}{\linewidth}{@{}llX@{}}
+\toprule
+\textbf{Envoyé} & \textbf{Reçu} & \textbf{Signifiait réellement}\\
+\midrule
+\tc{GracePeriod: 59} & \tc{temINVALID} & plancher non documenté à 60 s\\
+\tc{LoanBrokerSet} sur vault open-ended & \tc{tecNO\_PERMISSION} & V1\_1 exige un closed-ended\\
+échéance proche de \tc{RedemptionDate} & \tc{tecNO\_PERMISSION} & marge réelle $\sim$90 s en temps ledger\\
+\tc{StartDate} dans \tc{LoanSet} & \emph{disallowed location} & champ dérivé sur l'objet \tc{Loan}\\
+\tc{Data} dans \tc{LoanSet} & \tc{tesSUCCESS} & \textbf{accepté puis silencieusement jeté}\\
+\bottomrule
+\end{tabularx}\par}
+\vspace{3pt}
+
+\subsection{Ce qu'on propose}
+Publier la spec de V1\_1, même à l'état de brouillon --- un amendement actif sur un réseau public
+devrait avoir une page. Et \textbf{remonter côté serveur les messages qui n'existent aujourd'hui
+que dans le SDK JavaScript} : c'est là qu'ils servent à tout le monde, quel que soit le langage.
+
+% ------------------------------------------------------------------------------------------------------------------------------------------------
+\section{La co-signature \texttt{LoanSet} était invalide --- corrigé en \texttt{5.2.0-beta.1}}
+\cat{client libraries}{\tc{xrpl.js} 5.2.0-beta.0 $\rightarrow$ beta.1}
+
+\subsection{Le problème}
+\tc{signLoanSetByCounterparty} signait avec le préfixe historique \tc{STX\textbackslash0} alors
+que \tc{fixCleanup3\_4\_0}, actif sur ce Devnet, exige \tc{CPT\textbackslash0} en simple
+signature et \tc{CPM\textbackslash0} en multisig. Le n\oe{}ud refusait aux \emph{local checks} :
+\tc{fails local checks: Counterparty: Invalid signature.}
+
+\textbf{Aucun \tc{LoanSet} n'était soumettable depuis le SDK publié} --- la transaction centrale
+de XLS-66, et l'exemple officiel \tc{createLoan.js} avec elle. Les bons encodeurs existaient
+déjà dans \tc{ripple-binary-codec@2.11.0}, avec l'amendement nommé en commentaire ; ils
+n'étaient jamais appelés. Et \tc{.ci-config/xrpld.cfg} s'arrêtant à \tc{fixCleanup3\_2\_0}, la
+CI ne pouvait pas voir la casse.
+
+\subsection{Ce qu'on a vécu}
+Deux heures à chercher une erreur de notre côté, jusqu'au moment où le même payload signé avec
+\tc{encodeForSigningCounterparty} est passé. Sans prêt, un vault n'a ni rendement ni risque ---
+\textbf{tout notre projet était bloqué} derrière cette signature. \tc{5.2.0-beta.1} route
+désormais la signature par une table d'encodeurs indexée sur le rôle ; revérifié sur la chaîne :
+\tc{tesSUCCESS}, objet \tc{Loan} créé.
+
+\subsection{Ce qu'on propose}
+Deux points restent ouverts. \textbf{Ajouter \tc{fixCleanup3\_4\_0} à la configuration CI} de
+\tc{xrpl.js} --- sans ça la régression peut revenir sans qu'aucun test ne bronche, et c'est
+exactement ce qui a laissé passer le bug. Et \textbf{\tc{xrpl-py} (\tc{counterparty\_signer.py})
+porte toujours le même défaut}, son codec ayant d'abord besoin des deux préfixes.
+
+% ------------------------------------------------------------------------------------------------------------------------------------------------
+\section{Les MPT dans \texttt{Escrow} fonctionnent et ne sont documentés nulle part}
+\cat{documentation/tutorials}{rippled 3.4.0-rc5}
+
+\subsection{Le problème}
+En cherchant un rail de règlement alternatif au \tc{Batch}, on a testé les quatre candidats.
+Trois sont fermés et le disent clairement --- \tc{CheckCreate} $\rightarrow$ \tc{invalid SendMax},
+\tc{PaymentChannelCreate} $\rightarrow$ \tc{Amount must be a string}, \tc{OfferCreate}
+$\rightarrow$ \tc{temDISABLED}. Le quatrième marche de bout en bout, \textbf{et rien ne le dit} :
+
+\begin{itemize}
+\item \tc{EscrowCreate} avec des parts de vault $\rightarrow$ \tc{tesSUCCESS}, parts débitées à la création ;
+\item \tc{EscrowFinish} \textbf{livre réellement}, et \textbf{crée l'objet \tc{MPToken} du
+      destinataire tout seul} --- là où un \tc{Payment} exige un \tc{MPTokenAuthorize} préalable ;
+\item \tc{EscrowCancel} restitue l'intégralité, et le contrôle de domaine s'applique
+      \textbf{à la création comme au dénouement} ;
+\item deux escrows partageant une même \tc{Condition} forment un échange atomique \textbf{sans
+      \tc{Batch}} --- mesuré, 4 $\times$ \tc{tesSUCCESS}.
+\end{itemize}
+
+\subsection{Ce qu'on a vécu}
+Trouvé par hasard, en testant les rails un par un pour documenter ce qui est fermé. Capacité
+utile et invisible : la documentation d'\tc{Escrow} ne mentionne pas les MPT, et rien dans
+XLS-33 ne renvoie vers \tc{Escrow}.
+
+\textbf{Un cas limite à signaler} : un escrow \textbf{sans \tc{CancelAfter}} dont le destinataire
+perd son credential devient irrécupérable --- \tc{EscrowFinish} rend \tc{tecNO\_AUTH},
+\tc{EscrowCancel} rend \tc{tecNO\_PERMISSION}, les deux sorties sont fermées. Reproduit de bout
+en bout ; nous le signalons sans savoir si c'est voulu.
+
+\subsection{Ce qu'on propose}
+Documenter la compatibilité MPT $\times$ \tc{Escrow}, et l'asymétrie d'autorisation : recevoir un
+MPT par \tc{Payment} exige \tc{MPTokenAuthorize}, par \tc{EscrowFinish} non. C'est pour
+contourner la première que notre \tc{Batch} compte \textbf{trois jambes au lieu de deux}.
+
+% ------------------------------------------------------------------------------------------------------------------------------------------------
+\vspace{4pt}
+{\color{rule}\hrule height 0.6pt}
+\vspace{5pt}
+
+\textbf{\color{accent}Ce qui nous a rassurés}\par
+\textbf{Personne ne peut enfermer un déposant} : les dates ne sont pas des champs de
+\tc{VaultSet}, et un membre exclu d'un domaine peut toujours retirer. \textbf{Le pseudo-compte
+est étanche} --- \tc{Payment}, \tc{EscrowCreate}, \tc{CheckCreate}, \tc{PaymentChannelCreate}
+$\rightarrow$ \tc{tecNO\_PERMISSION} ; vault dans un \tc{Batch} $\rightarrow$
+\tc{temINVALID\_INNER\_BATCH}. \textbf{Aucune fuite d'arrondi} sur 145 aller-retours en XRP et
+en IOU. \textbf{Les \tc{BatchSigners} couvrent les jambes internes} : un vendeur qui réécrit le
+prix après signature de l'acheteur est rejeté, et sa séquence interdit la double-vente. Enfin
+\textbf{\tc{tfAllOrNothing} tient} dans tous les cas d'échec testés --- ce qui manque n'est pas
+la garantie, c'est le moyen de la constater.
+
+\vspace{3pt}
+\textbf{\color{accent}Une question ouverte}\par
+\tc{OfferCreate} avec un MPT répond \tc{temDISABLED} : le code existe, l'amendement dort.
+\textbf{Le carnet d'ordres natif connaîtra-t-il les Permissioned Domains ?} Nos parts sont
+gatées ; un carnet sans permission apparierait des ordres dont le règlement serait refusé. Selon
+la réponse, notre marché garde tout son sens --- ou devient inutile.
+
+\end{document}

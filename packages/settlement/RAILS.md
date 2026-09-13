@@ -171,7 +171,18 @@ node packages/settlement/scripts/batch.mjs        # nominal + acheteur à 1 drop
 node packages/settlement/scripts/htlc.mjs         # les 4 étapes + refund après expiration
 node packages/settlement/scripts/iou.mjs          # le piège du rippling, sa réparation, le swap
 npm run test:rails                                # les trois d'affilée
+npm run test:matrice                              # ⭐ la matrice PUBLIC × PRIVÉ : 18 contrôles
+                                                  #    XLS-33/56/65/80/85 via les vrais packages,
+                                                  #    décor autonome (immunisé contre la
+                                                  #    désynchronisation world/state — QA-hugo1 §1)
 ```
+
+Un angle mort assumé, mesuré par la matrice (P7) : **un échange réglé sur le
+rail HTLC est invisible de `priceHistory`** — la livraison est un `EscrowFinish`,
+pas un `Payment`, et l'historique ne lit que les `Payment`. Tant que le rail
+HTLC sert au gré à gré, c'est cohérent (un contrat privé n'est pas un prix de
+marché) ; si on veut l'y intégrer un jour, il faudra relire aussi les
+`EscrowFinish` du pseudo-compte.
 
 Chacun imprime les soldes avant et après. ⚠️ Ils tournent sur les comptes du
 monde de démo, qui sont **partagés** avec les autres sessions : les assertions

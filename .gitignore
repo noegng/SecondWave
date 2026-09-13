@@ -35,3 +35,7 @@ SECURITY-NOTES.md
 
 # sondes exploratoires
 probes*/*.log
+
+# Sortie du build web (Vercel)
+apps/web/dist/
+.vercel

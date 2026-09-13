@@ -57,6 +57,14 @@ const ligne = (w, limite = '10000') => submit(c, {
 // ═══════════════════════════════════════════════════════════════
 titre('A · LE PIÈGE — trustlines ouvertes avant le rippling')
 
+// ⚠️ Le piège ne se rejoue qu'avec un émetteur VIERGE : une fois DefaultRipple
+//    posé (première exécution), les lignes suivantes naissent ouvertes. On le
+//    détecte et on saute la démonstration au lieu de compter un faux écart.
+const flagsIssuer = Number((await c.request({ command: 'account_info',
+  account: issuer.classicAddress, ledger_index: 'validated' })).result.account_data.Flags ?? 0)
+const dejaRepare = Boolean(flagsIssuer & 0x00800000)          // lsfDefaultRipple
+if (dejaRepare) console.log('  ℹ️  émetteur déjà réparé (DefaultRipple posé) — piège non rejouable, sections A/B en constat seul\n')
+
 const l1 = await ligne(s.buyer), l2 = await ligne(s.seller)
 console.log(`  trustline acheteur ${l1.result} · vendeur ${l2.result}`)
 const emis = await submit(c, {
@@ -71,7 +79,8 @@ const avantRepair = await checkPaymentMeans(c, {
 })
 for (const ch of avantRepair) console.log(`    ${ch.ok ? '✅' : '⛔'} ${ch.name} — ${ch.detail}`)
 const piege = avantRepair.find(x => x.name.startsWith('rippling'))
-verdict(piege && !piege.ok, 'le preflight voit le NoRipple de l\'émetteur AVANT de dépenser un drop')
+if (dejaRepare) console.log('  ℹ️  piège sauté (émetteur déjà réparé)')
+else verdict(piege && !piege.ok, 'le preflight voit le NoRipple de l\'émetteur AVANT de dépenser un drop')
 
 // ═══════════════════════════════════════════════════════════════
 titre('B · RÉPARATION — tfClearNoRipple, ligne par ligne')
@@ -81,7 +90,8 @@ console.log(`  asfDefaultRipple sur l'émetteur : ${df.result}`)
 const encore = await checkPaymentMeans(c, { payer: s.buyer.classicAddress, payee: s.seller.classicAddress, amount: prix })
 const tjs = encore.find(x => x.name.startsWith('rippling'))
 console.log(`  après asfDefaultRipple : rippling ${tjs?.ok ? 'ouvert' : 'TOUJOURS bloqué'}`)
-verdict(tjs && !tjs.ok, 'asfDefaultRipple ne rattrape PAS les lignes déjà ouvertes',
+if (dejaRepare) console.log('  ℹ️  démonstration sautée (lignes nées ouvertes)')
+else verdict(tjs && !tjs.ok, 'asfDefaultRipple ne rattrape PAS les lignes déjà ouvertes',
   'c\'est exactement le piège qui coûte trois soumissions')
 
 for (const peer of [s.buyer.classicAddress, s.seller.classicAddress]) {

@@ -10,6 +10,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "web": "node apps/web/server.mjs",
     "world": "node fixtures/generate.mjs",
     "invite": "node fixtures/invite.mjs",
     "cli": "node apps/cli/src/index.mjs",
@@ -20,7 +21,8 @@
     "test": "node --test packages/core/test/analytics.test.mjs packages/vault/test/rules.test.mjs packages/settlement/test/amounts.test.mjs packages/settlement/test/condition.test.mjs packages/settlement/test/reserve.test.mjs packages/settlement/test/timing.test.mjs packages/orderbook/test/book.test.mjs && npm run test --workspace=@secondwave/analyst",
     "test:integration": "node fixtures/test-vault-lifecycle.mjs",
     "test:analyst": "npm run test --workspace=@secondwave/analyst",
-    "test:rails": "node packages/settlement/scripts/batch.mjs && node packages/settlement/scripts/htlc.mjs && node packages/settlement/scripts/iou.mjs"
+    "test:rails": "node packages/settlement/scripts/batch.mjs && node packages/settlement/scripts/htlc.mjs && node packages/settlement/scripts/iou.mjs",
+    "test:matrice": "node packages/settlement/scripts/matrice.mjs"
   },
   "dependencies": {
     "xrpl": "5.2.0-beta.1"
