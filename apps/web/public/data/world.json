@@ -1,208 +1,208 @@
 {
-  "generatedAt": "2026-09-13T10:01:55.424Z",
+  "generatedAt": "2026-09-13T10:17:56.529Z",
   "resyncedFrom": "state.json + ledger",
   "network": "wss://s.devnet.rippletest.net:51233",
-  "issuer": "rGzfMbMsjmoku5ark1zZpNaqwbsSnFvsbM",
-  "domainId": "0CDB6464B2229D6020D17EAE90CD61D8BE035081D67D7C7AF744F7BBB31885F1",
-  "nonMember": "rn53kbmETWVoFzAnxRJp4qoYhYbmWVLyYM",
+  "issuer": "r3zTochMrJw53WvuhwAkU3Dg6uZhCM8Zda",
+  "domainId": "18CEE7CEC9B7833DFECB3DA298F613ADCC72F9F7A9EDF88042D8109037F09BAF",
+  "nonMember": "rsREe585MJjrpp2rNd5zYM1b8Ahzz8JYvN",
   "vaults": [
     {
       "key": "sain",
       "label": "Vault sain — garantie normale, un prêt qui paie, un prêt qu'on laisse filer",
-      "vaultId": "19E8C9E230722B75CA8BA8183F30F1A8164B167BBFEB6F499694A6F62A30D3A6",
-      "pseudoAccount": "rMrG6jkkUR18DZZTc7LHB2wX2TATQZeiZh",
-      "owner": "rf4cv2XgVh6XtkZHeXvQLcWfm55pNxC1WB",
-      "shareMptId": "00000001DB6F9F93D2AEBC38D4D22A6E56FB0CCFC18F907C",
+      "vaultId": "01916795D2EA01CFC7C891C4BFA29A29C0A6F3FEB83C3F270E3DEFFAE8A414D4",
+      "pseudoAccount": "r4NrebLDKsH2JLk7BK3nmTJsTUYyZkhoMY",
+      "owner": "rphp7Cw2uTTmwtrtzcsW4MijGSMMpTzgpN",
+      "shareMptId": "00000001E8D0970A388F48797C3C1F981CD6438C933CF534",
       "asset": "XRP",
       "assetIssuer": null,
       "clawbackArmed": false,
-      "subscriptionDate": 842550052,
-      "redemptionDate": 842550952,
+      "subscriptionDate": 842542876,
+      "redemptionDate": 842543776,
       "holders": [
         {
-          "account": "r4KjHfQpnuXnMtVcoCLns7QcCyDQsTsy1T",
-          "shares": "25000000"
+          "account": "r9HmNTdhzBrJCydCGjwLCPLLXhhkCckd1n",
+          "shares": "33050000"
         },
         {
-          "account": "rMgxCs3UbDJEix1ZDgAJSHSFWiLVDNAAxF",
-          "shares": "20000000"
+          "account": "rQp67sdXqHBPWw86zTnixQpWfpZkVDi91k",
+          "shares": "11950000"
         }
       ],
       "brokers": [
         {
-          "brokerId": "E733442200453424856883F9A10A916F9B6040410DCDF637994B66DB65D392E7"
+          "brokerId": "A71BF8A3D912C5A7C2031FB5993F877175CCE376521BAF193DBD0C22FE90FDEB"
         }
       ],
       "loans": [
         {
-          "loanId": "D456A2EBF47BBE78BE27644CBAF08984A1185EBDAC5CB16965D3FBAD26197A89",
-          "borrower": "raw2kyWY5k6gqmMhMqWf8Lh3EZFBX3mfWM"
+          "loanId": "199FEE91B9338B2B580FB2FF84636B3F378A00435C710A8797C003252B4C6DAF",
+          "borrower": "rwzMg1bMjzwzzfdm5kw8LNSNVkjwFdojRo"
         },
         {
-          "loanId": "EC8AAF9A59AC0534148045ACF805E0B190CAB1A95528BF90F7B53AC69521F406",
-          "borrower": "rfok9Zyikiagj3ckSGwCdzW7GWKtXwEG7X"
+          "loanId": "D4F0EF755970A96694DD2D9BF12CCB02397104369699BD6B70674773D1BDDDF3",
+          "borrower": "rwusoNb39S8s81E3sZyYoin8fQTGz9a3LZ"
         }
       ]
     },
     {
       "key": "predateur",
       "label": "Vault prédateur — broker 0/0 (aucun first-loss) + AUTO-PRÊT du propriétaire, jamais remboursé",
-      "vaultId": "103DC5128AAF5296500A41FEA3FD3098700ACC56F1368DF1518A57A5719676AF",
-      "pseudoAccount": "rK5Fk6MhDXkWFTjGwbo6zdn5xBWEdA7Rrr",
-      "owner": "rDBHi5Dutt9e8PuR4hmucQyUVa3r5efq7P",
-      "shareMptId": "00000001CD5B2E594166DFA6AD20FE5F076B3BDF442D4CA7",
+      "vaultId": "91E2797F382D3A608783B269FE8CBDABACDF65F5430792F52A277C1029EEB5AA",
+      "pseudoAccount": "rMReq4xKcxbpGq7CfE4TGMK5WWJ34KHYdZ",
+      "owner": "rGkH9QNmySzS9tw9tYKkEPPg3c5YRJkxPd",
+      "shareMptId": "00000001E00C14C1FC2A0B24CCF3E2E5BFB877375C1288B7",
       "asset": "XRP",
       "assetIssuer": null,
       "clawbackArmed": false,
-      "subscriptionDate": 842550052,
-      "redemptionDate": 842550952,
+      "subscriptionDate": 842542876,
+      "redemptionDate": 842543776,
       "holders": [
         {
-          "account": "rMKwN4n432zNavbcuLYnpQLjMQ8S5WBk1v",
+          "account": "rNzVPVbd5QrdPhwTLKJE1MJQvyDv1gcsZ5",
           "shares": "30000000"
         },
         {
-          "account": "r3oMRYKkz3UnPdE8giFkgnuTi7PK41jzr9",
+          "account": "rHigRcqD94Vokx6qbiCefUvyJimbapuW44",
           "shares": "20000000"
         }
       ],
       "brokers": [
         {
-          "brokerId": "3751714F4E1FF6796C6A90396CBDAF96FF3ED9D7695D190FE23BA09E24F60CFC"
+          "brokerId": "EB9A6241D552563FB9F680C0605A80BA7EB64DF7948C54B51A2A2FCFA0664858"
         }
       ],
       "loans": [
         {
-          "loanId": "186EEB99B5B337458091BCF4B0067CCEA24E2AB014A04C3673170BE23A4A18CA",
-          "borrower": "rDBHi5Dutt9e8PuR4hmucQyUVa3r5efq7P"
+          "loanId": "2CFF5EFBD59865F7CC6F181D7DC5FD7C278784F4BF753EA3B43AA833B9E60541",
+          "borrower": "rGkH9QNmySzS9tw9tYKkEPPg3c5YRJkxPd"
         }
       ]
     },
     {
       "key": "deprecie",
       "label": "Vault déprécié — un prêt impairé, un prêt impairé puis réhabilité",
-      "vaultId": "E3FCC6C272173A0FD9C033EE82DA769FAED13CC9969DC7D4F247C2CEFE7832F2",
-      "pseudoAccount": "rNpYxrRzeHpFwcHCWThJPqPs5MSmDzxuzh",
-      "owner": "rBnbKjV8Kbdcd38hXFAy1m2WV1zp33kXYX",
-      "shareMptId": "000000018EE4B867E7DBB9590D8C53F4F53632D06D6E2A94",
+      "vaultId": "8368320E3362288D8102D3F5280D2D453747090DB5FA535D1CFA4F057788FD2F",
+      "pseudoAccount": "rp2c2pM7mcfa1fW7K289X8p6Xz6knBiSXr",
+      "owner": "rNskci9gG1uZwycbLdG48cjmkD1CiQr2ay",
+      "shareMptId": "0000000111538B59965E57EDAA891AF0FC9558961635444F",
       "asset": "XRP",
       "assetIssuer": null,
       "clawbackArmed": false,
-      "subscriptionDate": 842550052,
-      "redemptionDate": 842550952,
+      "subscriptionDate": 842542876,
+      "redemptionDate": 842543776,
       "holders": [
         {
-          "account": "rEeo1wKguZrmpFQKLV4MkuqYWxXGmR9Es5",
+          "account": "rnkudx6zxL7fmQc5ZnT6E7FgzABmmaU7sf",
           "shares": "25000000"
         },
         {
-          "account": "rMZTvUjt16MTXPwtT8ZbN3UacYxk85MZv",
+          "account": "rfmG6KTkUKvChaMhqtHrjUHzpvu3Bay9Yx",
           "shares": "20000000"
         }
       ],
       "brokers": [
         {
-          "brokerId": "B8B591C64E5A08C8F873BE4D8B88503ABE4F8030AE0018915E9BACA354A5974E"
+          "brokerId": "454F5934B9CEC42B91FF5FF8D72B82D483F07F9C0453B5220805B8A9D50B8344"
         }
       ],
       "loans": [
         {
-          "loanId": "3AD7AA1082E236759E67B5305FF42CD32AE431B99F47FBCC4A802CB6E512ED1C",
-          "borrower": "rJe7YdFqRHHc916qwk4D1zMUrs9GTHpqZL"
+          "loanId": "010CDFED2D59F8C895B9BC2B66B649285EA2DA2379F4B45FAFB9B8C0CE57EC27",
+          "borrower": "rHfACWzYiJVQ7EeRLjCBU1L6Px7vkNEWza"
         },
         {
-          "loanId": "E272E42FBB9C63546C4E6EB25355AFD0D9C04A4AA3EA2EF5B54DB51982AD7921",
-          "borrower": "rBvbodcc4oCbHX8BLiU2KqWhRgSTypLWvK"
+          "loanId": "339AAF18C1AC81D07791251863813DD082A53DE0A823F91FA38E3B3876B34DDB",
+          "borrower": "rfCCmzKf9JSS11wnBxfPr4FjGGhHWfCjqL"
         }
       ]
     },
     {
       "key": "iou",
       "label": "Vault IOU — actif émis par un tiers qui a AllowTrustLineClawback (position saisissable)",
-      "vaultId": "071D9098E67942742457B584F8C5F0BB187F0ADDBD676BC95704546043790DE2",
-      "pseudoAccount": "r4o8MevXFihQRFiDQQaZWCNEjZixqzeBe4",
-      "owner": "r4B9uQRt8sViv8ruHsAv4CSoJy9xTU5j94",
-      "shareMptId": "00000001EF33A316E13096104F8BC176E212C883B6C9F8D7",
+      "vaultId": "484ABE2922C4AC8D649346D9A3EB01A291C6AA3F4A8D8000FBE1C12490FCEF0D",
+      "pseudoAccount": "rA3W4oAgDTn36HRt8QmsKuL1VjYdMNrLF",
+      "owner": "rM3oBPp8xaNybDEuDN8Kq3XRpxYkVTvDZj",
+      "shareMptId": "000000010A3CBA606258F34DCE11AA62847973BCF28AD327",
       "asset": "IOU",
-      "assetIssuer": "rGzfMbMsjmoku5ark1zZpNaqwbsSnFvsbM",
-      "clawbackArmed": false,
-      "subscriptionDate": 842550052,
-      "redemptionDate": 842550952,
+      "assetIssuer": "r3zTochMrJw53WvuhwAkU3Dg6uZhCM8Zda",
+      "clawbackArmed": true,
+      "subscriptionDate": 842542876,
+      "redemptionDate": 842543776,
       "holders": [
         {
-          "account": "rNikqTEfTJvbfQ2Q6ojpSbVAitt8kY1zAt",
+          "account": "rsKCfGAY3kvR7RYKe8RYVw11wexk72ZxdT",
           "shares": "80000000"
         },
         {
-          "account": "rfa1gJxUMcpYVgh5njexfH8CYwh9ZET52Y",
+          "account": "ra6b8o8KyUdg4xREJ14q8KeHQwxByEqHto",
           "shares": "60000000"
         }
       ],
       "brokers": [
         {
-          "brokerId": "2954BDE30BEEAD913E3F2C5A560C2D48DE82098AB337BBFF8C3931EC9771741D"
+          "brokerId": "99636993B453D78536F044F1A259B4797901664BDF766EB2ADA6045F6FCE6C91"
         }
       ],
       "loans": [
         {
-          "loanId": "DB93548D7C983714EE1DA232FEA2A63836538004A94FC74C05F718FE3666767A",
-          "borrower": "rGoXuFUFqRomXSrQrjoKGaLghrDhGVUZUS"
+          "loanId": "4AC38D08F1B6FB769675A338DD111A549A61C7EB882E529D789123CCC75609B1",
+          "borrower": "rsLFmgVMRemYutTcxs4DsfTkydPgk5ZJnB"
         }
       ]
     },
     {
       "key": "verrouille",
       "label": "Vault à parts NON transférables — aucun marché secondaire possible",
-      "vaultId": "361E23C48907C995DEE59D6502AF47310FBD774246A4F7146607EA2A7AA7F55B",
-      "pseudoAccount": "rsDskJLt5KfEmhQCMchLc3ZNAifFEYi2YD",
-      "owner": "rHXdUEA9BB8XQ2vUcEyhTZqgnFKiDHTHd2",
-      "shareMptId": "000000011837892A3D9C24C3E87F410F0955A5E75C85140E",
+      "vaultId": "D1B6957F1FACCF368079526DC0F607DEE32E9CB52B4BE6777658DF3174FD2359",
+      "pseudoAccount": "rDhmzoU34AWZ5xYGn58TKz5KNaiCkF8U8j",
+      "owner": "rNgLageLcVP1t8B4G8bvFWmZEgkUHztAH6",
+      "shareMptId": "00000001845851872CCC0AA5216771785D59F7DF85B71576",
       "asset": "XRP",
       "assetIssuer": null,
       "clawbackArmed": false,
-      "subscriptionDate": 842550052,
-      "redemptionDate": 842550952,
+      "subscriptionDate": 842542876,
+      "redemptionDate": 842543776,
       "holders": [
         {
-          "account": "rLKY3SxModGnNgvUba8VyHRZxG2xi3o1zq",
+          "account": "rBXHLyfEqmsrw7dM6nkASRRgX2fp7Mw6Wj",
           "shares": "20000000"
         },
         {
-          "account": "rHDsD8EQnMw3Ednw1mCZcNdDJKJb46Skej",
+          "account": "rHLJaZ6xyf2v7WvJHPiJxM8eYpA7KZrSeD",
           "shares": "15000000"
         }
       ],
       "brokers": [
         {
-          "brokerId": "DEB547575E0669AC95EAA162A1D5853146576538C30081637555BD59749742AF"
+          "brokerId": "77BE7827290A05B3B95192BD9DEE4216937B48B428AC052D4E5176368CA864AB"
         }
       ],
       "loans": [
         {
-          "loanId": "C46D92A6B6DD00F592F71BBF455FF7A11595E4EC7974C595A95959034D20AE0F",
-          "borrower": "rM6mkuEW1iBkgL7hmFGd25AaQizfr2N8zj"
+          "loanId": "CD7210B07E006935F06CCB5271D5679D2D46C454FF411327F8D82E0FFD7D3E24",
+          "borrower": "raGi7rr6dBypNP9aQ6qkUCGNutUudc5JUr"
         }
       ]
     },
     {
       "key": "redemption",
       "label": "Vault déjà en phase Redemption — la sortie normale des déposants est testable",
-      "vaultId": "2157FE53C394D3D2215681139D8854C21A78399667E10909A0FB0C7DFEB841F6",
-      "pseudoAccount": "r3FWHJHXKrsVF4xhxFXPAw4QgxZBUsrB2r",
-      "owner": "rs9Xekqm7uZ3Pre2LEf5gEyPyh9YKEDpWg",
-      "shareMptId": "0000000155C4DF8C913D167827F2635512919CC0DEDDA8B5",
+      "vaultId": "E15A0A01029AEB1C88A84AF3D7FE0FEA9BFB1805A8A648E70B2B0F1F5D4C9A93",
+      "pseudoAccount": "rfRHaAu2iBhDDhtT55KBm3nm7Rgf7he6Cp",
+      "owner": "rw3AcfPWdz9eo76rMdQ8iJ8a98e8DZcvTT",
+      "shareMptId": "0000000146682DF3B0A073D9B79211F2BCDC37AD94997D6F",
       "asset": "XRP",
       "assetIssuer": null,
       "clawbackArmed": false,
-      "subscriptionDate": 842549617,
-      "redemptionDate": 842549797,
+      "subscriptionDate": 842542791,
+      "redemptionDate": 842542971,
       "holders": [
         {
-          "account": "rQs6GG3UmZzfnvocsVcf6KuBNqiJcAVcqo",
+          "account": "rKtWrWhYqh2fgGNFKe4yMbA55CVYumiX88",
           "shares": "18000000"
         },
         {
-          "account": "r3nuMWyXWehhgnhRwWgNLuHkGiGfWzGYrg",
+          "account": "rM7AeaXbkzohyoaPk8fe4q9mqrDUqS83e8",
           "shares": "12000000"
         }
       ],
@@ -212,24 +212,24 @@
     {
       "key": "solde",
       "label": "Vault avec un prêt soldé puis supprimé (LoanDelete) — fin de vie propre",
-      "vaultId": "DEB0A17837F670471E53F6C81AAA5008C4E2292CD1A8D7F02B88B2E7E533356F",
-      "pseudoAccount": "rBS38sdDCdCe4rJB8hbyfeacKkzyRkR6xR",
-      "owner": "raceXVATJyWzxEUJLWeowShb3f9zJYW1s2",
-      "shareMptId": "0000000172722603DE43FE3DDD5AA7F447E2F18A1DA37215",
+      "vaultId": "3EB04E3364A5468E7BAC58C539A57E694DACFBA8DC87677914009CFEF418DBE8",
+      "pseudoAccount": "rsNH8Gt6bF9RWSPJETJumbRtTFDXvYFLXa",
+      "owner": "rNPX8box8Q2XyQPmttsB5pqsHVuxRkoYDX",
+      "shareMptId": "000000011873AAB35030FEAADBBF022A6C0FA95C72F027C2",
       "asset": "XRP",
       "assetIssuer": null,
       "clawbackArmed": false,
-      "subscriptionDate": 842550052,
-      "redemptionDate": 842550952,
+      "subscriptionDate": 842542876,
+      "redemptionDate": 842543776,
       "holders": [
         {
-          "account": "r3DcehK4z3tc1j4nhZ1nd6xfrdYSto8vxf",
+          "account": "rhFmmEEGJobMg9z2LQk4VbxtF3tP2sQjg3",
           "shares": "30000000"
         }
       ],
       "brokers": [
         {
-          "brokerId": "76236F8B4D9F084E7BC4237F8D6E6A395F6C14284C9C51424DF0A5AE78C4087A"
+          "brokerId": "C6D43B735219BC2926B1B5866CC9B4F506349761C66CBFB6BB6638318E3AF4F3"
         }
       ],
       "loans": []

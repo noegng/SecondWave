@@ -77,6 +77,26 @@ const snapshot = {
 
 const guests = new Set()
 
+/**
+ * ⚠️ `clawbackArmed` ne se devine pas : c'est un drapeau du compte ÉMETTEUR
+ *    (lsfAllowTrustLineClawback). Le laisser à false effaçait le signal rouge
+ *    du vault IOU — l'analyste perdait « position saisissable », et trois
+ *    tests de non-régression tombaient.
+ */
+const LSF_ALLOW_CLAWBACK = 0x80000000
+const armeCache = new Map()
+async function clawbackArme(issuer) {
+  if (!issuer) return false
+  if (armeCache.has(issuer)) return armeCache.get(issuer)
+  let arme = false
+  try {
+    const r = await c.request({ command: 'account_info', account: issuer, ledger_index: 'validated' })
+    arme = Boolean(Number(r.result.account_data.Flags ?? 0) & LSF_ALLOW_CLAWBACK)
+  } catch { /* compte introuvable : on n'affirme rien */ }
+  armeCache.set(issuer, arme)
+  return arme
+}
+
 for (const [key, s] of Object.entries(seeds.vaults)) {
   const owner = Wallet.fromSeed(s.owner)
   const vaultObj = (await objects(owner.classicAddress)).find(o => o.LedgerEntryType === 'Vault')
@@ -97,7 +117,7 @@ for (const [key, s] of Object.entries(seeds.vaults)) {
     shareMptId: g.vault.ShareMPTID,
     asset: isIou ? 'IOU' : 'XRP',
     assetIssuer: isIou ? g.vault.Asset.issuer : null,
-    clawbackArmed: false,
+    clawbackArmed: isIou ? await clawbackArme(g.vault.Asset.issuer) : false,
     subscriptionDate: Number(g.vault.SubscriptionDate ?? 0),
     redemptionDate: Number(g.vault.RedemptionDate ?? 0),
   }
