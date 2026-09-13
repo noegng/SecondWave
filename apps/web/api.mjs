@@ -21,12 +21,13 @@
 import { readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { connect, Wallet, shareBalance } from '@secondwave/core'
+import { connect, Wallet, shareBalance, xrpBalance } from '@secondwave/core'
 import {
   ensureTickets, TICKETS_SELLER, ticketsBuyer,
   buildOffer, signAsBuyer, signAsSeller, submitOffer,
   cancelOffer, withdrawCommitment, offerAlive,
   commitmentDeadline, commitmentSeconds, COMMITMENT_LEDGERS, SECONDS_PER_LEDGER,
+  buyerSolvency, accountFootprint,
 } from '@secondwave/settlement'
 import { OrderBook, STATUS, EN_COURS, OFFER_TTL } from '@secondwave/orderbook'
 
@@ -198,6 +199,17 @@ export function createApi(repo) {
       const bal = await shareBalance(c, buyer, v.shareMptId)
       const needsAuthorize = !bal.holds
       const need = ticketsBuyer(needsAuthorize)
+
+      // ⭐ Sur-engagement : le prix de CET achat plus tous ceux déjà engagés et
+      //    non réglés. Sans ça, on peut s'engager sur trois lots avec de quoi
+      //    en payer un ; les deux autres mourront chez leur vendeur.
+      const foot = await accountFootprint(c, buyer)
+      const solde = await xrpBalance(c, buyer)
+      const garde = b.canCommit({
+        buyer, price: o.price, balance: solde,
+        ownerCount: foot.ownerCount ?? 0, fees: 400n, solvency: buyerSolvency,
+      })
+      if (!garde.ok) throw new ApiError('insufficient', garde.reason)
       const t = await ensureTickets(c, w, need, { reserved: engages(b, buyer) })
       if (t.ok === false) throw new ApiError('ticket', `TicketCreate : ${t.result} ${t.message ?? ''}`)
       const buyerTickets = t.free.slice(0, need)

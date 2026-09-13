@@ -282,6 +282,40 @@ export class OrderBook {
       EN_COURS.includes(o.status) && !this.expired(o) && (!vaultId || o.vaultId === vaultId))
   }
 
+  /** Le prix total déjà engagé par cet acheteur sur des offres non réglées. */
+  committedPrice(buyer, { except = null } = {}) {
+    return this.orders
+      .filter(o => o.buyer === buyer && o.id !== except
+        && (o.status === STATUS.MATCHED || o.status === STATUS.ARMED))
+      .reduce((s, o) => s + BigInt(o.price), 0n)
+  }
+
+  /**
+   * ⭐ LE SYMÉTRIQUE DE LA SURVENTE, CÔTÉ ACHETEUR.
+   *
+   * Rien n'empêchait un acheteur de s'engager sur trois offres à 30 XRP avec
+   * 50 XRP en poche. Les trois vendeurs pouvaient confirmer dans les 24 h : le
+   * premier Batch passe, les deux autres meurent faute de solde. Pas de double
+   * débit — `tfAllOrNothing` protège l'acheteur — mais deux vendeurs ont
+   * confirmé pour rien, et l'acheteur croyait avoir acheté trois lots.
+   *
+   * `balance` en drops, `solvency` = `buyerSolvency` de @secondwave/settlement,
+   * injecté pour garder ce paquet sans dépendance au règlement.
+   */
+  canCommit({ buyer, price, balance, ownerCount = 0, fees = 0n, except = null, solvency }) {
+    const engage = this.committedPrice(buyer, { except })
+    const total = engage + BigInt(price)
+    const s = solvency({ balance, ownerCount, priceDrops: total, fees })
+    if (s.ok) return { ok: true, engaged: engage, total, reason: null }
+    return {
+      ok: false, engaged: engage, total, missing: s.missing,
+      reason: engage === 0n
+        ? `solde insuffisant : ${s.detail}`
+        : `${engage} drops déjà engagés sur d'autres achats en cours — `
+          + `avec celui-ci il faudrait ${s.required} drops, il en manque ${s.missing}`,
+    }
+  }
+
   /** Les parts déjà promises par ce vendeur sur ce vault, offre `except` exclue. */
   engagedShares(seller, vaultId, { except = null } = {}) {
     return this.live(vaultId)

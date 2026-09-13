@@ -181,3 +181,62 @@ test("une offre sans échéance ne périme jamais, même très loin dans le futu
   assert.deepEqual(book.sweepCommitments(999_999_999), [])
   clean()
 })
+
+/* ── Le sur-engagement, côté acheteur ───────────────────────────────────────
+   Symétrique de la survente. Rien n'empêchait de s'engager sur trois lots avec
+   de quoi en payer un : `tfAllOrNothing` évite le double débit, mais deux
+   vendeurs confirment pour rien et l'acheteur croit avoir acheté trois fois. */
+
+/** Version minimale de `buyerSolvency` — le vrai vit dans @secondwave/settlement. */
+const solvency = ({ balance, ownerCount = 0, priceDrops = 0n, fees = 0n }) => {
+  const need = 1_000_000n + 200_000n * BigInt(ownerCount + 1)
+  const required = BigInt(priceDrops) + need + BigInt(fees)
+  const ok = BigInt(balance) >= required
+  return { ok, required, missing: ok ? 0n : required - BigInt(balance), detail: `${balance} vs ${required}` }
+}
+
+const offreDe = (book, prix) =>
+  book.post({ vaultId: V, seller: S, shares: '1', price: String(prix), sellerTickets: [1, 2] })
+
+test('un premier engagement dans les moyens passe', () => {
+  const { book, clean } = neuf()
+  const o = offreDe(book, 30_000_000n)
+  const r = book.canCommit({ buyer: B, price: o.price, balance: 50_000_000n, solvency })
+  assert.equal(r.ok, true)
+  assert.equal(r.engaged, 0n)
+  clean()
+})
+
+test('le second engagement qui dépasse le solde est refusé', () => {
+  const { book, clean } = neuf()
+  const a = offreDe(book, 30_000_000n)
+  book.match(a.id, { buyer: B, batch: {} })
+  const b = offreDe(book, 30_000_000n)
+  const r = book.canCommit({ buyer: B, price: b.price, balance: 50_000_000n, solvency })
+  assert.equal(r.ok, false)
+  assert.equal(r.engaged, 30_000_000n)
+  assert.match(r.reason, /déjà engagés/)
+  clean()
+})
+
+test('un achat réglé ou retiré libère le budget', () => {
+  const { book, clean } = neuf()
+  const a = offreDe(book, 30_000_000n)
+  book.match(a.id, { buyer: B, batch: {} })
+  book.confirm(a.id, {})
+  book.fill(a.id, 'HASH')
+  const b = offreDe(book, 30_000_000n)
+  const r = book.canCommit({ buyer: B, price: b.price, balance: 50_000_000n, solvency })
+  assert.equal(r.ok, true, 'un achat réglé a quitté les engagements')
+  assert.equal(r.engaged, 0n)
+  clean()
+})
+
+test('les engagements des autres acheteurs ne me sont pas comptés', () => {
+  const { book, clean } = neuf()
+  const a = offreDe(book, 30_000_000n)
+  book.match(a.id, { buyer: 'rQuelquUnDautre', batch: {} })
+  const b = offreDe(book, 30_000_000n)
+  assert.equal(book.canCommit({ buyer: B, price: b.price, balance: 50_000_000n, solvency }).ok, true)
+  clean()
+})

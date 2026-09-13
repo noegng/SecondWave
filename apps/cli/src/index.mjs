@@ -23,12 +23,13 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { connect, Wallet, readVaultGraph, holderMap, shareBalance } from '@secondwave/core'
+import { connect, Wallet, readVaultGraph, holderMap, shareBalance, xrpBalance } from '@secondwave/core'
 import {
   SettlementEngine, ensureTickets, TICKETS_SELLER, ticketsBuyer,
   buildOffer, signAsBuyer, signAsSeller, submitOffer,
   cancelOffer, withdrawCommitment, offerAlive,
   commitmentDeadline, commitmentSeconds, COMMITMENT_LEDGERS, SECONDS_PER_LEDGER,
+  buyerSolvency, accountFootprint,
 } from '@secondwave/settlement'
 import { OrderBook, priceHistory, STATUS, EN_COURS, OFFER_TTL } from '@secondwave/orderbook'
 import { analyse, classifyDiscount, toAnalystInput } from '@secondwave/analyst'
@@ -313,6 +314,18 @@ async function cmdTake(orderId, acheteur) {
   console.log(`  NAV ${nav.toFixed(4)}/part · payé ${pps.toFixed(4)} · décote ${(decote * 100).toFixed(1)} %`)
   console.log(`  ${PASTILLE[n.kind]} — ${n.headline}`)
   for (const s of note.signaux) console.log(`  ${PUCE[s.niveau]} ${s.titre} — ${s.detail}`)
+
+  // ⭐ Sur-engagement : ce que l'acheteur doit déjà sur d'autres achats en cours.
+  const foot = await accountFootprint(c, buyer)
+  const solde = await xrpBalance(c, buyer)
+  const gardeAchat = book.canCommit({
+    buyer, price: o.price, balance: solde,
+    ownerCount: foot.ownerCount ?? 0, fees: 400n, solvency: buyerSolvency,
+  })
+  if (!gardeAchat.ok) fatal(gardeAchat.reason)
+  if (gardeAchat.engaged > 0n)
+    console.log(`\n  déjà engagé sur d'autres achats : ${XRP(gardeAchat.engaged)} XRP`
+      + ` · total après celui-ci ${XRP(gardeAchat.total)} XRP`)
 
   // L'autorisation MPT n'est une jambe que si l'acheteur ne détient pas encore l'objet.
   const bal = await shareBalance(c, buyer, v.shareMptId)
