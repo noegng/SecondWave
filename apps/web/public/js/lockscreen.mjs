@@ -143,14 +143,14 @@ export function initLock(world, onEnter) {
     entering = true
     idPanel.hidden = true
     led.classList.add('ok')
-    // Pas de transition : la porte s'ouvre et on est directement sur le marché.
+    // Aucune transition : dès la validation, on est sur l'order book.
     document.body.classList.add('inside')            // parois + jetons du coffre
-    lock.classList.add('open')                       // la porte pivote
     onEnter?.()                                      // le marché est prêt en dessous
     stopTick()
     window.removeEventListener('keydown', onKey)
-    setTimeout(() => lock.classList.add('done'), 350)   // fondu du sas pendant l'ouverture
-    setTimeout(() => { lock.hidden = true }, 950)       // retiré une fois le fondu terminé
+    lock.style.transition = 'opacity .2s ease'       // fondu court et net
+    lock.classList.add('done')
+    setTimeout(() => { lock.hidden = true }, 230)
   }
 
   function validateCode() {
