@@ -188,8 +188,8 @@ test("une offre sans échéance ne périme jamais, même très loin dans le futu
    vendeurs confirment pour rien et l'acheteur croit avoir acheté trois fois. */
 
 /** Version minimale de `buyerSolvency` — le vrai vit dans @secondwave/settlement. */
-const solvency = ({ balance, ownerCount = 0, priceDrops = 0n, fees = 0n }) => {
-  const need = 1_000_000n + 200_000n * BigInt(ownerCount + 1)
+const solvency = ({ balance, ownerCount = 0, priceDrops = 0n, fees = 0n, newObjects = 1 }) => {
+  const need = 1_000_000n + 200_000n * BigInt(ownerCount + newObjects)
   const required = BigInt(priceDrops) + need + BigInt(fees)
   const ok = BigInt(balance) >= required
   return { ok, required, missing: ok ? 0n : required - BigInt(balance), detail: `${balance} vs ${required}` }
@@ -238,5 +238,17 @@ test('les engagements des autres acheteurs ne me sont pas comptés', () => {
   book.match(a.id, { buyer: 'rQuelquUnDautre', batch: {} })
   const b = offreDe(book, 30_000_000n)
   assert.equal(book.canCommit({ buyer: B, price: b.price, balance: 50_000_000n, solvency }).ok, true)
+  clean()
+})
+
+test('chaque achat en attente ajoute sa part de réserve', () => {
+  const { book, clean } = neuf()
+  const a = offreDe(book, 10_000_000n)
+  book.match(a.id, { buyer: B, batch: {} })
+  const b = offreDe(book, 10_000_000n)
+  // 20 XRP de prix + base 1 + 0,2 × 2 nouveaux objets = 21,4 XRP exigés.
+  assert.equal(book.canCommit({ buyer: B, price: b.price, balance: 21_400_000n, solvency }).ok, true)
+  assert.equal(book.canCommit({ buyer: B, price: b.price, balance: 21_399_999n, solvency }).ok, false,
+    'un drop de moins et le second MPToken n\'est plus couvert')
   clean()
 })
